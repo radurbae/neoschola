@@ -145,10 +145,7 @@ function getFallbackErrorMessage(status: number): string {
   }
 }
 
-// ============================================================================
-// 1. Autentikasi
-// ============================================================================
-
+// Autentikasi
 export async function login(credentials: LoginRequest): Promise<LoginResponse> {
   return request<LoginResponse>("/api/auth/login", {
     method: "POST",
@@ -176,10 +173,7 @@ export async function getMe(): Promise<ExtendedMeResponse> {
   return request<ExtendedMeResponse>("/api/auth/me");
 }
 
-// ============================================================================
-// 2. Peserta Didik & Dashboard
-// ============================================================================
-
+// Peserta Didik & Dashboard
 export async function getStudents(): Promise<{ students: Student[] }> {
   return request<{ students: Student[] }>("/api/students");
 }
@@ -190,10 +184,7 @@ export async function getStudentDashboard(
   return request<StudentDashboardResponse>(`/api/students/${studentId}/dashboard`);
 }
 
-// ============================================================================
-// 3. Presensi
-// ============================================================================
-
+// Presensi
 export async function getAttendance(params?: {
   student_id?: string;
   month?: string;
@@ -225,10 +216,7 @@ export async function bulkAttendance(
   );
 }
 
-// ============================================================================
-// 4. Pengajuan Izin
-// ============================================================================
-
+// Pengajuan Izin
 export async function getLeaveRequests(params?: {
   student_id?: string;
 }): Promise<{ items: LeaveRequest[] }> {
@@ -257,10 +245,7 @@ export async function reviewLeaveRequest(
   );
 }
 
-// ============================================================================
-// 5. Akademik
-// ============================================================================
-
+// Akademik
 export async function getSchedule(params?: {
   class_id?: string;
   student_id?: string;
@@ -301,10 +286,7 @@ export async function createGrade(
   });
 }
 
-// ============================================================================
-// 6. Pengumuman
-// ============================================================================
-
+// Pengumuman
 export async function getAnnouncements(params?: {
   class_id?: string;
   category?: string;
@@ -334,10 +316,7 @@ export async function ackAnnouncement(
   );
 }
 
-// ============================================================================
-// 7. Pesan Langsung (Threads & Messages)
-// ============================================================================
-
+// Pesan Langsung (Threads & Messages)
 export async function getThreads(): Promise<{
   threads: MessageThread[];
   service_hours?: string;
@@ -378,10 +357,7 @@ export async function markThreadRead(id: string): Promise<{ success: boolean }> 
   });
 }
 
-// ============================================================================
-// 8. Tagihan & Keuangan
-// ============================================================================
-
+// Tagihan & Keuangan
 export async function getInvoices(params?: {
   student_id?: string;
   status?: string;
@@ -418,10 +394,7 @@ export async function verifyInvoice(
   });
 }
 
-// ============================================================================
-// 9. Notifikasi
-// ============================================================================
-
+// Notifikasi
 export async function getNotifications(): Promise<{
   notifications: Notification[];
   unread_count: number;

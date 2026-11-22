@@ -222,7 +222,7 @@ export default function HomeScreen() {
                 <Text style={styles.attendanceTimeValue}>
                   {dashboardData?.attendance_today?.check_in_time
                     ? `${dashboardData.attendance_today.check_in_time} WIB`
-                    : "—"}
+                    : "-"}
                 </Text>
               </View>
 
@@ -231,7 +231,7 @@ export default function HomeScreen() {
                 <Text style={styles.attendanceTimeValue}>
                   {dashboardData?.attendance_today?.check_out_time
                     ? `${dashboardData.attendance_today.check_out_time} WIB`
-                    : "—"}
+                    : "-"}
                 </Text>
               </View>
 
@@ -265,7 +265,7 @@ export default function HomeScreen() {
                 {dashboardData?.unpaid_invoices_count || 0}
               </Text>
               <Text style={styles.quickStatLabel}>Tagihan Aktif</Text>
-              <Text style={styles.quickStatActionHint}>Buka Keuangan →</Text>
+              <Text style={styles.quickStatActionHint}>Buka Keuangan</Text>
             </TouchableOpacity>
 
             {/* Pengumuman Belum Dibaca */}
@@ -283,7 +283,7 @@ export default function HomeScreen() {
                 {dashboardData?.unread_announcements_count || 0}
               </Text>
               <Text style={styles.quickStatLabel}>Kabar Belum Dibaca</Text>
-              <Text style={styles.quickStatActionHint}>Pengumuman →</Text>
+              <Text style={styles.quickStatActionHint}>Lihat Pengumuman</Text>
             </TouchableOpacity>
           </View>
 

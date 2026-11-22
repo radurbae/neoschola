@@ -384,7 +384,7 @@ export async function seedDatabase(
 
   insertAnnouncement.run(
     "anc_2",
-    "Peringatan Hari Guru Nasional & Dresscode Seragam Batik",
+    "Peringatan Hari Guru Nasional & Ketentuan Seragam Batik",
     "Dalam rangka memperingati Hari Guru Nasional, pada hari Senin seluruh peserta didik dihimbau mengenakan seragam batik bebas rapi dan sepatu hitam bertali.",
     "SEKOLAH",
     "ALL",
@@ -407,7 +407,7 @@ export async function seedDatabase(
   insertAnnouncement.run(
     "anc_4",
     "Kunjungan Edukatif Museum Nasional & Kebun Raya",
-    "Pendaftaran kegiatan field trip semester ganjil telah dibuka. Formulir persetujuan dapat diambil melalui wali kelas masing-masing hingga akhir pekan ini.",
+    "Pendaftaran kegiatan studi wisata semester ganjil telah dibuka. Formulir persetujuan dapat diambil melalui wali kelas masing-masing hingga akhir pekan ini.",
     "KEGIATAN",
     "GUARDIAN",
     null,

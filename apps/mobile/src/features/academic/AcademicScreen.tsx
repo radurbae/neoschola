@@ -132,7 +132,7 @@ export default function AcademicScreen() {
       {/* Segmented Tab Navigation Chips */}
       <View style={styles.tabBarWrapper}>
         <Chip
-          label="Jadwal Pelajaran"
+          label="Jadwal"
           selected={activeTab === "JADWAL"}
           onPress={() => setActiveTab("JADWAL")}
           style={styles.tabChip}
@@ -147,7 +147,7 @@ export default function AcademicScreen() {
           accessibilityLabel="Buka tab Tugas dan Pekerjaan Rumah"
         />
         <Chip
-          label="Nilai & Catatan"
+          label="Nilai"
           selected={activeTab === "NILAI"}
           onPress={() => setActiveTab("NILAI")}
           style={styles.tabChip}
@@ -238,7 +238,7 @@ export default function AcademicScreen() {
                     <View style={styles.scheduleTimeBadge}>
                       <Ionicons name="time-outline" size={16} color={colors.primary} />
                       <Text style={styles.scheduleTimeRange}>
-                        {schedule.start_time} – {schedule.end_time} WIB
+                        {schedule.start_time} - {schedule.end_time} WIB
                       </Text>
                     </View>
 
@@ -420,6 +420,8 @@ const styles = StyleSheet.create({
   },
   tabChip: {
     flex: 1,
+    marginRight: 0,
+    paddingHorizontal: spacing.xs,
   },
   scrollBody: {
     flex: 1,

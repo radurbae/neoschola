@@ -25,7 +25,7 @@ Panduan desain visual, interaksi, dan sistem token untuk aplikasi mobile & web N
 | `soft` | `#ECFDF5` | Latar belakang aksen lembut, banner sukses | Nyaman |
 | `textPrimary` | `#0F172A` | Judul, label utama, angka penting | 14.8:1 terhadap `#FFFFFF` |
 | `textSecondary`| `#475569` | Keterangan, waktu, deskripsi sekunder | 5.3:1 terhadap `#FFFFFF` |
-| `textMuted` | `#94A3B8` | Placeholder, teks non-aktif | 4.5:1 terhadap `#0F172A` |
+| `textMuted` | `#64748B` | Placeholder, teks non-aktif | 4.76:1 terhadap `#FFFFFF`, 4.50:1 terhadap `#F7F9F8` |
 
 ### Semantic Badges (Status Chips)
 

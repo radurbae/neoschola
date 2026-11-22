@@ -20,7 +20,7 @@ export const colors = {
   // Teks & Hierarki
   textPrimary: "#0F172A", // Kontras 14.8:1 terhadap #FFFFFF
   textSecondary: "#475569", // Kontras 5.3:1 terhadap #FFFFFF
-  textMuted: "#94A3B8",
+  textMuted: "#64748B", // Kontras 4.76:1 terhadap #FFFFFF, 4.50:1 terhadap #F7F9F8 (WCAG AA)
   textInverse: "#FFFFFF",
 
   // Status Badges & Semantic Chips (Teks ke background >= 4.5:1)

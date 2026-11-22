@@ -41,14 +41,10 @@ export function StaffFinanceOrAcademicScreen() {
   const { user, classes } = useAuth();
   const isAdmin = user?.role === Role.ADMIN;
 
-  // ==========================================
-  // SHARED STATE (Siswa & Kelas)
-  // ==========================================
+  // State bersama siswa dan kelas
   const [students, setStudents] = useState<Student[]>([]);
 
-  // ==========================================
-  // ADMIN STATE (Keuangan / Tagihan)
-  // ==========================================
+  // State admin (Keuangan / Tagihan)
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [invoiceFilter, setInvoiceFilter] = useState<InvoiceFilter>("WAITING");
   const [invoicesLoading, setInvoicesLoading] = useState<boolean>(true);
@@ -73,9 +69,7 @@ export function StaffFinanceOrAcademicScreen() {
   const [invoiceFormError, setInvoiceFormError] = useState<string | null>(null);
   const [creatingInvoice, setCreatingInvoice] = useState<boolean>(false);
 
-  // ==========================================
-  // TEACHER STATE (Akademik / Tugas & Nilai)
-  // ==========================================
+  // State guru (Akademik / Tugas & Nilai)
   const [teacherMode, setTeacherMode] = useState<TeacherAcademicMode>("ASSIGNMENTS");
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [assignmentsLoading, setAssignmentsLoading] = useState<boolean>(true);
@@ -99,15 +93,13 @@ export function StaffFinanceOrAcademicScreen() {
   const [gradeModalVisible, setGradeModalVisible] = useState<boolean>(false);
   const [gradeSubject, setGradeSubject] = useState<string>("");
   const [gradeSemester, setGradeSemester] = useState<number>(1);
-  const [gradeAcademicYear, setGradeAcademicYear] = useState<string>("2024/2025");
+  const [gradeAcademicYear, setGradeAcademicYear] = useState<string>("2026/2027");
   const [gradeScoreStr, setGradeScoreStr] = useState<string>("");
   const [gradeNotes, setGradeNotes] = useState<string>("");
   const [gradeFormError, setGradeFormError] = useState<string | null>(null);
   const [creatingGrade, setCreatingGrade] = useState<boolean>(false);
 
-  // ==========================================
-  // DATA FETCHING
-  // ==========================================
+  // Pengambilan data
   const loadStudents = useCallback(async () => {
     try {
       const res = await api.getStudents();
@@ -180,9 +172,7 @@ export function StaffFinanceOrAcademicScreen() {
     }
   }, [isAdmin, selectedStudentForGrade, loadGradesForStudent]);
 
-  // ==========================================
-  // HANDLERS ADMIN (Keuangan)
-  // ==========================================
+  // Handler Admin Keuangan
   const handleVerifyPaid = async (inv: Invoice) => {
     setActionLoadingId(inv.id);
     try {
@@ -289,9 +279,7 @@ export function StaffFinanceOrAcademicScreen() {
     }
   };
 
-  // ==========================================
-  // HANDLERS TEACHER (Akademik)
-  // ==========================================
+  // Handler Guru Akademik
   const handleOpenCreateAssignment = () => {
     const defaultClass = classes && classes.length > 0 ? classes[0].id : "cls_4a";
     const nextWeek = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
@@ -391,9 +379,7 @@ export function StaffFinanceOrAcademicScreen() {
     }
   };
 
-  // ==========================================
-  // RENDER ADMIN VIEW
-  // ==========================================
+  // Tampilan Admin (Keuangan)
   if (isAdmin) {
     const waitingInvoices = invoices.filter(
       (inv) => inv.status === InvoiceStatus.WAITING_VERIFICATION
@@ -789,9 +775,7 @@ export function StaffFinanceOrAcademicScreen() {
     );
   }
 
-  // ==========================================
-  // RENDER TEACHER VIEW (Akademik)
-  // ==========================================
+  // Tampilan Guru (Akademik)
   return (
     <Screen
       scroll={false}

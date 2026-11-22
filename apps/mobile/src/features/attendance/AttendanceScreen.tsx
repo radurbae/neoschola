@@ -451,14 +451,14 @@ export default function AttendanceScreen() {
                       <View style={styles.historyTimeCol}>
                         <Text style={styles.historyTimeLabel}>Jam Masuk</Text>
                         <Text style={styles.historyTimeValue}>
-                          {att.check_in_time ? `${att.check_in_time} WIB` : "—"}
+                          {att.check_in_time ? `${att.check_in_time} WIB` : "-"}
                         </Text>
                       </View>
 
                       <View style={styles.historyTimeCol}>
                         <Text style={styles.historyTimeLabel}>Jam Pulang</Text>
                         <Text style={styles.historyTimeValue}>
-                          {att.check_out_time ? `${att.check_out_time} WIB` : "—"}
+                          {att.check_out_time ? `${att.check_out_time} WIB` : "-"}
                         </Text>
                       </View>
 

@@ -21,9 +21,7 @@ import { Ionicons } from "@expo/vector-icons";
 import type { Student } from "@neoschola/shared";
 import { colors, spacing, radius, typography, touchTarget } from "../theme/tokens";
 
-// ============================================================================
-// 1. Screen
-// ============================================================================
+// Screen
 
 export interface ScreenProps {
   children: React.ReactNode;
@@ -79,9 +77,7 @@ export function Screen({
   );
 }
 
-// ============================================================================
-// 2. Card
-// ============================================================================
+// Card
 
 export interface CardProps {
   children: React.ReactNode;
@@ -120,9 +116,7 @@ export function Card({
   );
 }
 
-// ============================================================================
-// 3. Button
-// ============================================================================
+// Button
 
 export interface ButtonProps {
   title: string;
@@ -247,9 +241,7 @@ export function Button({
   );
 }
 
-// ============================================================================
-// 4. Badge
-// ============================================================================
+// Badge
 
 export type BadgeVariant = "success" | "warning" | "danger" | "info" | "neutral";
 
@@ -312,9 +304,7 @@ export function Badge({
   );
 }
 
-// ============================================================================
-// 5. Chip
-// ============================================================================
+// Chip
 
 export interface ChipProps {
   label: string;
@@ -374,9 +364,7 @@ export function Chip({
   );
 }
 
-// ============================================================================
-// 6. Input
-// ============================================================================
+// Input
 
 export interface InputProps extends TextInputProps {
   label?: string;
@@ -446,9 +434,7 @@ export function Input({
   );
 }
 
-// ============================================================================
-// 7. SectionHeader
-// ============================================================================
+// SectionHeader
 
 export interface SectionHeaderProps {
   title: string;
@@ -478,9 +464,7 @@ export function SectionHeader({
   );
 }
 
-// ============================================================================
-// 8. ChildSwitcher
-// ============================================================================
+// ChildSwitcher
 
 export interface ChildSwitcherProps {
   students: Student[];
@@ -584,9 +568,7 @@ export function ChildSwitcher({
   );
 }
 
-// ============================================================================
-// 9. StateView (Loading, Empty, Error)
-// ============================================================================
+// StateView (Loading, Empty, Error)
 
 export interface StateViewProps {
   type: "loading" | "empty" | "error";
@@ -658,9 +640,7 @@ export function StateView({
   );
 }
 
-// ============================================================================
-// 10. ModalSheet (Responsive Bottom Sheet / Modal)
-// ============================================================================
+// ModalSheet (Responsive Bottom Sheet / Modal)
 
 export interface ModalSheetProps {
   visible: boolean;
@@ -689,6 +669,7 @@ export function ModalSheet({
         <Pressable
           style={styles.modalDismissArea}
           onPress={onClose}
+          accessibilityRole="button"
           accessibilityLabel="Tutup modal"
         />
         <View style={styles.modalSheetCard}>

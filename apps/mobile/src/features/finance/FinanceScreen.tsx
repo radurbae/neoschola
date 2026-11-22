@@ -37,7 +37,7 @@ type FinanceFilter = "SEMUA" | "BELUM_LUNAS" | "MENUNGGU_VERIFIKASI" | "LUNAS";
 const PAYMENT_METHODS = [
   { id: "TRANSFER_BANK", label: "Transfer Bank" },
   { id: "VIRTUAL_ACCOUNT", label: "Virtual Account" },
-  { id: "QRIS_SANDBOX", label: "QRIS Sandbox" },
+  { id: "QRIS_SANDBOX", label: "QRIS (Uji Coba)" },
 ];
 
 export function FinanceScreen() {
@@ -422,7 +422,7 @@ export function FinanceScreen() {
       <ModalSheet
         visible={Boolean(paymentModalInvoice)}
         onClose={() => setPaymentModalInvoice(null)}
-        title="Konfirmasi Pembayaran (Sandbox)"
+        title="Konfirmasi Pembayaran (Uji Coba)"
       >
         {paymentModalInvoice && (
           <View style={styles.modalBody}>

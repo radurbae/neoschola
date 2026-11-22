@@ -200,7 +200,7 @@ export default function ProfileScreen() {
             </View>
             <View style={styles.contactTextCol}>
               <Text style={styles.contactLabel}>Jam Layanan Kantor</Text>
-              <Text style={styles.contactValue}>Senin–Jumat 07.00–15.00 WIB</Text>
+              <Text style={styles.contactValue}>Senin - Jumat, 07.00 - 15.00 WIB</Text>
             </View>
           </View>
         </Card>
