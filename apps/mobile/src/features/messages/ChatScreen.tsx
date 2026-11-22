@@ -1,0 +1,430 @@
+import React, { useState, useEffect, useCallback, useRef } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+  ActivityIndicator,
+} from "react-native";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
+import { formatTanggalId } from "@neoschola/shared";
+import type { Message, MessageThread } from "@neoschola/shared";
+import { Screen, Input, Button, StateView } from "../../components/ui";
+import { useAuth } from "../../store/auth";
+import * as api from "../../lib/api";
+import {
+  colors,
+  spacing,
+  radius,
+  typography,
+  touchTarget,
+} from "../../theme/tokens";
+
+export function ChatScreen() {
+  const router = useRouter();
+  const { id } = useLocalSearchParams<{ id: string }>();
+  const { user } = useAuth();
+
+  const [thread, setThread] = useState<MessageThread | null>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // Input kirim pesan
+  const [inputContent, setInputContent] = useState<string>("");
+  const [sending, setSending] = useState<boolean>(false);
+
+  const scrollViewRef = useRef<ScrollView>(null);
+
+  const loadThreadAndMessages = useCallback(async () => {
+    if (!id) return;
+    setLoading(true);
+    setErrorMessage(null);
+
+    try {
+      const res = await api.getThreadMessages(id);
+      setMessages(res.messages || []);
+      if (res.thread) {
+        setThread(res.thread);
+      }
+      // Tandai percakapan telah dibaca
+      api.markThreadRead(id).catch(() => {});
+    } catch (err: any) {
+      setErrorMessage(
+        err?.message || "Gagal memuat pesan. Periksa koneksi internet Anda."
+      );
+    } finally {
+      setLoading(false);
+    }
+  }, [id]);
+
+  useEffect(() => {
+    loadThreadAndMessages();
+  }, [loadThreadAndMessages]);
+
+  // Scroll otomatis ke paling bawah saat pesan bertambah
+  useEffect(() => {
+    if (messages.length > 0) {
+      setTimeout(() => {
+        scrollViewRef.current?.scrollToEnd({ animated: true });
+      }, 100);
+    }
+  }, [messages.length]);
+
+  const handleSendMessage = async () => {
+    if (!id || !inputContent.trim() || sending) return;
+
+    const contentToSend = inputContent.trim();
+    setInputContent("");
+    setSending(true);
+
+    try {
+      const res = await api.sendThreadMessage(id, { content: contentToSend });
+      setMessages((prev) => [...prev, res.message]);
+    } catch (err: any) {
+      // Kembalikan teks jika gagal kirim
+      setInputContent(contentToSend);
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const formatMessageTime = (isoString: string) => {
+    if (!isoString) return "";
+    const date = new Date(isoString);
+    if (isNaN(date.getTime())) return "";
+    return date.toLocaleTimeString("id-ID", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
+  return (
+    <Screen
+      scroll={false}
+      headerShown={true}
+      title={thread?.subject || "Ruang Percakapan"}
+      subtitle={
+        thread
+          ? `${thread.teacher_name || "Wali Kelas"} • Siswa: ${
+              thread.student_name || "Siswa"
+            }`
+          : "Memuat info..."
+      }
+      rightAction={
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => router.back()}
+          activeOpacity={0.7}
+          accessibilityRole="button"
+          accessibilityLabel="Kembali ke daftar pesan"
+        >
+          <Ionicons name="arrow-back" size={24} color={colors.textPrimary} />
+        </TouchableOpacity>
+      }
+    >
+      <KeyboardAvoidingView
+        style={styles.chatContainer}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
+      >
+        {/* Area Pesan */}
+        {loading ? (
+          <StateView type="loading" message="Memuat isi percakapan..." />
+        ) : errorMessage ? (
+          <StateView
+            type="error"
+            title="Gagal Memuat Pesan"
+            message={errorMessage}
+            actionLabel="Coba Lagi"
+            onAction={loadThreadAndMessages}
+          />
+        ) : (
+          <ScrollView
+            ref={scrollViewRef}
+            style={styles.messagesScroll}
+            contentContainerStyle={styles.messagesContent}
+            showsVerticalScrollIndicator={false}
+          >
+            {/* Header info thread */}
+            {thread && (
+              <View style={styles.threadInfoBox}>
+                <Ionicons
+                  name="shield-checkmark"
+                  size={16}
+                  color={colors.primary}
+                />
+                <Text style={styles.threadInfoText}>
+                  Percakapan resmi terpantau dengan{" "}
+                  {thread.teacher_name || "Wali Kelas"} terkait{" "}
+                  {thread.student_name || "Siswa"}.
+                </Text>
+              </View>
+            )}
+
+            {messages.length === 0 ? (
+              <View style={styles.emptyMessagesBox}>
+                <Text style={styles.emptyMessagesText}>
+                  Belum ada pesan dalam percakapan ini. Kirim pesan pertama Anda di bawah.
+                </Text>
+              </View>
+            ) : (
+              messages.map((msg) => {
+                const isMyMessage = msg.sender_id === user?.id;
+                return (
+                  <View
+                    key={msg.id}
+                    style={[
+                      styles.bubbleRow,
+                      isMyMessage ? styles.bubbleRowMy : styles.bubbleRowPartner,
+                    ]}
+                  >
+                    <View
+                      style={[
+                        styles.bubbleCard,
+                        isMyMessage
+                          ? styles.bubbleCardMy
+                          : styles.bubbleCardPartner,
+                      ]}
+                    >
+                      {/* Nama Pengirim pada lawan bicara */}
+                      {!isMyMessage && Boolean(msg.sender_name) && (
+                        <Text style={styles.senderNameText}>
+                          {msg.sender_name}
+                        </Text>
+                      )}
+
+                      {/* Teks Pesan */}
+                      <Text
+                        style={[
+                          styles.messageText,
+                          isMyMessage
+                            ? styles.messageTextMy
+                            : styles.messageTextPartner,
+                        ]}
+                      >
+                        {msg.content}
+                      </Text>
+
+                      {/* Waktu Pesan */}
+                      <View style={styles.bubbleFooter}>
+                        <Text
+                          style={[
+                            styles.messageTimeText,
+                            isMyMessage
+                              ? styles.messageTimeTextMy
+                              : styles.messageTimeTextPartner,
+                          ]}
+                        >
+                          {formatMessageTime(msg.created_at)}
+                        </Text>
+                        {isMyMessage && (
+                          <Ionicons
+                            name="checkmark-done"
+                            size={14}
+                            color="#BBF7D0"
+                            style={styles.checkIcon}
+                          />
+                        )}
+                      </View>
+                    </View>
+                  </View>
+                );
+              })
+            )}
+          </ScrollView>
+        )}
+
+        {/* Input Bar Bawah */}
+        <View style={styles.inputBar}>
+          <Input
+            placeholder="Ketik pesan untuk guru..."
+            value={inputContent}
+            onChangeText={setInputContent}
+            containerStyle={styles.textInputWrapper}
+            inputStyle={styles.inputField}
+            accessibilityLabel="Tulis pesan"
+          />
+          <TouchableOpacity
+            style={[
+              styles.sendButton,
+              (!inputContent.trim() || sending) && styles.sendButtonDisabled,
+            ]}
+            onPress={handleSendMessage}
+            disabled={!inputContent.trim() || sending}
+            activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel="Kirim pesan"
+          >
+            {sending ? (
+              <ActivityIndicator size="small" color={colors.textInverse} />
+            ) : (
+              <Ionicons
+                name="send"
+                size={18}
+                color={colors.textInverse}
+              />
+            )}
+          </TouchableOpacity>
+        </View>
+      </KeyboardAvoidingView>
+    </Screen>
+  );
+}
+
+const styles = StyleSheet.create({
+  backButton: {
+    width: touchTarget.minWidth,
+    height: touchTarget.minHeight,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: radius.md,
+  },
+  chatContainer: {
+    flex: 1,
+  },
+  messagesScroll: {
+    flex: 1,
+  },
+  messagesContent: {
+    padding: spacing.lg,
+    paddingBottom: spacing.lg,
+  },
+  threadInfoBox: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: colors.cardSecondary,
+    padding: spacing.md,
+    borderRadius: radius.md,
+    marginBottom: spacing.lg,
+    gap: spacing.sm,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  threadInfoText: {
+    flex: 1,
+    fontSize: typography.size.xs,
+    color: colors.textSecondary,
+    lineHeight: 18,
+  },
+  emptyMessagesBox: {
+    padding: spacing.xl,
+    alignItems: "center",
+  },
+  emptyMessagesText: {
+    fontSize: typography.size.sm,
+    color: colors.textSecondary,
+    textAlign: "center",
+  },
+  bubbleRow: {
+    flexDirection: "row",
+    marginBottom: spacing.md,
+  },
+  bubbleRowMy: {
+    justifyContent: "flex-end",
+  },
+  bubbleRowPartner: {
+    justifyContent: "flex-start",
+  },
+  bubbleCard: {
+    maxWidth: "80%",
+    borderRadius: radius.lg,
+    paddingVertical: spacing.sm + 2,
+    paddingHorizontal: spacing.md + 2,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#0F172A",
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.05,
+        shadowRadius: 2,
+      },
+      android: {
+        elevation: 1,
+      },
+      web: {
+        boxShadow: "0 1px 2px rgba(15, 23, 42, 0.05)",
+      },
+    }),
+  },
+  bubbleCardMy: {
+    backgroundColor: colors.primary, // Kontras teks putih 7.4:1 terhadap hijau primary
+    borderBottomRightRadius: 2,
+  },
+  bubbleCardPartner: {
+    backgroundColor: colors.card,
+    borderBottomLeftRadius: 2,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  senderNameText: {
+    fontSize: typography.size.xs,
+    fontWeight: typography.weight.bold,
+    color: colors.primary,
+    marginBottom: 2,
+  },
+  messageText: {
+    fontSize: typography.size.base - 1,
+    lineHeight: typography.lineHeight.base - 2,
+  },
+  messageTextMy: {
+    color: colors.textInverse,
+  },
+  messageTextPartner: {
+    color: colors.textPrimary,
+  },
+  bubbleFooter: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-end",
+    marginTop: 4,
+    gap: 4,
+  },
+  messageTimeText: {
+    fontSize: 11,
+    fontVariant: ["tabular-nums"],
+  },
+  messageTimeTextMy: {
+    color: "#E2E8F0",
+  },
+  messageTimeTextPartner: {
+    color: colors.textSecondary,
+  },
+  checkIcon: {
+    marginLeft: 2,
+  },
+
+  // Input Bar Styles
+  inputBar: {
+    flexDirection: "row",
+    alignItems: "flex-end",
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    backgroundColor: colors.card,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    gap: spacing.sm,
+  },
+  textInputWrapper: {
+    flex: 1,
+    marginBottom: 0,
+  },
+  inputField: {
+    minHeight: touchTarget.minHeight,
+    paddingVertical: 10,
+  },
+  sendButton: {
+    width: touchTarget.minWidth,
+    height: touchTarget.minHeight,
+    backgroundColor: colors.primary,
+    borderRadius: radius.md,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  sendButtonDisabled: {
+    opacity: 0.5,
+  },
+});
