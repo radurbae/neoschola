@@ -1,0 +1,1597 @@
+import React, { useState, useEffect, useCallback } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+  RefreshControl,
+  Alert,
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import {
+  Role,
+  Invoice,
+  InvoiceStatus,
+  Assignment,
+  GradeNote,
+  Student,
+  formatRupiah,
+  formatTanggalId,
+} from "@neoschola/shared";
+import {
+  Screen,
+  Card,
+  Badge,
+  Chip,
+  Button,
+  Input,
+  StateView,
+  ModalSheet,
+  SectionHeader,
+} from "../../components/ui";
+import { useAuth } from "../../store/auth";
+import * as api from "../../lib/api";
+import { colors, spacing, radius, typography, touchTarget } from "../../theme/tokens";
+
+type InvoiceFilter = "WAITING" | "UNPAID" | "PAID" | "ALL";
+type TeacherAcademicMode = "ASSIGNMENTS" | "GRADES";
+
+export function StaffFinanceOrAcademicScreen() {
+  const { user, classes } = useAuth();
+  const isAdmin = user?.role === Role.ADMIN;
+
+  // ==========================================
+  // SHARED STATE (Siswa & Kelas)
+  // ==========================================
+  const [students, setStudents] = useState<Student[]>([]);
+
+  // ==========================================
+  // ADMIN STATE (Keuangan / Tagihan)
+  // ==========================================
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [invoiceFilter, setInvoiceFilter] = useState<InvoiceFilter>("WAITING");
+  const [invoicesLoading, setInvoicesLoading] = useState<boolean>(true);
+  const [invoicesRefreshing, setInvoicesRefreshing] = useState<boolean>(false);
+  const [invoicesError, setInvoicesError] = useState<string | null>(null);
+
+  // Modal Verifikasi / Sukses Kuitansi
+  const [verifiedReceipt, setVerifiedReceipt] = useState<{
+    receiptNo: string;
+    studentName: string;
+    amount: number;
+  } | null>(null);
+  const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
+
+  // Modal Buat Tagihan Baru (Admin)
+  const [invoiceModalVisible, setInvoiceModalVisible] = useState<boolean>(false);
+  const [selectedStudentForInvoice, setSelectedStudentForInvoice] = useState<string>("");
+  const [invoiceTitle, setInvoiceTitle] = useState<string>("");
+  const [invoiceDescription, setInvoiceDescription] = useState<string>("");
+  const [invoiceAmountStr, setInvoiceAmountStr] = useState<string>("");
+  const [invoiceDueDate, setInvoiceDueDate] = useState<string>("");
+  const [invoiceFormError, setInvoiceFormError] = useState<string | null>(null);
+  const [creatingInvoice, setCreatingInvoice] = useState<boolean>(false);
+
+  // ==========================================
+  // TEACHER STATE (Akademik / Tugas & Nilai)
+  // ==========================================
+  const [teacherMode, setTeacherMode] = useState<TeacherAcademicMode>("ASSIGNMENTS");
+  const [assignments, setAssignments] = useState<Assignment[]>([]);
+  const [assignmentsLoading, setAssignmentsLoading] = useState<boolean>(true);
+  const [assignmentsRefreshing, setAssignmentsRefreshing] = useState<boolean>(false);
+  const [assignmentsError, setAssignmentsError] = useState<string | null>(null);
+
+  // Modal Buat Tugas (Teacher)
+  const [assignmentModalVisible, setAssignmentModalVisible] = useState<boolean>(false);
+  const [assignmentTitle, setAssignmentTitle] = useState<string>("");
+  const [assignmentSubject, setAssignmentSubject] = useState<string>("");
+  const [assignmentDescription, setAssignmentDescription] = useState<string>("");
+  const [assignmentDueDate, setAssignmentDueDate] = useState<string>("");
+  const [assignmentClassId, setAssignmentClassId] = useState<string>("");
+  const [assignmentFormError, setAssignmentFormError] = useState<string | null>(null);
+  const [creatingAssignment, setCreatingAssignment] = useState<boolean>(false);
+
+  // Nilai & Catatan (Teacher)
+  const [selectedStudentForGrade, setSelectedStudentForGrade] = useState<string>("");
+  const [grades, setGrades] = useState<GradeNote[]>([]);
+  const [gradesLoading, setGradesLoading] = useState<boolean>(false);
+  const [gradeModalVisible, setGradeModalVisible] = useState<boolean>(false);
+  const [gradeSubject, setGradeSubject] = useState<string>("");
+  const [gradeSemester, setGradeSemester] = useState<number>(1);
+  const [gradeAcademicYear, setGradeAcademicYear] = useState<string>("2024/2025");
+  const [gradeScoreStr, setGradeScoreStr] = useState<string>("");
+  const [gradeNotes, setGradeNotes] = useState<string>("");
+  const [gradeFormError, setGradeFormError] = useState<string | null>(null);
+  const [creatingGrade, setCreatingGrade] = useState<boolean>(false);
+
+  // ==========================================
+  // DATA FETCHING
+  // ==========================================
+  const loadStudents = useCallback(async () => {
+    try {
+      const res = await api.getStudents();
+      const st = res.students || [];
+      setStudents(st);
+      if (st.length > 0) {
+        if (!selectedStudentForInvoice) setSelectedStudentForInvoice(st[0].id);
+        if (!selectedStudentForGrade) setSelectedStudentForGrade(st[0].id);
+      }
+    } catch {}
+  }, [selectedStudentForInvoice, selectedStudentForGrade]);
+
+  const loadInvoices = useCallback(async (isRefresh = false) => {
+    if (isRefresh) setInvoicesRefreshing(true);
+    else setInvoicesLoading(true);
+    setInvoicesError(null);
+
+    try {
+      const res = await api.getInvoices();
+      setInvoices(res.invoices || []);
+    } catch (err: any) {
+      setInvoicesError(err?.message || "Gagal memuat daftar tagihan. Silakan coba kembali.");
+    } finally {
+      setInvoicesLoading(false);
+      setInvoicesRefreshing(false);
+    }
+  }, []);
+
+  const loadAssignments = useCallback(async (isRefresh = false) => {
+    if (isRefresh) setAssignmentsRefreshing(true);
+    else setAssignmentsLoading(true);
+    setAssignmentsError(null);
+
+    try {
+      const res = await api.getAssignments();
+      setAssignments(res.assignments || []);
+    } catch (err: any) {
+      setAssignmentsError(err?.message || "Gagal memuat daftar tugas kelas.");
+    } finally {
+      setAssignmentsLoading(false);
+      setAssignmentsRefreshing(false);
+    }
+  }, []);
+
+  const loadGradesForStudent = useCallback(async (studentId: string) => {
+    if (!studentId) return;
+    setGradesLoading(true);
+    try {
+      const res = await api.getGrades({ student_id: studentId });
+      setGrades(res.grades || []);
+    } catch {
+      setGrades([]);
+    } finally {
+      setGradesLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadStudents();
+    if (isAdmin) {
+      loadInvoices();
+    } else {
+      loadAssignments();
+    }
+  }, [isAdmin, loadStudents, loadInvoices, loadAssignments]);
+
+  useEffect(() => {
+    if (!isAdmin && selectedStudentForGrade) {
+      loadGradesForStudent(selectedStudentForGrade);
+    }
+  }, [isAdmin, selectedStudentForGrade, loadGradesForStudent]);
+
+  // ==========================================
+  // HANDLERS ADMIN (Keuangan)
+  // ==========================================
+  const handleVerifyPaid = async (inv: Invoice) => {
+    setActionLoadingId(inv.id);
+    try {
+      const res = await api.verifyInvoice(inv.id, {
+        status: "PAID",
+        notes: "Pembayaran telah diverifikasi sah oleh Admin Tata Usaha.",
+      });
+
+      const receiptNo = res.invoice?.receipt_no || `KWT-${Date.now().toString().slice(-6)}`;
+      setVerifiedReceipt({
+        receiptNo,
+        studentName: inv.student_name || "Peserta Didik",
+        amount: inv.amount,
+      });
+
+      await loadInvoices(true);
+    } catch (err: any) {
+      Alert.alert("Kendala", err?.message || "Gagal memverifikasi pembayaran.");
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
+
+  const handleRejectPayment = async (inv: Invoice) => {
+    Alert.alert(
+      "Tolak Pembayaran",
+      `Apakah Anda yakin ingin menolak bukti bayar untuk ${inv.title}?`,
+      [
+        { text: "Batal", style: "cancel" },
+        {
+          text: "Tolak",
+          style: "destructive",
+          onPress: async () => {
+            setActionLoadingId(inv.id);
+            try {
+              await api.verifyInvoice(inv.id, {
+                status: "REJECTED",
+                notes: "Bukti pembayaran tidak sesuai atau tidak dapat diverifikasi.",
+              });
+              Alert.alert("Ditolak", "Status pembayaran telah ditolak.");
+              await loadInvoices(true);
+            } catch (err: any) {
+              Alert.alert("Kendala", err?.message || "Gagal menolak pembayaran.");
+            } finally {
+              setActionLoadingId(null);
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const handleOpenCreateInvoice = () => {
+    const today = new Date();
+    const nextMonth = new Date(today.getFullYear(), today.getMonth() + 1, 10);
+    const defaultDueDate = nextMonth.toISOString().split("T")[0];
+
+    setInvoiceTitle("SPP Sekolah");
+    setInvoiceDescription("Iuran Penyelenggaraan Pendidikan");
+    setInvoiceAmountStr("250000");
+    setInvoiceDueDate(defaultDueDate);
+    setInvoiceFormError(null);
+    setInvoiceModalVisible(true);
+  };
+
+  const handleCreateInvoice = async () => {
+    if (!selectedStudentForInvoice) {
+      setInvoiceFormError("Pilih siswa yang akan ditagihkan.");
+      return;
+    }
+    if (invoiceTitle.trim().length < 3) {
+      setInvoiceFormError("Judul tagihan minimal 3 karakter.");
+      return;
+    }
+    const amountNum = parseFloat(invoiceAmountStr);
+    if (isNaN(amountNum) || amountNum <= 0) {
+      setInvoiceFormError("Nominal tagihan harus berupa angka positif.");
+      return;
+    }
+    if (!invoiceDueDate.trim()) {
+      setInvoiceFormError("Tanggal jatuh tempo wajib diisi (YYYY-MM-DD).");
+      return;
+    }
+
+    setCreatingInvoice(true);
+    setInvoiceFormError(null);
+
+    try {
+      await api.createInvoice({
+        student_id: selectedStudentForInvoice,
+        title: invoiceTitle.trim(),
+        description: invoiceDescription.trim() || undefined,
+        amount: amountNum,
+        due_date: invoiceDueDate.trim(),
+      });
+
+      Alert.alert("Berhasil", "Tagihan baru berhasil diterbitkan.");
+      setInvoiceModalVisible(false);
+      await loadInvoices(true);
+    } catch (err: any) {
+      setInvoiceFormError(err?.message || "Gagal menerbitkan tagihan.");
+    } finally {
+      setCreatingInvoice(false);
+    }
+  };
+
+  // ==========================================
+  // HANDLERS TEACHER (Akademik)
+  // ==========================================
+  const handleOpenCreateAssignment = () => {
+    const defaultClass = classes && classes.length > 0 ? classes[0].id : "cls_4a";
+    const nextWeek = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+      .toISOString()
+      .split("T")[0];
+
+    setAssignmentClassId(defaultClass);
+    setAssignmentTitle("");
+    setAssignmentSubject("Matematika");
+    setAssignmentDescription("");
+    setAssignmentDueDate(nextWeek);
+    setAssignmentFormError(null);
+    setAssignmentModalVisible(true);
+  };
+
+  const handleCreateAssignment = async () => {
+    if (assignmentTitle.trim().length < 3) {
+      setAssignmentFormError("Judul tugas minimal 3 karakter.");
+      return;
+    }
+    if (!assignmentSubject.trim()) {
+      setAssignmentFormError("Mata pelajaran wajib diisi.");
+      return;
+    }
+    if (!assignmentDueDate.trim()) {
+      setAssignmentFormError("Tenggat pengumpulan wajib diisi.");
+      return;
+    }
+
+    setCreatingAssignment(true);
+    setAssignmentFormError(null);
+
+    try {
+      await api.createAssignment({
+        class_id: assignmentClassId || "cls_4a",
+        title: assignmentTitle.trim(),
+        subject: assignmentSubject.trim(),
+        description: assignmentDescription.trim() || "Kerjakan latihan di buku modul.",
+        due_date: assignmentDueDate.trim(),
+      });
+
+      Alert.alert("Berhasil", "Tugas baru berhasil dibagikan.");
+      setAssignmentModalVisible(false);
+      await loadAssignments(true);
+    } catch (err: any) {
+      setAssignmentFormError(err?.message || "Gagal membuat tugas.");
+    } finally {
+      setCreatingAssignment(false);
+    }
+  };
+
+  const handleOpenCreateGrade = () => {
+    setGradeSubject("Matematika");
+    setGradeSemester(1);
+    setGradeAcademicYear("2024/2025");
+    setGradeScoreStr("85");
+    setGradeNotes("Sangat baik dalam pemahaman konsep.");
+    setGradeFormError(null);
+    setGradeModalVisible(true);
+  };
+
+  const handleCreateGrade = async () => {
+    if (!selectedStudentForGrade) {
+      setGradeFormError("Pilih siswa terlebih dahulu.");
+      return;
+    }
+    if (!gradeSubject.trim()) {
+      setGradeFormError("Mata pelajaran wajib diisi.");
+      return;
+    }
+    const scoreNum = parseFloat(gradeScoreStr);
+    if (isNaN(scoreNum) || scoreNum < 0 || scoreNum > 100) {
+      setGradeFormError("Nilai skor harus di antara 0 dan 100.");
+      return;
+    }
+
+    setCreatingGrade(true);
+    setGradeFormError(null);
+
+    try {
+      await api.createGrade({
+        student_id: selectedStudentForGrade,
+        subject: gradeSubject.trim(),
+        semester: gradeSemester,
+        academic_year: gradeAcademicYear.trim(),
+        score: scoreNum,
+        notes: gradeNotes.trim() || undefined,
+      });
+
+      Alert.alert("Berhasil", "Nilai siswa berhasil disimpan.");
+      setGradeModalVisible(false);
+      await loadGradesForStudent(selectedStudentForGrade);
+    } catch (err: any) {
+      setGradeFormError(err?.message || "Gagal menyimpan nilai.");
+    } finally {
+      setCreatingGrade(false);
+    }
+  };
+
+  // ==========================================
+  // RENDER ADMIN VIEW
+  // ==========================================
+  if (isAdmin) {
+    const waitingInvoices = invoices.filter(
+      (inv) => inv.status === InvoiceStatus.WAITING_VERIFICATION
+    );
+    const unpaidInvoices = invoices.filter(
+      (inv) => inv.status === InvoiceStatus.UNPAID || inv.status === InvoiceStatus.OVERDUE
+    );
+    const paidInvoices = invoices.filter((inv) => inv.status === InvoiceStatus.PAID);
+
+    const filteredInvoices = invoices.filter((inv) => {
+      if (invoiceFilter === "WAITING") return inv.status === InvoiceStatus.WAITING_VERIFICATION;
+      if (invoiceFilter === "UNPAID")
+        return inv.status === InvoiceStatus.UNPAID || inv.status === InvoiceStatus.OVERDUE;
+      if (invoiceFilter === "PAID") return inv.status === InvoiceStatus.PAID;
+      return true;
+    });
+
+    return (
+      <Screen
+        scroll={false}
+        headerShown={true}
+        title="Keuangan & SPP"
+        subtitle="Verifikasi pembayaran dan kelola tagihan siswa"
+        rightAction={
+          <TouchableOpacity
+            style={styles.headerActionButton}
+            onPress={handleOpenCreateInvoice}
+            activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel="Buat tagihan baru"
+          >
+            <Ionicons name="add" size={24} color={colors.primary} />
+          </TouchableOpacity>
+        }
+      >
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={invoicesRefreshing}
+              onRefresh={() => loadInvoices(true)}
+              colors={[colors.primary]}
+              tintColor={colors.primary}
+            />
+          }
+        >
+          {/* Tombol Buat Tagihan Baru */}
+          <Button
+            title="Buat Tagihan Baru"
+            onPress={handleOpenCreateInvoice}
+            variant="primary"
+            accessibilityLabel="Buka formulir pembuatan tagihan baru"
+            leftIcon={<Ionicons name="wallet" size={18} color={colors.textInverse} />}
+            style={styles.actionBtnTop}
+          />
+
+          {/* Filter Chips */}
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.filterChipsRow}
+          >
+            <Chip
+              label="Verifikasi"
+              selected={invoiceFilter === "WAITING"}
+              onPress={() => setInvoiceFilter("WAITING")}
+              count={waitingInvoices.length}
+              accessibilityLabel={`Filter tagihan menunggu verifikasi, ${waitingInvoices.length} item`}
+            />
+            <Chip
+              label="Belum Lunas"
+              selected={invoiceFilter === "UNPAID"}
+              onPress={() => setInvoiceFilter("UNPAID")}
+              count={unpaidInvoices.length}
+              accessibilityLabel={`Filter tagihan belum lunas, ${unpaidInvoices.length} item`}
+            />
+            <Chip
+              label="Lunas"
+              selected={invoiceFilter === "PAID"}
+              onPress={() => setInvoiceFilter("PAID")}
+              count={paidInvoices.length}
+              accessibilityLabel={`Filter tagihan lunas, ${paidInvoices.length} item`}
+            />
+            <Chip
+              label="Semua"
+              selected={invoiceFilter === "ALL"}
+              onPress={() => setInvoiceFilter("ALL")}
+              count={invoices.length}
+              accessibilityLabel={`Filter semua tagihan, total ${invoices.length} item`}
+            />
+          </ScrollView>
+
+          {/* State Loading / Error / Empty */}
+          {invoicesLoading && !invoicesRefreshing ? (
+            <StateView type="loading" message="Memuat daftar tagihan sekolah..." />
+          ) : invoicesError ? (
+            <StateView
+              type="error"
+              title="Gagal Memuat Tagihan"
+              message={invoicesError}
+              actionLabel="Coba Lagi"
+              onAction={() => loadInvoices()}
+            />
+          ) : filteredInvoices.length === 0 ? (
+            <StateView
+              type="empty"
+              title="Tidak Ada Tagihan"
+              message={`Belum ada tagihan dengan filter ${
+                invoiceFilter === "WAITING"
+                  ? "Menunggu Verifikasi"
+                  : invoiceFilter === "UNPAID"
+                  ? "Belum Lunas"
+                  : invoiceFilter === "PAID"
+                  ? "Lunas"
+                  : "Semua"
+              }.`}
+            />
+          ) : (
+            <View style={styles.invoicesList}>
+              {filteredInvoices.map((inv) => {
+                const isWaiting = inv.status === InvoiceStatus.WAITING_VERIFICATION;
+                const isPaid = inv.status === InvoiceStatus.PAID;
+                const isActionBusy = actionLoadingId === inv.id;
+
+                const getStatusBadge = () => {
+                  switch (inv.status) {
+                    case InvoiceStatus.PAID:
+                      return <Badge label="Lunas" variant="success" />;
+                    case InvoiceStatus.WAITING_VERIFICATION:
+                      return <Badge label="Verifikasi" variant="warning" />;
+                    case InvoiceStatus.OVERDUE:
+                      return <Badge label="Terlambat" variant="danger" />;
+                    case InvoiceStatus.REJECTED:
+                      return <Badge label="Ditolak" variant="danger" />;
+                    case InvoiceStatus.UNPAID:
+                    default:
+                      return <Badge label="Belum Lunas" variant="neutral" />;
+                  }
+                };
+
+                return (
+                  <Card key={inv.id} style={styles.invoiceCard}>
+                    <View style={styles.invHeaderRow}>
+                      <View style={styles.invTitleCol}>
+                        <Text style={styles.invTitle}>{inv.title}</Text>
+                        <Text style={styles.invStudentName}>
+                          {inv.student_name || "Siswa"}
+                          {inv.class_name ? ` • Kelas ${inv.class_name}` : ""}
+                        </Text>
+                      </View>
+                      <View style={styles.invBadgeCol}>{getStatusBadge()}</View>
+                    </View>
+
+                    <View style={styles.invAmountRow}>
+                      <View>
+                        <Text style={styles.invAmountLabel}>Nominal:</Text>
+                        <Text style={styles.invAmountValue}>{formatRupiah(inv.amount)}</Text>
+                      </View>
+                      <View style={styles.invDueCol}>
+                        <Text style={styles.invDueLabel}>Jatuh Tempo:</Text>
+                        <Text style={styles.invDueValue}>
+                          {formatTanggalId(inv.due_date, { shortMonth: true })}
+                        </Text>
+                      </View>
+                    </View>
+
+                    {/* Informasi Bukti Pembayaran Khusus WAITING_VERIFICATION */}
+                    {isWaiting && (
+                      <View style={styles.verificationBox}>
+                        <View style={styles.verificationTitleRow}>
+                          <Ionicons
+                            name="receipt-outline"
+                            size={16}
+                            color={colors.badge.warning.text}
+                          />
+                          <Text style={styles.verificationBoxTitle}>
+                            Rincian Pembayaran Masuk
+                          </Text>
+                        </View>
+                        <Text style={styles.proofField}>
+                          Metode Bayar:{" "}
+                          <Text style={styles.proofValue}>
+                            {inv.payment_method || "Transfer Bank / Dompet Digital"}
+                          </Text>
+                        </Text>
+                        {Boolean(inv.payment_ref) && (
+                          <Text style={styles.proofField}>
+                            No. Referensi:{" "}
+                            <Text style={styles.proofValue}>{inv.payment_ref}</Text>
+                          </Text>
+                        )}
+                        {Boolean(inv.proof_note) && (
+                          <Text style={styles.proofField}>
+                            Catatan Wali:{" "}
+                            <Text style={styles.proofValue}>"{inv.proof_note}"</Text>
+                          </Text>
+                        )}
+
+                        {/* Tombol Aksi Verifikasi & Tolak */}
+                        <View style={styles.verifyActionsRow}>
+                          <TouchableOpacity
+                            style={styles.rejectBtn}
+                            onPress={() => handleRejectPayment(inv)}
+                            disabled={isActionBusy}
+                            activeOpacity={0.7}
+                            accessibilityRole="button"
+                            accessibilityLabel={`Tolak bukti pembayaran ${inv.title}`}
+                          >
+                            <Ionicons
+                              name="close"
+                              size={18}
+                              color={colors.badge.danger.text}
+                            />
+                            <Text style={styles.rejectBtnText}>Tolak</Text>
+                          </TouchableOpacity>
+
+                          <TouchableOpacity
+                            style={styles.approveBtn}
+                            onPress={() => handleVerifyPaid(inv)}
+                            disabled={isActionBusy}
+                            activeOpacity={0.7}
+                            accessibilityRole="button"
+                            accessibilityLabel={`Verifikasi lunas tagihan ${inv.title}`}
+                          >
+                            <Ionicons
+                              name="checkmark"
+                              size={18}
+                              color={colors.textInverse}
+                            />
+                            <Text style={styles.approveBtnText}>
+                              {isActionBusy ? "Memproses..." : "Verifikasi Lunas"}
+                            </Text>
+                          </TouchableOpacity>
+                        </View>
+                      </View>
+                    )}
+
+                    {/* Info Kuitansi Jika Lunas */}
+                    {isPaid && Boolean(inv.receipt_no) && (
+                      <View style={styles.receiptBox}>
+                        <Ionicons
+                          name="checkmark-circle"
+                          size={16}
+                          color={colors.badge.success.text}
+                        />
+                        <Text style={styles.receiptNoText}>
+                          No. Kuitansi: {inv.receipt_no}
+                        </Text>
+                      </View>
+                    )}
+                  </Card>
+                );
+              })}
+            </View>
+          )}
+
+          {/* Modal Buat Tagihan Baru */}
+          <ModalSheet
+            visible={invoiceModalVisible}
+            onClose={() => setInvoiceModalVisible(false)}
+            title="Buat Tagihan Baru"
+          >
+            <View style={styles.modalBody}>
+              {Boolean(invoiceFormError) && (
+                <View style={styles.formErrorBox}>
+                  <Ionicons name="alert-circle" size={18} color={colors.badge.danger.text} />
+                  <Text style={styles.formErrorText}>{invoiceFormError}</Text>
+                </View>
+              )}
+
+              <Text style={styles.formSectionLabel}>Pilih Siswa Penerima:</Text>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.studentChipsScroll}
+              >
+                {students.map((st) => {
+                  const isSelected = selectedStudentForInvoice === st.id;
+                  return (
+                    <TouchableOpacity
+                      key={st.id}
+                      style={[
+                        styles.choiceChip,
+                        isSelected ? styles.choiceChipSelected : styles.choiceChipUnselected,
+                      ]}
+                      onPress={() => setSelectedStudentForInvoice(st.id)}
+                      activeOpacity={0.7}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Pilih ${st.full_name}`}
+                    >
+                      <Text
+                        style={[
+                          styles.choiceChipText,
+                          isSelected
+                            ? styles.choiceChipTextSelected
+                            : styles.choiceChipTextUnselected,
+                        ]}
+                      >
+                        {st.full_name} ({st.class_name || "Siswa"})
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </ScrollView>
+
+              <Input
+                label="Judul Tagihan"
+                value={invoiceTitle}
+                onChangeText={setInvoiceTitle}
+                placeholder="Contoh: SPP Bulan November 2024"
+                accessibilityLabel="Input judul tagihan"
+              />
+
+              <Input
+                label="Nominal Pembayaran (Rp)"
+                value={invoiceAmountStr}
+                onChangeText={setInvoiceAmountStr}
+                keyboardType="numeric"
+                placeholder="250000"
+                accessibilityLabel="Input nominal tagihan"
+              />
+
+              <Input
+                label="Jatuh Tempo (YYYY-MM-DD)"
+                value={invoiceDueDate}
+                onChangeText={setInvoiceDueDate}
+                placeholder="2024-11-10"
+                accessibilityLabel="Input tanggal jatuh tempo"
+              />
+
+              <Input
+                label="Deskripsi / Keterangan (Opsional)"
+                value={invoiceDescription}
+                onChangeText={setInvoiceDescription}
+                placeholder="Rincian tambahan..."
+                accessibilityLabel="Input keterangan tagihan"
+              />
+
+              <Button
+                title={creatingInvoice ? "Menerbitkan..." : "Terbitkan Tagihan"}
+                onPress={handleCreateInvoice}
+                variant="primary"
+                loading={creatingInvoice}
+                accessibilityLabel="Konfirmasi terbitkan tagihan baru"
+                style={styles.modalSubmitBtn}
+              />
+            </View>
+          </ModalSheet>
+
+          {/* Modal Pop-up Kuitansi Terbit */}
+          <ModalSheet
+            visible={Boolean(verifiedReceipt)}
+            onClose={() => setVerifiedReceipt(null)}
+            title="Kuitansi Resmi Diterbitkan"
+          >
+            {verifiedReceipt && (
+              <View style={styles.receiptModalBody}>
+                <View style={styles.receiptIconCircle}>
+                  <Ionicons name="checkmark-done" size={32} color={colors.primary} />
+                </View>
+                <Text style={styles.receiptModalTitle}>Verifikasi Pembayaran Berhasil</Text>
+                <Text style={styles.receiptModalSub}>
+                  Bukti pembayaran telah disahkan dan kuitansi resmi telah dicatat ke sistem.
+                </Text>
+
+                <View style={styles.receiptDetailCard}>
+                  <Text style={styles.receiptLabel}>Nomor Kuitansi Resmi:</Text>
+                  <Text style={styles.receiptValueHighlight}>
+                    {verifiedReceipt.receiptNo}
+                  </Text>
+                  <View style={styles.receiptDivider} />
+                  <Text style={styles.receiptLabel}>Peserta Didik:</Text>
+                  <Text style={styles.receiptValue}>{verifiedReceipt.studentName}</Text>
+                  <Text style={styles.receiptLabel}>Jumlah Terbayar:</Text>
+                  <Text style={styles.receiptValue}>
+                    {formatRupiah(verifiedReceipt.amount)}
+                  </Text>
+                </View>
+
+                <Button
+                  title="Selesai & Tutup"
+                  onPress={() => setVerifiedReceipt(null)}
+                  variant="primary"
+                  accessibilityLabel="Tutup dialog kuitansi"
+                  style={styles.modalSubmitBtn}
+                />
+              </View>
+            )}
+          </ModalSheet>
+        </ScrollView>
+      </Screen>
+    );
+  }
+
+  // ==========================================
+  // RENDER TEACHER VIEW (Akademik)
+  // ==========================================
+  return (
+    <Screen
+      scroll={false}
+      headerShown={true}
+      title="Akademik Siswa"
+      subtitle="Kelola tugas PR kelas serta catatan nilai evaluasi"
+    >
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={assignmentsRefreshing}
+            onRefresh={() => {
+              loadAssignments(true);
+              if (selectedStudentForGrade) loadGradesForStudent(selectedStudentForGrade);
+            }}
+            colors={[colors.primary]}
+            tintColor={colors.primary}
+          />
+        }
+      >
+        {/* Segmented Mode: Tugas / Nilai */}
+        <View style={styles.segmentedRow}>
+          <TouchableOpacity
+            style={[
+              styles.segmentedButton,
+              teacherMode === "ASSIGNMENTS"
+                ? styles.segmentedButtonActive
+                : styles.segmentedButtonInactive,
+            ]}
+            onPress={() => setTeacherMode("ASSIGNMENTS")}
+            activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel="Pilih mode Tugas dan PR Kelas"
+          >
+            <Ionicons
+              name="book"
+              size={18}
+              color={
+                teacherMode === "ASSIGNMENTS" ? colors.primary : colors.textSecondary
+              }
+            />
+            <Text
+              style={[
+                styles.segmentedText,
+                teacherMode === "ASSIGNMENTS"
+                  ? styles.segmentedTextActive
+                  : styles.segmentedTextInactive,
+              ]}
+            >
+              Tugas / PR Kelas
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[
+              styles.segmentedButton,
+              teacherMode === "GRADES"
+                ? styles.segmentedButtonActive
+                : styles.segmentedButtonInactive,
+            ]}
+            onPress={() => setTeacherMode("GRADES")}
+            activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel="Pilih mode Nilai dan Catatan Siswa"
+          >
+            <Ionicons
+              name="ribbon"
+              size={18}
+              color={teacherMode === "GRADES" ? colors.primary : colors.textSecondary}
+            />
+            <Text
+              style={[
+                styles.segmentedText,
+                teacherMode === "GRADES"
+                  ? styles.segmentedTextActive
+                  : styles.segmentedTextInactive,
+              ]}
+            >
+              Nilai & Catatan
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* ======================================= */}
+        {/* TAB 1: TUGAS / PR KELAS                 */}
+        {/* ======================================= */}
+        {teacherMode === "ASSIGNMENTS" && (
+          <View>
+            <Button
+              title="Buat Tugas Baru"
+              onPress={handleOpenCreateAssignment}
+              variant="primary"
+              accessibilityLabel="Buka formulir pembuatan tugas baru"
+              leftIcon={<Ionicons name="add-circle" size={18} color={colors.textInverse} />}
+              style={styles.actionBtnTop}
+            />
+
+            {assignmentsLoading && !assignmentsRefreshing ? (
+              <StateView type="loading" message="Memuat daftar tugas kelas..." />
+            ) : assignmentsError ? (
+              <StateView
+                type="error"
+                title="Gagal Memuat Tugas"
+                message={assignmentsError}
+                actionLabel="Coba Lagi"
+                onAction={() => loadAssignments()}
+              />
+            ) : assignments.length === 0 ? (
+              <StateView
+                type="empty"
+                title="Belum Ada Tugas"
+                message="Belum ada tugas atau PR aktif yang dibuat untuk kelas."
+              />
+            ) : (
+              <View style={styles.assignmentsList}>
+                {assignments.map((item) => (
+                  <Card key={item.id} style={styles.assignmentCard}>
+                    <View style={styles.assignHeaderRow}>
+                      <Badge label={item.subject} variant="info" />
+                      <Text style={styles.assignDueDate}>
+                        Tenggat: {formatTanggalId(item.due_date, { shortMonth: true })}
+                      </Text>
+                    </View>
+                    <Text style={styles.assignTitle}>{item.title}</Text>
+                    <Text style={styles.assignDesc}>{item.description}</Text>
+                    <View style={styles.assignFooter}>
+                      <Ionicons
+                        name="person-outline"
+                        size={14}
+                        color={colors.textMuted}
+                      />
+                      <Text style={styles.assignAuthor}>
+                        Diberikan oleh: {item.assigned_by_name || "Wali Kelas"}
+                      </Text>
+                    </View>
+                  </Card>
+                ))}
+              </View>
+            )}
+          </View>
+        )}
+
+        {/* ======================================= */}
+        {/* TAB 2: NILAI & CATATAN SISWA            */}
+        {/* ======================================= */}
+        {teacherMode === "GRADES" && (
+          <View>
+            <SectionHeader
+              title="Pilih Siswa Binaan"
+              subtitle="Pilih peserta didik untuk meninjau dan menginput evaluasi"
+            />
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.studentChipsScroll}
+            >
+              {students.map((st) => {
+                const isSelected = selectedStudentForGrade === st.id;
+                return (
+                  <TouchableOpacity
+                    key={st.id}
+                    style={[
+                      styles.choiceChip,
+                      isSelected ? styles.choiceChipSelected : styles.choiceChipUnselected,
+                    ]}
+                    onPress={() => setSelectedStudentForGrade(st.id)}
+                    activeOpacity={0.7}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Pilih siswa ${st.full_name}`}
+                  >
+                    <Text
+                      style={[
+                        styles.choiceChipText,
+                        isSelected
+                          ? styles.choiceChipTextSelected
+                          : styles.choiceChipTextUnselected,
+                      ]}
+                    >
+                      {st.full_name} ({st.class_name || "Siswa"})
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+
+            <Button
+              title="Tambah Nilai & Catatan"
+              onPress={handleOpenCreateGrade}
+              variant="primary"
+              accessibilityLabel="Buka formulir input nilai dan catatan siswa"
+              leftIcon={<Ionicons name="ribbon" size={18} color={colors.textInverse} />}
+              style={styles.actionBtnTop}
+            />
+
+            {gradesLoading ? (
+              <StateView type="loading" message="Memuat catatan nilai siswa..." />
+            ) : grades.length === 0 ? (
+              <StateView
+                type="empty"
+                title="Belum Ada Nilai"
+                message="Siswa yang dipilih belum memiliki rekaman nilai atau catatan evaluasi."
+              />
+            ) : (
+              <View style={styles.gradesList}>
+                {grades.map((gr) => (
+                  <Card key={gr.id} style={styles.gradeCard}>
+                    <View style={styles.gradeHeaderRow}>
+                      <View style={styles.gradeSubjectCol}>
+                        <Text style={styles.gradeSubject}>{gr.subject}</Text>
+                        <Text style={styles.gradeMeta}>
+                          Semester {gr.semester} • TA {gr.academic_year}
+                        </Text>
+                      </View>
+                      <View style={styles.gradeScoreBadge}>
+                        <Text style={styles.gradeScoreNumber}>{gr.score}</Text>
+                        <Text style={styles.gradeScoreLabel}>Skor</Text>
+                      </View>
+                    </View>
+
+                    {Boolean(gr.notes) && (
+                      <View style={styles.gradeNotesBox}>
+                        <Text style={styles.gradeNotesLabel}>Catatan Evaluasi:</Text>
+                        <Text style={styles.gradeNotesText}>"{gr.notes}"</Text>
+                      </View>
+                    )}
+                  </Card>
+                ))}
+              </View>
+            )}
+          </View>
+        )}
+
+        {/* Modal Buat Tugas (Teacher) */}
+        <ModalSheet
+          visible={assignmentModalVisible}
+          onClose={() => setAssignmentModalVisible(false)}
+          title="Buat Tugas Baru"
+        >
+          <View style={styles.modalBody}>
+            {Boolean(assignmentFormError) && (
+              <View style={styles.formErrorBox}>
+                <Ionicons name="alert-circle" size={18} color={colors.badge.danger.text} />
+                <Text style={styles.formErrorText}>{assignmentFormError}</Text>
+              </View>
+            )}
+
+            <Input
+              label="Mata Pelajaran"
+              value={assignmentSubject}
+              onChangeText={setAssignmentSubject}
+              placeholder="Contoh: Matematika, Bahasa Indonesia, IPA"
+              accessibilityLabel="Input mata pelajaran tugas"
+            />
+
+            <Input
+              label="Judul Tugas / PR"
+              value={assignmentTitle}
+              onChangeText={setAssignmentTitle}
+              placeholder="Contoh: Latihan Perkalian & Pembagian Bab 2"
+              accessibilityLabel="Input judul tugas"
+            />
+
+            <Input
+              label="Tenggat Pengumpulan (YYYY-MM-DD)"
+              value={assignmentDueDate}
+              onChangeText={setAssignmentDueDate}
+              placeholder="2024-11-05"
+              accessibilityLabel="Input batas waktu pengumpulan"
+            />
+
+            <Input
+              label="Petunjuk & Deskripsi Pengerjaan"
+              value={assignmentDescription}
+              onChangeText={setAssignmentDescription}
+              multiline
+              numberOfLines={3}
+              placeholder="Instruksi pengerjaan bagi siswa dan panduan untuk orang tua..."
+              accessibilityLabel="Input deskripsi tugas"
+            />
+
+            <Button
+              title={creatingAssignment ? "Menyimpan..." : "Bagikan Tugas"}
+              onPress={handleCreateAssignment}
+              variant="primary"
+              loading={creatingAssignment}
+              accessibilityLabel="Konfirmasi bagikan tugas ke siswa"
+              style={styles.modalSubmitBtn}
+            />
+          </View>
+        </ModalSheet>
+
+        {/* Modal Tambah Nilai (Teacher) */}
+        <ModalSheet
+          visible={gradeModalVisible}
+          onClose={() => setGradeModalVisible(false)}
+          title="Tambah Nilai & Catatan Siswa"
+        >
+          <View style={styles.modalBody}>
+            {Boolean(gradeFormError) && (
+              <View style={styles.formErrorBox}>
+                <Ionicons name="alert-circle" size={18} color={colors.badge.danger.text} />
+                <Text style={styles.formErrorText}>{gradeFormError}</Text>
+              </View>
+            )}
+
+            <Input
+              label="Mata Pelajaran"
+              value={gradeSubject}
+              onChangeText={setGradeSubject}
+              placeholder="Contoh: Matematika"
+              accessibilityLabel="Input mata pelajaran nilai"
+            />
+
+            <Input
+              label="Nilai Skor (0 - 100)"
+              value={gradeScoreStr}
+              onChangeText={setGradeScoreStr}
+              keyboardType="numeric"
+              placeholder="85"
+              accessibilityLabel="Input nilai angka siswa"
+            />
+
+            <View style={styles.inputDoubleRow}>
+              <View style={styles.inputDoubleCol}>
+                <Input
+                  label="Semester"
+                  value={String(gradeSemester)}
+                  onChangeText={(val) => setGradeSemester(parseInt(val, 10) || 1)}
+                  keyboardType="numeric"
+                  accessibilityLabel="Input semester"
+                />
+              </View>
+              <View style={styles.inputDoubleCol}>
+                <Input
+                  label="Tahun Ajaran"
+                  value={gradeAcademicYear}
+                  onChangeText={setGradeAcademicYear}
+                  placeholder="2024/2025"
+                  accessibilityLabel="Input tahun ajaran"
+                />
+              </View>
+            </View>
+
+            <Input
+              label="Catatan Guru & Evaluasi Capaian"
+              value={gradeNotes}
+              onChangeText={setGradeNotes}
+              multiline
+              numberOfLines={3}
+              placeholder="Berikan umpan balik positif atau arahan perbaikan bagi siswa..."
+              accessibilityLabel="Input catatan guru"
+            />
+
+            <Button
+              title={creatingGrade ? "Menyimpan..." : "Simpan Nilai & Catatan"}
+              onPress={handleCreateGrade}
+              variant="primary"
+              loading={creatingGrade}
+              accessibilityLabel="Konfirmasi simpan nilai siswa"
+              style={styles.modalSubmitBtn}
+            />
+          </View>
+        </ModalSheet>
+      </ScrollView>
+    </Screen>
+  );
+}
+
+const styles = StyleSheet.create({
+  headerActionButton: {
+    width: touchTarget.minWidth,
+    height: touchTarget.minHeight,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  scrollContent: {
+    padding: spacing.lg,
+    paddingBottom: spacing.max,
+  },
+  actionBtnTop: {
+    marginBottom: spacing.md,
+  },
+  filterChipsRow: {
+    paddingVertical: spacing.xs,
+    marginBottom: spacing.md,
+  },
+  segmentedRow: {
+    flexDirection: "row",
+    backgroundColor: colors.card,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: 3,
+    marginBottom: spacing.md,
+  },
+  segmentedButton: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    minHeight: touchTarget.minHeight,
+    borderRadius: radius.sm,
+  },
+  segmentedButtonActive: {
+    backgroundColor: colors.primarySoft,
+  },
+  segmentedButtonInactive: {
+    backgroundColor: "transparent",
+  },
+  segmentedText: {
+    fontSize: typography.size.sm,
+    fontWeight: typography.weight.semibold,
+    marginLeft: spacing.xs,
+  },
+  segmentedTextActive: {
+    color: colors.primary,
+  },
+  segmentedTextInactive: {
+    color: colors.textSecondary,
+  },
+  studentChipsScroll: {
+    paddingVertical: spacing.xs,
+    marginBottom: spacing.md,
+  },
+  choiceChip: {
+    minHeight: touchTarget.minHeight,
+    paddingHorizontal: spacing.md,
+    borderRadius: radius.full,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: spacing.xs,
+  },
+  choiceChipSelected: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  choiceChipUnselected: {
+    backgroundColor: colors.card,
+    borderColor: colors.border,
+  },
+  choiceChipText: {
+    fontSize: typography.size.xs,
+    fontWeight: typography.weight.semibold,
+  },
+  choiceChipTextSelected: {
+    color: colors.textInverse,
+  },
+  choiceChipTextUnselected: {
+    color: colors.textSecondary,
+  },
+  invoicesList: {
+    marginBottom: spacing.md,
+  },
+  invoiceCard: {
+    padding: spacing.lg,
+    marginBottom: spacing.md,
+  },
+  invHeaderRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    marginBottom: spacing.sm,
+  },
+  invTitleCol: {
+    flex: 1,
+    marginRight: spacing.sm,
+  },
+  invTitle: {
+    fontSize: typography.size.base,
+    fontWeight: typography.weight.bold,
+    color: colors.textPrimary,
+  },
+  invStudentName: {
+    fontSize: typography.size.xs,
+    color: colors.textSecondary,
+    marginTop: 2,
+  },
+  invBadgeCol: {
+    alignItems: "flex-end",
+  },
+  invAmountRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-end",
+    backgroundColor: "#F8FAFC",
+    padding: spacing.md,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    marginBottom: spacing.sm,
+  },
+  invAmountLabel: {
+    fontSize: 11,
+    color: colors.textSecondary,
+    marginBottom: 2,
+  },
+  invAmountValue: {
+    fontSize: typography.size.lg,
+    fontWeight: typography.weight.heavy,
+    color: colors.primary,
+    fontVariant: ["tabular-nums"],
+  },
+  invDueCol: {
+    alignItems: "flex-end",
+  },
+  invDueLabel: {
+    fontSize: 11,
+    color: colors.textSecondary,
+    marginBottom: 2,
+  },
+  invDueValue: {
+    fontSize: typography.size.sm,
+    fontWeight: typography.weight.semibold,
+    color: colors.textPrimary,
+    fontVariant: ["tabular-nums"],
+  },
+  verificationBox: {
+    backgroundColor: "#FFFBEB",
+    borderColor: colors.badge.warning.border,
+    borderWidth: 1,
+    padding: spacing.md,
+    borderRadius: radius.md,
+    marginTop: spacing.xs,
+  },
+  verificationTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: spacing.xs,
+  },
+  verificationBoxTitle: {
+    fontSize: typography.size.xs,
+    fontWeight: typography.weight.bold,
+    color: colors.badge.warning.text,
+    marginLeft: spacing.xs,
+  },
+  proofField: {
+    fontSize: typography.size.xs,
+    color: colors.textSecondary,
+    marginTop: 2,
+  },
+  proofValue: {
+    fontWeight: typography.weight.semibold,
+    color: colors.textPrimary,
+  },
+  verifyActionsRow: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    alignItems: "center",
+    marginTop: spacing.md,
+    paddingTop: spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: "rgba(133, 77, 14, 0.15)",
+  },
+  rejectBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    minHeight: touchTarget.minHeight,
+    paddingHorizontal: spacing.md,
+    borderRadius: radius.md,
+    backgroundColor: colors.badge.danger.bg,
+    borderWidth: 1,
+    borderColor: colors.badge.danger.border,
+    marginRight: spacing.sm,
+  },
+  rejectBtnText: {
+    fontSize: typography.size.xs,
+    fontWeight: typography.weight.bold,
+    color: colors.badge.danger.text,
+    marginLeft: 2,
+  },
+  approveBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    minHeight: touchTarget.minHeight,
+    paddingHorizontal: spacing.lg,
+    borderRadius: radius.md,
+    backgroundColor: colors.primary,
+  },
+  approveBtnText: {
+    fontSize: typography.size.xs,
+    fontWeight: typography.weight.bold,
+    color: colors.textInverse,
+    marginLeft: 4,
+  },
+  receiptBox: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: colors.badge.success.bg,
+    padding: spacing.sm,
+    borderRadius: radius.sm,
+    marginTop: spacing.xs,
+  },
+  receiptNoText: {
+    fontSize: typography.size.xs,
+    fontWeight: typography.weight.bold,
+    color: colors.badge.success.text,
+    marginLeft: spacing.xs,
+    fontVariant: ["tabular-nums"],
+  },
+  assignmentsList: {
+    marginBottom: spacing.md,
+  },
+  assignmentCard: {
+    padding: spacing.lg,
+    marginBottom: spacing.md,
+  },
+  assignHeaderRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: spacing.xs,
+  },
+  assignDueDate: {
+    fontSize: 11,
+    color: colors.textSecondary,
+    fontVariant: ["tabular-nums"],
+  },
+  assignTitle: {
+    fontSize: typography.size.base,
+    fontWeight: typography.weight.bold,
+    color: colors.textPrimary,
+    marginBottom: spacing.xs,
+  },
+  assignDesc: {
+    fontSize: typography.size.sm,
+    color: colors.textSecondary,
+    lineHeight: typography.lineHeight.sm,
+    marginBottom: spacing.sm,
+  },
+  assignFooter: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingTop: spacing.xs,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+  },
+  assignAuthor: {
+    fontSize: 11,
+    color: colors.textMuted,
+    marginLeft: spacing.xs,
+  },
+  gradesList: {
+    marginBottom: spacing.md,
+  },
+  gradeCard: {
+    padding: spacing.md,
+    marginBottom: spacing.sm,
+  },
+  gradeHeaderRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  gradeSubjectCol: {
+    flex: 1,
+  },
+  gradeSubject: {
+    fontSize: typography.size.base,
+    fontWeight: typography.weight.bold,
+    color: colors.textPrimary,
+  },
+  gradeMeta: {
+    fontSize: typography.size.xs,
+    color: colors.textSecondary,
+    marginTop: 2,
+    fontVariant: ["tabular-nums"],
+  },
+  gradeScoreBadge: {
+    alignItems: "center",
+    justifyContent: "center",
+    width: 52,
+    height: 52,
+    borderRadius: radius.md,
+    backgroundColor: colors.primarySoft,
+    borderWidth: 1,
+    borderColor: "#BBF7D0",
+  },
+  gradeScoreNumber: {
+    fontSize: typography.size.xl,
+    fontWeight: typography.weight.heavy,
+    color: colors.primary,
+    fontVariant: ["tabular-nums"],
+  },
+  gradeScoreLabel: {
+    fontSize: 9,
+    fontWeight: typography.weight.bold,
+    color: colors.primary,
+  },
+  gradeNotesBox: {
+    backgroundColor: "#F8FAFC",
+    padding: spacing.sm,
+    borderRadius: radius.sm,
+    borderWidth: 1,
+    borderColor: colors.border,
+    marginTop: spacing.sm,
+  },
+  gradeNotesLabel: {
+    fontSize: 10,
+    fontWeight: typography.weight.bold,
+    color: colors.textMuted,
+    marginBottom: 1,
+  },
+  gradeNotesText: {
+    fontSize: typography.size.xs,
+    color: colors.textSecondary,
+    fontStyle: "italic",
+  },
+  modalBody: {
+    paddingVertical: spacing.xs,
+  },
+  formErrorBox: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: colors.badge.danger.bg,
+    padding: spacing.sm,
+    borderRadius: radius.md,
+    marginBottom: spacing.md,
+  },
+  formErrorText: {
+    fontSize: typography.size.xs,
+    color: colors.badge.danger.text,
+    marginLeft: spacing.xs,
+    flex: 1,
+  },
+  formSectionLabel: {
+    fontSize: typography.size.sm,
+    fontWeight: typography.weight.semibold,
+    color: colors.textPrimary,
+    marginBottom: spacing.xs,
+  },
+  modalSubmitBtn: {
+    marginTop: spacing.md,
+    width: "100%",
+  },
+  inputDoubleRow: {
+    flexDirection: "row",
+  },
+  inputDoubleCol: {
+    flex: 1,
+    marginRight: spacing.sm,
+  },
+  receiptModalBody: {
+    alignItems: "center",
+    paddingVertical: spacing.md,
+  },
+  receiptIconCircle: {
+    width: 64,
+    height: 64,
+    borderRadius: radius.full,
+    backgroundColor: colors.primarySoft,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: spacing.md,
+  },
+  receiptModalTitle: {
+    fontSize: typography.size.lg,
+    fontWeight: typography.weight.bold,
+    color: colors.textPrimary,
+    textAlign: "center",
+  },
+  receiptModalSub: {
+    fontSize: typography.size.xs,
+    color: colors.textSecondary,
+    textAlign: "center",
+    marginTop: spacing.xs,
+    marginBottom: spacing.lg,
+  },
+  receiptDetailCard: {
+    width: "100%",
+    backgroundColor: "#F8FAFC",
+    padding: spacing.md,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    marginBottom: spacing.lg,
+  },
+  receiptLabel: {
+    fontSize: 11,
+    color: colors.textSecondary,
+    marginTop: spacing.xs,
+  },
+  receiptValue: {
+    fontSize: typography.size.sm,
+    fontWeight: typography.weight.bold,
+    color: colors.textPrimary,
+  },
+  receiptValueHighlight: {
+    fontSize: typography.size.base,
+    fontWeight: typography.weight.heavy,
+    color: colors.primary,
+    fontVariant: ["tabular-nums"],
+  },
+  receiptDivider: {
+    height: 1,
+    backgroundColor: colors.border,
+    marginVertical: spacing.sm,
+  },
+});
