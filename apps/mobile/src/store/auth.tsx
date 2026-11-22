@@ -6,7 +6,7 @@ import React, {
   useCallback,
   useMemo,
 } from "react";
-import type { User, Student } from "@neoschola/shared";
+import type { User, Student, Class } from "@neoschola/shared";
 import * as api from "../lib/api";
 
 const TOKEN_STORAGE_KEY = "neoschola_auth_token";
@@ -46,6 +46,7 @@ export interface AuthContextType {
   token: string | null;
   user: User | null;
   students: Student[];
+  classes: Class[];
   activeStudentId: string | null;
   activeStudent: Student | null;
   isLoading: boolean;
@@ -62,12 +63,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [students, setStudents] = useState<Student[]>([]);
+  const [classes, setClasses] = useState<Class[]>([]);
   const [activeStudentId, setActiveStudentIdState] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isReady, setIsReady] = useState<boolean>(false);
 
   // Helper untuk memuat data siswa & menyetel active student
-  const loadStudentsForUser = async (currentUser: User) => {
+  const loadStudentsForUser = async (currentUser: User, meClasses?: Class[]) => {
+    setClasses(meClasses ?? []);
     if (currentUser.role === "GUARDIAN") {
       try {
         const { students: fetchedStudents } = await api.getStudents();
@@ -105,11 +108,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (savedToken) {
         try {
           api.setAuthToken(savedToken);
-          const { user: currentUser } = await api.getMe();
+          const meRes = await api.getMe();
           if (isMounted) {
             setToken(savedToken);
-            setUser(currentUser);
-            await loadStudentsForUser(currentUser);
+            setUser(meRes.user);
+            await loadStudentsForUser(meRes.user, meRes.classes);
           }
         } catch (error) {
           // Token kedaluwarsa atau server menolak
@@ -120,6 +123,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setToken(null);
             setUser(null);
             setStudents([]);
+            setClasses([]);
             setActiveStudentIdState(null);
           }
         }
@@ -148,7 +152,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setToken(res.token);
       setUser(res.user);
 
-      await loadStudentsForUser(res.user);
+      if (res.user.role === "GUARDIAN") {
+        await loadStudentsForUser(res.user);
+      } else {
+        const meRes = await api.getMe().catch(() => null);
+        await loadStudentsForUser(res.user, meRes?.classes);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -164,6 +173,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setToken(null);
       setUser(null);
       setStudents([]);
+      setClasses([]);
       setActiveStudentIdState(null);
     } finally {
       setIsLoading(false);
@@ -173,9 +183,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const refreshSession = useCallback(async () => {
     if (!token) return;
     try {
-      const { user: currentUser } = await api.getMe();
-      setUser(currentUser);
-      await loadStudentsForUser(currentUser);
+      const meRes = await api.getMe();
+      setUser(meRes.user);
+      await loadStudentsForUser(meRes.user, meRes.classes);
     } catch {
       // Biarkan state yang ada jika refresh sementara gagal
     }
@@ -198,6 +208,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       token,
       user,
       students,
+      classes,
       activeStudentId,
       activeStudent,
       isLoading,
@@ -211,6 +222,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       token,
       user,
       students,
+      classes,
       activeStudentId,
       activeStudent,
       isLoading,

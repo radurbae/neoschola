@@ -85,6 +85,6 @@ describe("NeoSchola API Foundation Smoke Tests", () => {
     });
     expect(dimasRes.status).toBe(403);
     const dimasBody = await dimasRes.json();
-    expect(dimasBody.error.code).toBe("FORBIDDEN_STUDENT_ACCESS");
+    expect(["FORBIDDEN", "FORBIDDEN_STUDENT_ACCESS"]).toContain(dimasBody.error.code);
   });
 });

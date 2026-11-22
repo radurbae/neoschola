@@ -2,9 +2,11 @@ import type {
   LoginRequest,
   LoginResponse,
   MeResponse,
+  Class,
   Student,
   StudentDashboardResponse,
   Attendance,
+  AttendanceStatus,
   BulkAttendanceRequest,
   LeaveRequest,
   CreateLeaveRequest,
@@ -154,8 +156,24 @@ export async function login(credentials: LoginRequest): Promise<LoginResponse> {
   });
 }
 
-export async function getMe(): Promise<MeResponse> {
-  return request<MeResponse>("/api/auth/me");
+export interface ClassAttendanceItem {
+  student_id: string;
+  nis: string;
+  student_name: string;
+  attendance_id: string | null;
+  status: AttendanceStatus | null;
+  check_in_time: string | null;
+  check_out_time: string | null;
+  notes: string | null;
+}
+
+export interface ExtendedMeResponse extends MeResponse {
+  students?: Student[];
+  classes?: Class[];
+}
+
+export async function getMe(): Promise<ExtendedMeResponse> {
+  return request<ExtendedMeResponse>("/api/auth/me");
 }
 
 // ============================================================================
@@ -188,8 +206,8 @@ export async function getAttendance(params?: {
 export async function getClassAttendance(params: {
   class_id: string;
   date?: string;
-}): Promise<{ class_id: string; date: string; items: Attendance[] }> {
-  return request<{ class_id: string; date: string; items: Attendance[] }>(
+}): Promise<{ class_id: string; date: string; items: ClassAttendanceItem[] }> {
+  return request<{ class_id: string; date: string; items: ClassAttendanceItem[] }>(
     "/api/attendance/class",
     { params }
   );
@@ -289,6 +307,7 @@ export async function createGrade(
 
 export async function getAnnouncements(params?: {
   class_id?: string;
+  category?: string;
 }): Promise<{ announcements: Announcement[] }> {
   return request<{ announcements: Announcement[] }>("/api/announcements", {
     params,
@@ -319,8 +338,11 @@ export async function ackAnnouncement(
 // 7. Pesan Langsung (Threads & Messages)
 // ============================================================================
 
-export async function getThreads(): Promise<{ threads: MessageThread[] }> {
-  return request<{ threads: MessageThread[] }>("/api/threads");
+export async function getThreads(): Promise<{
+  threads: MessageThread[];
+  service_hours?: string;
+}> {
+  return request<{ threads: MessageThread[]; service_hours?: string }>("/api/threads");
 }
 
 export async function createThread(
@@ -334,8 +356,10 @@ export async function createThread(
 
 export async function getThreadMessages(
   id: string
-): Promise<{ messages: Message[] }> {
-  return request<{ messages: Message[] }>(`/api/threads/${id}/messages`);
+): Promise<{ thread?: MessageThread; messages: Message[]; service_hours?: string }> {
+  return request<{ thread?: MessageThread; messages: Message[]; service_hours?: string }>(
+    `/api/threads/${id}/messages`
+  );
 }
 
 export async function sendThreadMessage(
@@ -360,6 +384,7 @@ export async function markThreadRead(id: string): Promise<{ success: boolean }> 
 
 export async function getInvoices(params?: {
   student_id?: string;
+  status?: string;
 }): Promise<{ invoices: Invoice[] }> {
   return request<{ invoices: Invoice[] }>("/api/invoices", { params });
 }
