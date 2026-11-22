@@ -1,0 +1,15 @@
+{
+  "name": "neoschola",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "packages/shared",
+    "apps/api",
+    "apps/mobile"
+  ],
+  "scripts": {
+    "typecheck": "npm run --workspaces --if-present typecheck",
+    "test:api": "npm run --workspace=apps/api test",
+    "build:mobile:web": "npm run --workspace=apps/mobile build:web"
+  }
+}

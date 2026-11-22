@@ -1,0 +1,18 @@
+{
+  "expo": {
+    "name": "NeoSchola",
+    "slug": "neoschola",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "neoschola",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": false,
+    "web": {
+      "bundler": "metro",
+      "output": "single"
+    },
+    "plugins": [
+      "expo-router"
+    ]
+  }
+}
