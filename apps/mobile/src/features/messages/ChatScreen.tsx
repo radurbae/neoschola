@@ -22,6 +22,7 @@ import {
 import { useAuth } from "../../store/auth";
 import * as api from "../../lib/api";
 import {
+  bento,
   shadcn,
   spacing,
   radius,
@@ -110,7 +111,7 @@ export function ChatScreen() {
 
   return (
     <Screen scroll={false} headerShown={false}>
-      {/* Header Percakapan Hairline shadcn.background dengan tombol kembali 44x44pt + Avatar sm + subjek */}
+      {/* Header Percakapan Putih Bersih Hairline Bawah dengan Tombol Kembali 44x44 + Avatar sm + Subjek */}
       <View style={styles.headerBar}>
         <TouchableOpacity
           style={styles.backButton}
@@ -244,7 +245,7 @@ export function ChatScreen() {
                           <Ionicons
                             name="checkmark-done"
                             size={14}
-                            color={shadcn.primaryForeground}
+                            color={bento.iceBlueCta}
                             style={styles.checkIcon}
                           />
                         )}
@@ -257,7 +258,7 @@ export function ChatScreen() {
           </ScrollView>
         )}
 
-        {/* Composer Bawah shadcn.background dengan border top shadcn.border, Input, dan Button default */}
+        {/* Composer Bawah Rounded Pill Rapi dengan Input + Tombol Kirim >= 44pt */}
         <View style={styles.composerBar}>
           <View style={styles.composerInputCol}>
             <Input
@@ -305,6 +306,8 @@ const styles = StyleSheet.create({
   backButton: {
     width: touchTarget.minWidth,
     height: touchTarget.minHeight,
+    minWidth: touchTarget.minWidth,
+    minHeight: touchTarget.minHeight,
     alignItems: "center",
     justifyContent: "center",
     borderRadius: radius.md,
@@ -329,7 +332,7 @@ const styles = StyleSheet.create({
   },
   chatContainer: {
     flex: 1,
-    backgroundColor: shadcn.canvas,
+    backgroundColor: bento.surface,
   },
   messagesScroll: {
     flex: 1,
@@ -367,22 +370,20 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm + 2,
     paddingHorizontal: spacing.md,
   },
-  // Pesan Sendiri: shadcn.primary teks shadcn.primaryForeground
+  // Geometri Bubble Pesan Sendiri: bento.obsidian dengan teks bento.obsidianForeground
   bubbleCardMy: {
-    backgroundColor: shadcn.primary,
-    borderBottomRightRadius: 2,
+    backgroundColor: bento.obsidian,
+    borderBottomRightRadius: radius.sm,
   },
-  // Pesan Lawan Bicara: shadcn.secondary teks shadcn.foreground border shadcn.border
+  // Geometri Bubble Lawan Bicara: bento.iceBlue dengan teks shadcn.foreground
   bubbleCardPartner: {
-    backgroundColor: shadcn.secondary,
-    borderBottomLeftRadius: 2,
-    borderWidth: 1,
-    borderColor: shadcn.border,
+    backgroundColor: bento.iceBlue,
+    borderBottomLeftRadius: radius.sm,
   },
   senderNameText: {
     fontSize: typography.size.xs,
     fontWeight: typography.weight.semibold,
-    color: shadcn.foreground,
+    color: bento.iceBlueText,
     marginBottom: 2,
   },
   messageText: {
@@ -390,7 +391,7 @@ const styles = StyleSheet.create({
     lineHeight: typography.lineHeight.sm + 2,
   },
   messageTextMy: {
-    color: shadcn.primaryForeground,
+    color: bento.obsidianForeground,
   },
   messageTextPartner: {
     color: shadcn.foreground,
@@ -407,18 +408,16 @@ const styles = StyleSheet.create({
     fontVariant: ["tabular-nums"],
   },
   messageTimeTextMy: {
-    color: shadcn.primaryForeground,
-    opacity: 0.75,
+    color: bento.obsidianMuted,
   },
   messageTimeTextPartner: {
-    color: shadcn.mutedForeground,
+    color: bento.pastelMutedText,
   },
   checkIcon: {
     marginLeft: 2,
-    opacity: 0.85,
   },
 
-  // Composer Bawah
+  // Composer Bawah Rounded Pill Rapi
   composerBar: {
     flexDirection: "row",
     alignItems: "center",
@@ -438,9 +437,13 @@ const styles = StyleSheet.create({
   inputField: {
     minHeight: touchTarget.minHeight,
     paddingVertical: 8,
+    borderRadius: radius.full,
   },
   sendButton: {
     width: touchTarget.minWidth,
     height: touchTarget.minHeight,
+    minWidth: touchTarget.minWidth,
+    minHeight: touchTarget.minHeight,
+    borderRadius: radius.full,
   },
 });

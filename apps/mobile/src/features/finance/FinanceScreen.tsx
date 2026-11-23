@@ -5,12 +5,16 @@ import {
   StyleSheet,
   RefreshControl,
   ScrollView,
+  useWindowDimensions,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { formatTanggalId, formatRupiah } from "@neoschola/shared";
 import type { Invoice, InvoiceStatus } from "@neoschola/shared";
 import {
   Screen,
+  TopUtilityBar,
+  PastelStatCard,
+  DarkIconRow,
   Card,
   Badge,
   Chip,
@@ -27,6 +31,8 @@ import type { BadgeVariant } from "../../components/ui";
 import { useAuth } from "../../store/auth";
 import * as api from "../../lib/api";
 import {
+  bento,
+  breakpoints,
   shadcn,
   spacing,
   radius,
@@ -43,6 +49,9 @@ const PAYMENT_METHODS = [
 ];
 
 export function FinanceScreen() {
+  const { width } = useWindowDimensions();
+  const isTablet = width >= breakpoints.tablet;
+
   const { students, activeStudentId, activeStudent, setActiveStudentId } =
     useAuth();
 
@@ -178,7 +187,6 @@ export function FinanceScreen() {
   const handleOpenPaymentModal = (invoice: Invoice) => {
     setPaymentModalInvoice(invoice);
     setSelectedPaymentMethod("TRANSFER_BANK");
-    // Generate nomor mock ref untuk pengujian sandbox
     const randomRef = `REF-${Math.floor(100000 + Math.random() * 900000)}`;
     setPaymentRef(randomRef);
     setProofNote(`Pembayaran ${invoice.title} a.n. ${activeStudent?.full_name || "Siswa"}`);
@@ -208,7 +216,6 @@ export function FinanceScreen() {
       });
 
       setPaymentModalInvoice(null);
-      // Refresh daftar tagihan
       fetchInvoices(false);
     } catch (err: any) {
       setPaymentError(
@@ -220,224 +227,254 @@ export function FinanceScreen() {
   };
 
   return (
-    <Screen
-      scroll={true}
-      headerShown={true}
-      title="Keuangan & SPP"
-      subtitle="Pengelolaan tagihan dan kuitansi siswa"
-    >
-      {/* Pemilih Anak Asuh */}
-      {students.length > 0 && (
-        <ChildSwitcher
-          students={students}
-          activeStudentId={activeStudentId}
-          onSelectStudent={setActiveStudentId}
-          style={styles.childSwitcherStyle}
-        />
-      )}
+    <Screen scroll={false} headerShown={false}>
+      {/* TopUtilityBar ("Keuangan") */}
+      <TopUtilityBar
+        title="Keuangan"
+        subtitle="Pengelolaan tagihan dan kuitansi siswa"
+      />
 
-      {/* 1 Card Hero Ringkasan Total Tagihan Belum Lunas (Minimalis & Elegan) */}
-      <Card style={styles.heroCard}>
-        <View style={styles.heroTopRow}>
-          <View style={styles.heroTextCol}>
-            <Text style={styles.heroLabel}>Total Tagihan Belum Lunas</Text>
-            <Text style={styles.heroStudentName}>
-              {activeStudent?.full_name || "Semua Siswa"}
+      <ScrollView
+        style={styles.screenScroll}
+        contentContainerStyle={styles.screenScrollContent}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={() => fetchInvoices(true)}
+            tintColor={shadcn.primary}
+            colors={[shadcn.primary]}
+          />
+        }
+      >
+        {/* Pemilih Anak Asuh */}
+        {students.length > 0 && (
+          <ChildSwitcher
+            students={students}
+            activeStudentId={activeStudentId}
+            onSelectStudent={setActiveStudentId}
+            style={styles.childSwitcherStyle}
+          />
+        )}
+
+        {/* Bento Row Atas (Tablet: 2 kolom sejajar, Mobile: bertumpuk) */}
+        <View style={[styles.bentoRow, isTablet && styles.bentoRowTablet]}>
+          {/* Kartu Hero Soft Ice Blue: Total Tagihan Aktif */}
+          <View style={[styles.heroCard, isTablet && styles.heroCardTablet]}>
+            <View style={styles.heroTopRow}>
+              <View style={styles.heroTextCol}>
+                <Text style={styles.heroEyebrow}>Total Tagihan Aktif</Text>
+                <Text style={styles.heroStudentName}>
+                  {activeStudent?.full_name || "Semua Siswa"}
+                </Text>
+              </View>
+              <Badge
+                label={
+                  filterCounts.BELUM_LUNAS > 0
+                    ? `${filterCounts.BELUM_LUNAS} Tagihan`
+                    : "Semua Lunas"
+                }
+                variant={filterCounts.BELUM_LUNAS > 0 ? "warning" : "success"}
+              />
+            </View>
+
+            <Text style={styles.heroAmount}>
+              {formatRupiah(totalUnpaidAmount)}
             </Text>
+
+            <Separator style={styles.heroSeparator} />
+
+            <View style={styles.heroFooterRow}>
+              <Ionicons
+                name={
+                  filterCounts.BELUM_LUNAS > 0
+                    ? "alert-circle-outline"
+                    : "checkmark-circle-outline"
+                }
+                size={16}
+                color={
+                  filterCounts.BELUM_LUNAS > 0
+                    ? bento.butterText
+                    : bento.mintText
+                }
+              />
+              <Text style={styles.heroFooterText}>
+                {filterCounts.BELUM_LUNAS > 0
+                  ? `${filterCounts.BELUM_LUNAS} tagihan memerlukan penyelesaian`
+                  : "Seluruh kewajiban pembayaran telah lunas"}
+              </Text>
+            </View>
           </View>
-          <Badge
-            label={
-              filterCounts.BELUM_LUNAS > 0
-                ? `${filterCounts.BELUM_LUNAS} Tagihan`
-                : "Semua Lunas"
-            }
-            variant={filterCounts.BELUM_LUNAS > 0 ? "outline" : "secondary"}
-          />
+
+          {/* 2 PastelStatCard: Mint Lunas & Butter Menunggu Verifikasi */}
+          <View style={[styles.statsGroup, isTablet && styles.statsGroupTablet]}>
+            <PastelStatCard
+              tone="mint"
+              value={String(filterCounts.LUNAS)}
+              label="Tagihan Lunas"
+              trendText="Terverifikasi"
+              icon="checkmark-circle-outline"
+              style={styles.statCardItem}
+            />
+            <PastelStatCard
+              tone="butter"
+              value={String(filterCounts.MENUNGGU_VERIFIKASI)}
+              label="Menunggu Verifikasi"
+              trendText="Dalam Proses"
+              icon="time-outline"
+              style={styles.statCardItem}
+            />
+          </View>
         </View>
 
-        <Text style={styles.heroAmount}>
-          {formatRupiah(totalUnpaidAmount)}
-        </Text>
-
-        <Separator style={styles.heroSeparator} />
-
-        <View style={styles.heroFooterRow}>
-          <Ionicons
-            name={
-              filterCounts.BELUM_LUNAS > 0
-                ? "alert-circle-outline"
-                : "checkmark-circle-outline"
-            }
-            size={16}
-            color={
-              filterCounts.BELUM_LUNAS > 0
-                ? shadcn.mutedForeground
-                : shadcn.status.success.text
-            }
-          />
-          <Text style={styles.heroFooterText}>
-            {filterCounts.BELUM_LUNAS > 0
-              ? `${filterCounts.BELUM_LUNAS} tagihan memerlukan pelunasan`
-              : "Seluruh kewajiban pembayaran telah lunas"}
-          </Text>
+        {/* Filter Status Chip Horizontal (Aman di 360px) */}
+        <View style={styles.filterSection}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.filterScroll}
+          >
+            <Chip
+              label="Semua"
+              count={filterCounts.SEMUA}
+              selected={selectedFilter === "SEMUA"}
+              onPress={() => setSelectedFilter("SEMUA")}
+              accessibilityLabel={`Semua tagihan, ${filterCounts.SEMUA} tagihan`}
+            />
+            <Chip
+              label="Belum Lunas"
+              count={filterCounts.BELUM_LUNAS}
+              selected={selectedFilter === "BELUM_LUNAS"}
+              onPress={() => setSelectedFilter("BELUM_LUNAS")}
+              accessibilityLabel={`Tagihan belum lunas, ${filterCounts.BELUM_LUNAS} tagihan`}
+            />
+            <Chip
+              label="Menunggu Verifikasi"
+              count={filterCounts.MENUNGGU_VERIFIKASI}
+              selected={selectedFilter === "MENUNGGU_VERIFIKASI"}
+              onPress={() => setSelectedFilter("MENUNGGU_VERIFIKASI")}
+              accessibilityLabel={`Tagihan menunggu verifikasi, ${filterCounts.MENUNGGU_VERIFIKASI} tagihan`}
+            />
+            <Chip
+              label="Lunas"
+              count={filterCounts.LUNAS}
+              selected={selectedFilter === "LUNAS"}
+              onPress={() => setSelectedFilter("LUNAS")}
+              accessibilityLabel={`Tagihan lunas, ${filterCounts.LUNAS} tagihan`}
+            />
+          </ScrollView>
         </View>
-      </Card>
 
-      {/* Filter Status Chip Horizontal */}
-      <View style={styles.filterSection}>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.filterScroll}
-        >
-          <Chip
-            label="Semua"
-            count={filterCounts.SEMUA}
-            selected={selectedFilter === "SEMUA"}
-            onPress={() => setSelectedFilter("SEMUA")}
+        {/* Konten Daftar Tagihan */}
+        {loading ? (
+          <StateView type="loading" message="Memuat daftar tagihan..." />
+        ) : errorMessage ? (
+          <StateView
+            type="error"
+            title="Gagal Memuat Tagihan"
+            message={errorMessage}
+            actionLabel="Muat Ulang"
+            onAction={() => fetchInvoices(false)}
           />
-          <Chip
-            label="Belum Lunas"
-            count={filterCounts.BELUM_LUNAS}
-            selected={selectedFilter === "BELUM_LUNAS"}
-            onPress={() => setSelectedFilter("BELUM_LUNAS")}
+        ) : filteredInvoices.length === 0 ? (
+          <StateView
+            type="empty"
+            title="Tidak Ada Tagihan"
+            message="Tidak ditemukan tagihan untuk filter yang dipilih."
+            actionLabel="Segarkan Data"
+            onAction={() => fetchInvoices(false)}
           />
-          <Chip
-            label="Menunggu Verifikasi"
-            count={filterCounts.MENUNGGU_VERIFIKASI}
-            selected={selectedFilter === "MENUNGGU_VERIFIKASI"}
-            onPress={() => setSelectedFilter("MENUNGGU_VERIFIKASI")}
-          />
-          <Chip
-            label="Lunas"
-            count={filterCounts.LUNAS}
-            selected={selectedFilter === "LUNAS"}
-            onPress={() => setSelectedFilter("LUNAS")}
-          />
-        </ScrollView>
-      </View>
+        ) : (
+          <View style={styles.invoiceList}>
+            {filteredInvoices.map((invoice) => {
+              const statusBadge = getStatusBadge(invoice.status);
+              const isPayable =
+                invoice.status === "UNPAID" ||
+                invoice.status === "OVERDUE" ||
+                invoice.status === "REJECTED";
+              const isPaid = invoice.status === "PAID";
+              const isWaiting = invoice.status === "WAITING_VERIFICATION";
 
-      {/* Konten Daftar Tagihan */}
-      {loading ? (
-        <StateView type="loading" message="Memuat daftar tagihan..." />
-      ) : errorMessage ? (
-        <StateView
-          type="error"
-          title="Gagal Memuat Tagihan"
-          message={errorMessage}
-          actionLabel="Muat Ulang"
-          onAction={() => fetchInvoices(false)}
-        />
-      ) : filteredInvoices.length === 0 ? (
-        <StateView
-          type="empty"
-          title="Tidak Ada Tagihan"
-          message="Tidak ditemukan tagihan untuk filter yang dipilih."
-          actionLabel="Segarkan Data"
-          onAction={() => fetchInvoices(false)}
-        />
-      ) : (
-        <View style={styles.invoiceList}>
-          {filteredInvoices.map((invoice) => {
-            const statusBadge = getStatusBadge(invoice.status);
-            const isPayable =
-              invoice.status === "UNPAID" ||
-              invoice.status === "OVERDUE" ||
-              invoice.status === "REJECTED";
-            const isPaid = invoice.status === "PAID";
-
-            return (
-              <Card key={invoice.id} style={styles.invoiceCard}>
-                {/* Header Kartu: Judul & Badge Status */}
-                <View style={styles.invoiceHeaderRow}>
-                  <View style={styles.invoiceTitleCol}>
-                    <Text style={styles.invoiceTitle}>{invoice.title}</Text>
-                    {Boolean(invoice.student_name) && (
-                      <Text style={styles.invoiceStudentClass}>
-                        {invoice.student_name} - {invoice.class_name || "Siswa"}
-                      </Text>
-                    )}
-                  </View>
-                  <Badge
-                    label={statusBadge.label}
-                    variant={statusBadge.variant}
+              return (
+                <Card key={invoice.id} style={styles.invoiceCard}>
+                  {/* Item Tagihan dengan DarkIconRow */}
+                  <DarkIconRow
+                    icon={isPaid ? "receipt-outline" : "card-outline"}
+                    title={invoice.title}
+                    subtitle={`${invoice.student_name || activeStudent?.full_name || "Siswa"} • Jatuh Tempo: ${formatTanggalId(invoice.due_date, { includeDay: true })}`}
+                    rightPrimary={formatRupiah(invoice.amount)}
+                    rightSecondary={statusBadge.label}
+                    rightSecondaryTone={
+                      isPaid
+                        ? "success"
+                        : isWaiting
+                        ? "warning"
+                        : "danger"
+                    }
                   />
-                </View>
 
-                {/* Deskripsi Tagihan */}
-                {Boolean(invoice.description) && (
-                  <Text style={styles.invoiceDescription}>
-                    {invoice.description}
-                  </Text>
-                )}
-
-                {/* Info Nominal & Jatuh Tempo */}
-                <View style={styles.invoiceDetailBox}>
-                  <View style={styles.detailCol}>
-                    <Text style={styles.detailLabel}>Nominal</Text>
-                    <Text style={styles.detailAmount}>
-                      {formatRupiah(invoice.amount)}
+                  {/* Deskripsi Tagihan */}
+                  {Boolean(invoice.description) && (
+                    <Text style={styles.invoiceDescription}>
+                      {invoice.description}
                     </Text>
-                  </View>
-                  <View style={styles.detailColRight}>
-                    <Text style={styles.detailLabel}>Jatuh Tempo</Text>
-                    <Text style={styles.detailDate}>
-                      {formatTanggalId(invoice.due_date, { includeDay: true })}
-                    </Text>
-                  </View>
-                </View>
-
-                <Separator style={styles.cardSeparator} />
-
-                {/* Tombol Aksi */}
-                <View style={styles.actionRow}>
-                  {isPayable && (
-                    <Button
-                      title="Bayar / Konfirmasi"
-                      variant="default"
-                      onPress={() => handleOpenPaymentModal(invoice)}
-                      leftIcon={
-                        <Ionicons
-                          name="card-outline"
-                          size={18}
-                          color={shadcn.primaryForeground}
-                        />
-                      }
-                      accessibilityLabel={`Bayar tagihan ${invoice.title} sejumlah ${formatRupiah(
-                        invoice.amount
-                      )}`}
-                    />
                   )}
 
-                  {isPaid && (
-                    <Button
-                      title="Lihat Kuitansi"
-                      variant="outline"
-                      onPress={() => setReceiptModalInvoice(invoice)}
-                      leftIcon={
-                        <Ionicons
-                          name="receipt-outline"
-                          size={18}
-                          color={shadcn.foreground}
-                        />
-                      }
-                      accessibilityLabel={`Buka kuitansi resmi untuk ${invoice.title}`}
-                    />
-                  )}
+                  {/* Tombol Aksi Dipisah Separator */}
+                  {(isPayable || isPaid || isWaiting) && (
+                    <>
+                      <Separator style={styles.cardSeparator} />
+                      <View style={styles.actionRow}>
+                        {isPayable && (
+                          <Button
+                            title="Bayar / Konfirmasi"
+                            variant="default"
+                            onPress={() => handleOpenPaymentModal(invoice)}
+                            leftIcon={
+                              <Ionicons
+                                name="card-outline"
+                                size={18}
+                                color={shadcn.primaryForeground}
+                              />
+                            }
+                            accessibilityLabel={`Bayar tagihan ${invoice.title} sejumlah ${formatRupiah(
+                              invoice.amount
+                            )}`}
+                          />
+                        )}
 
-                  {invoice.status === "WAITING_VERIFICATION" && (
-                    <Alert
-                      variant="warning"
-                      title="Menunggu Verifikasi"
-                      description="Bukti pembayaran telah dikirim dan sedang diverifikasi oleh staf tata usaha."
-                    />
+                        {isPaid && (
+                          <Button
+                            title="Lihat Kuitansi"
+                            variant="outline"
+                            onPress={() => setReceiptModalInvoice(invoice)}
+                            leftIcon={
+                              <Ionicons
+                                name="receipt-outline"
+                                size={18}
+                                color={shadcn.foreground}
+                              />
+                            }
+                            accessibilityLabel={`Buka kuitansi resmi untuk ${invoice.title}`}
+                          />
+                        )}
+
+                        {isWaiting && (
+                          <Alert
+                            variant="warning"
+                            title="Menunggu Verifikasi"
+                            description="Bukti pembayaran telah dikirim dan sedang diverifikasi oleh staf tata usaha."
+                          />
+                        )}
+                      </View>
+                    </>
                   )}
-                </View>
-              </Card>
-            );
-          })}
-        </View>
-      )}
+                </Card>
+              );
+            })}
+          </View>
+        )}
+      </ScrollView>
 
       {/* Sheet Konfirmasi Pembayaran Sandbox */}
       <Sheet
@@ -563,7 +600,7 @@ export function FinanceScreen() {
         )}
       </Sheet>
 
-      {/* Sheet Kuitansi Digital Resmi Bergaya Dokumen/Struk Editorial */}
+      {/* Sheet Kuitansi Digital Resmi Bergaya Editorial Rapi */}
       <Sheet
         visible={Boolean(receiptModalInvoice)}
         onClose={() => setReceiptModalInvoice(null)}
@@ -588,7 +625,7 @@ export function FinanceScreen() {
 
             <Separator style={styles.receiptSeparator} />
 
-            {/* Rincian Kuitansi Bergaya Struk Dokumen */}
+            {/* Rincian Kuitansi Bergaya Struk Dokumen Editorial */}
             <View style={styles.receiptGrid}>
               <View style={styles.receiptRow}>
                 <Text style={styles.receiptFieldLabel}>Nama Siswa</Text>
@@ -690,17 +727,36 @@ export function FinanceScreen() {
 }
 
 const styles = StyleSheet.create({
+  screenScroll: {
+    flex: 1,
+    backgroundColor: bento.surface,
+  },
+  screenScrollContent: {
+    padding: spacing.lg,
+    paddingBottom: spacing.xxxl,
+  },
   childSwitcherStyle: {
     marginBottom: spacing.md,
   },
-  // Hero Card Ringkasan Total Tagihan: Minimalis & Elegan
+
+  // Bento Row Atas
+  bentoRow: {
+    marginBottom: spacing.lg,
+    gap: spacing.md,
+  },
+  bentoRowTablet: {
+    flexDirection: "row",
+    alignItems: "stretch",
+  },
+
+  // Hero Card Soft Ice Blue (radius 24pt, padding 20pt)
   heroCard: {
-    backgroundColor: shadcn.card,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: shadcn.border,
-    padding: spacing.lg,
-    marginBottom: spacing.md,
+    backgroundColor: bento.iceBlue,
+    borderRadius: radius.xxl,
+    padding: spacing.xl,
+  },
+  heroCardTablet: {
+    flex: 1.2,
   },
   heroTopRow: {
     flexDirection: "row",
@@ -711,9 +767,9 @@ const styles = StyleSheet.create({
   heroTextCol: {
     flex: 1,
   },
-  heroLabel: {
+  heroEyebrow: {
     fontSize: typography.size.xs,
-    color: shadcn.mutedForeground,
+    color: bento.pastelMutedText,
     fontWeight: typography.weight.medium,
   },
   heroStudentName: {
@@ -724,7 +780,7 @@ const styles = StyleSheet.create({
   },
   heroAmount: {
     fontSize: typography.size.xxxl,
-    fontWeight: typography.weight.semibold,
+    fontWeight: typography.weight.bold,
     color: shadcn.foreground,
     fontVariant: ["tabular-nums"],
     marginVertical: spacing.xs,
@@ -732,6 +788,7 @@ const styles = StyleSheet.create({
   },
   heroSeparator: {
     marginVertical: spacing.sm,
+    backgroundColor: bento.iceBlueBar,
   },
   heroFooterRow: {
     flexDirection: "row",
@@ -740,87 +797,55 @@ const styles = StyleSheet.create({
   },
   heroFooterText: {
     fontSize: typography.size.xs,
-    color: shadcn.mutedForeground,
+    color: bento.pastelMutedText,
   },
+
+  // Stats Group
+  statsGroup: {
+    gap: spacing.md,
+  },
+  statsGroupTablet: {
+    flex: 1,
+    justifyContent: "space-between",
+  },
+  statCardItem: {
+    flex: 1,
+  },
+
+  // Filter Kategori Chips
   filterSection: {
     marginBottom: spacing.md,
   },
   filterScroll: {
     flexDirection: "row",
+    gap: spacing.xs,
     paddingVertical: spacing.xs,
   },
+
+  // Daftar Tagihan
   invoiceList: {
-    paddingBottom: spacing.xxxl,
+    gap: spacing.md,
   },
   invoiceCard: {
-    padding: spacing.lg,
-    marginBottom: spacing.md,
-  },
-  invoiceHeaderRow: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    justifyContent: "space-between",
-    marginBottom: spacing.sm,
-  },
-  invoiceTitleCol: {
-    flex: 1,
-    marginRight: spacing.sm,
-  },
-  invoiceTitle: {
-    fontSize: typography.size.base,
-    fontWeight: typography.weight.semibold,
-    color: shadcn.foreground,
-    letterSpacing: typography.tracking.snug,
-  },
-  invoiceStudentClass: {
-    fontSize: typography.size.xs,
-    color: shadcn.mutedForeground,
-    marginTop: 2,
+    borderRadius: radius.xl,
+    padding: spacing.md,
+    borderWidth: 1,
+    borderColor: shadcn.border,
+    backgroundColor: shadcn.card,
   },
   invoiceDescription: {
     fontSize: typography.size.sm,
     color: shadcn.mutedForeground,
-    marginBottom: spacing.md,
+    marginTop: spacing.xs,
+    marginHorizontal: spacing.xs,
     lineHeight: typography.lineHeight.sm,
-  },
-  invoiceDetailBox: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    backgroundColor: shadcn.secondary,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: shadcn.border,
-    padding: spacing.md,
-    marginBottom: spacing.md,
-  },
-  detailCol: {
-    flex: 1,
-  },
-  detailColRight: {
-    alignItems: "flex-end",
-  },
-  detailLabel: {
-    fontSize: typography.size.xs,
-    color: shadcn.mutedForeground,
-    marginBottom: 2,
-  },
-  detailAmount: {
-    fontSize: typography.size.base,
-    fontWeight: typography.weight.semibold,
-    color: shadcn.foreground,
-    fontVariant: ["tabular-nums"],
-  },
-  detailDate: {
-    fontSize: typography.size.sm,
-    fontWeight: typography.weight.medium,
-    color: shadcn.foreground,
-    fontVariant: ["tabular-nums"],
   },
   cardSeparator: {
     marginVertical: spacing.sm,
   },
   actionRow: {
     marginTop: spacing.xs,
+    gap: spacing.xs,
   },
 
   // Sheet Pembayaran Styles
@@ -828,21 +853,19 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.xxl,
   },
   paymentSummaryCard: {
-    backgroundColor: shadcn.secondary,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: shadcn.border,
+    backgroundColor: bento.iceBlue,
+    borderRadius: radius.lg,
     padding: spacing.md,
     alignItems: "center",
   },
   paymentSummaryLabel: {
     fontSize: typography.size.xs,
-    color: shadcn.mutedForeground,
+    color: bento.pastelMutedText,
     fontWeight: typography.weight.medium,
   },
   paymentSummaryAmount: {
     fontSize: typography.size.xxl,
-    fontWeight: typography.weight.semibold,
+    fontWeight: typography.weight.bold,
     color: shadcn.foreground,
     fontVariant: ["tabular-nums"],
     marginVertical: 4,
@@ -850,7 +873,7 @@ const styles = StyleSheet.create({
   },
   paymentSummaryTitle: {
     fontSize: typography.size.sm,
-    color: shadcn.mutedForeground,
+    color: shadcn.foreground,
   },
   sheetSeparator: {
     marginVertical: spacing.md,

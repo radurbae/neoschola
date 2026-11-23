@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import {
   View,
   Text,
@@ -13,6 +13,8 @@ import { formatTanggalId } from "@neoschola/shared";
 import type { MessageThread } from "@neoschola/shared";
 import {
   Screen,
+  TopUtilityBar,
+  DarkActionCard,
   Card,
   Badge,
   Chip,
@@ -28,6 +30,7 @@ import {
 import { useAuth } from "../../store/auth";
 import * as api from "../../lib/api";
 import {
+  bento,
   shadcn,
   spacing,
   radius,
@@ -40,7 +43,7 @@ const DEFAULT_TEACHER_NAME = "Ibu Ani Wijayanti, S.Pd. (Wali Kelas)";
 
 export function ThreadsScreen() {
   const router = useRouter();
-  const { students } = useAuth();
+  const { user, students } = useAuth();
 
   const [threads, setThreads] = useState<MessageThread[]>([]);
   const [serviceHours, setServiceHours] = useState<string>(
@@ -70,7 +73,7 @@ export function ThreadsScreen() {
       const res = await api.getThreads();
       setThreads(res.threads || []);
       if (res.service_hours) {
-        // Bersihkan dash en/em menjadi hyphen baku
+        // Bersihkan tanda hubung dash en/em menjadi hyphen biasa
         setServiceHours(res.service_hours.replace(/[\u2013\u2014]/g, " - "));
       }
     } catch (err: any) {
@@ -87,7 +90,10 @@ export function ThreadsScreen() {
     fetchThreads();
   }, [fetchThreads]);
 
-  // Siapkan default student saat membuka modal
+  const totalUnreadCount = useMemo(() => {
+    return threads.reduce((acc, t) => acc + (t.unread_count || 0), 0);
+  }, [threads]);
+
   const handleOpenNewThreadModal = () => {
     if (students.length > 0 && !selectedStudentId) {
       setSelectedStudentId(students[0].id);
@@ -124,9 +130,7 @@ export function ThreadsScreen() {
       });
 
       setNewThreadModalVisible(false);
-      // Navigasi langsung ke ruang percakapan baru
       router.push(`/chat/${res.thread.id}`);
-      // Refresh daftar di belakang layar
       fetchThreads(false);
     } catch (err: any) {
       setFormError(
@@ -138,26 +142,30 @@ export function ThreadsScreen() {
   };
 
   return (
-    <Screen
-      scroll={false}
-      headerShown={true}
-      title="Pesan Guru"
-      subtitle="Komunikasi langsung wali murid & sekolah"
-      rightAction={
-        <Button
-          title="Pesan Baru"
-          variant="default"
-          size="sm"
-          onPress={handleOpenNewThreadModal}
-          leftIcon={
-            <Ionicons name="add" size={16} color={shadcn.primaryForeground} />
-          }
-          accessibilityLabel="Buka formulir pesan baru ke wali kelas"
-        />
-      }
-    >
-      {/* Jam Layanan Sekolah dalam Alert variant="default" (Monokrom Tenang) */}
-      <View style={styles.serviceAlertSection}>
+    <Screen scroll={false} headerShown={false}>
+      {/* TopUtilityBar ("Pesan", tombol notif/profil) */}
+      <TopUtilityBar
+        title="Pesan"
+        subtitle="Komunikasi langsung wali murid dan sekolah"
+        unreadCount={totalUnreadCount}
+        profileName={user?.name || "Wali Murid"}
+        onPressNotifications={() => {}}
+      />
+
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={() => fetchThreads(true)}
+            tintColor={shadcn.primary}
+            colors={[shadcn.primary]}
+          />
+        }
+      >
+        {/* Alert jam layanan bersih (pakai - bukan en-dash) */}
         <Alert
           variant="default"
           title="Jam Layanan Guru"
@@ -169,43 +177,39 @@ export function ThreadsScreen() {
               color={shadcn.foreground}
             />
           }
+          style={styles.serviceAlert}
         />
-      </View>
 
-      {/* Konten Daftar Percakapan */}
-      {loading ? (
-        <StateView type="loading" message="Memuat daftar percakapan..." />
-      ) : errorMessage ? (
-        <StateView
-          type="error"
-          title="Gagal Memuat Pesan"
-          message={errorMessage}
-          actionLabel="Muat Ulang"
-          onAction={() => fetchThreads(false)}
+        {/* DarkActionCard ringkas untuk mulai pesan baru */}
+        <DarkActionCard
+          eyebrow="Konsultasi Guru"
+          title="Mulai Pesan Baru"
+          description="Sampaikan pertanyaan atau konsultasi langsung kepada wali kelas mengenai perkembangan belajar anak."
+          ctaLabel="Tulis Pesan Baru"
+          onPress={handleOpenNewThreadModal}
+          style={styles.actionCard}
         />
-      ) : threads.length === 0 ? (
-        <StateView
-          type="empty"
-          title="Belum Ada Percakapan"
-          message="Anda belum memiliki pesan aktif dengan pihak sekolah. Mulai percakapan baru dengan menekan tombol Pesan Baru di atas."
-          actionLabel="Mulai Pesan Baru"
-          onAction={handleOpenNewThreadModal}
-        />
-      ) : (
-        <ScrollView
-          style={styles.threadsScrollView}
-          contentContainerStyle={styles.threadsScrollContent}
-          showsVerticalScrollIndicator={false}
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={() => fetchThreads(true)}
-              tintColor={shadcn.primary}
-              colors={[shadcn.primary]}
-            />
-          }
-        >
-          {/* Daftar Percakapan dalam 1 Card dipisah Separator */}
+
+        {/* Konten Daftar Percakapan */}
+        {loading ? (
+          <StateView type="loading" message="Memuat daftar percakapan..." />
+        ) : errorMessage ? (
+          <StateView
+            type="error"
+            title="Gagal Memuat Pesan"
+            message={errorMessage}
+            actionLabel="Muat Ulang"
+            onAction={() => fetchThreads(false)}
+          />
+        ) : threads.length === 0 ? (
+          <StateView
+            type="empty"
+            title="Belum Ada Percakapan"
+            message="Anda belum memiliki pesan aktif dengan pihak sekolah. Mulai percakapan baru dengan menekan tombol Tulis Pesan Baru di atas."
+            actionLabel="Mulai Pesan Baru"
+            onAction={handleOpenNewThreadModal}
+          />
+        ) : (
           <Card style={styles.threadsCard}>
             {threads.map((thread, index) => {
               const hasUnread = Boolean(thread.unread_count && thread.unread_count > 0);
@@ -254,7 +258,7 @@ export function ThreadsScreen() {
                         </Text>
                       </View>
 
-                      {/* Baris Bawah: Cuplikan Pesan & Counter Unread */}
+                      {/* Baris Bawah: Cuplikan Pesan & Counter Unread Pill Obsidian */}
                       <View style={styles.threadBottomRow}>
                         <Text
                           style={[
@@ -279,10 +283,10 @@ export function ThreadsScreen() {
               );
             })}
           </Card>
-        </ScrollView>
-      )}
+        )}
+      </ScrollView>
 
-      {/* Sheet Buat Pesan Baru */}
+      {/* Sheet Form Buat Pesan Baru */}
       <Sheet
         visible={newThreadModalVisible}
         onClose={() => setNewThreadModalVisible(false)}
@@ -303,7 +307,7 @@ export function ThreadsScreen() {
 
           <Separator style={styles.formSeparator} />
 
-          {/* Pemilihan Anak Asuh */}
+          {/* Pemilihan Anak Asuh via Chip */}
           {students.length > 0 && (
             <View style={styles.formGroup}>
               <Label required>Pilih Siswa Terkait</Label>
@@ -391,23 +395,24 @@ export function ThreadsScreen() {
 }
 
 const styles = StyleSheet.create({
-  serviceAlertSection: {
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.md,
-    backgroundColor: shadcn.canvas,
-  },
-  threadsScrollView: {
+  container: {
     flex: 1,
+    backgroundColor: bento.surface,
   },
-  threadsScrollContent: {
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.xs,
+  scrollContent: {
+    padding: spacing.lg,
     paddingBottom: spacing.xxxl,
   },
+  serviceAlert: {
+    marginBottom: spacing.md,
+  },
+  actionCard: {
+    marginBottom: spacing.lg,
+  },
   threadsCard: {
+    borderRadius: radius.xl,
     padding: 0,
     overflow: "hidden",
-    borderRadius: radius.lg,
     borderWidth: 1,
     borderColor: shadcn.border,
     backgroundColor: shadcn.card,
@@ -477,7 +482,7 @@ const styles = StyleSheet.create({
     fontWeight: typography.weight.medium,
   },
   unreadPill: {
-    backgroundColor: shadcn.primary,
+    backgroundColor: bento.obsidian,
     borderRadius: radius.full,
     minWidth: 22,
     height: 22,
@@ -486,7 +491,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
   },
   unreadPillText: {
-    color: shadcn.primaryForeground,
+    color: bento.obsidianForeground,
     fontSize: 11,
     fontWeight: typography.weight.bold,
     fontVariant: ["tabular-nums"],
@@ -506,6 +511,7 @@ const styles = StyleSheet.create({
     borderColor: shadcn.border,
     backgroundColor: shadcn.secondary,
     marginBottom: spacing.xs,
+    minHeight: touchTarget.minHeight,
   },
   recipientTextCol: {
     flex: 1,
@@ -525,6 +531,7 @@ const styles = StyleSheet.create({
   },
   studentChipsScroll: {
     flexDirection: "row",
+    gap: spacing.xs,
     paddingVertical: spacing.xs,
   },
   formSeparator: {
