@@ -303,6 +303,7 @@ export default function AcademicScreen() {
                 <ScrollView
                   horizontal
                   showsHorizontalScrollIndicator={false}
+                  style={styles.daySelectorScroll}
                   contentContainerStyle={styles.daySelectorRow}
                 >
                   {days.map((day) => (
@@ -482,9 +483,13 @@ const styles = StyleSheet.create({
   tabContentContainer: {
     gap: spacing.sm,
   },
+  daySelectorScroll: {
+    flexGrow: 0,
+  },
   daySelectorRow: {
     flexDirection: "row",
-    gap: spacing.xs,
+    alignItems: "center",
+    gap: spacing.sm,
     paddingVertical: spacing.xs,
   },
   listCard: {

@@ -48,6 +48,9 @@ export function StaffAnnouncementsScreen() {
   const router = useRouter();
   const { width } = useWindowDimensions();
   const isTablet = width >= breakpoints.tablet;
+  const responsiveHorizontalPadding = isTablet
+    ? layout.tabletPaddingX
+    : layout.mobilePaddingX;
   const { user, classes, unreadNotificationCount } = useAuth();
   const isAdmin = user?.role === Role.ADMIN;
 
@@ -253,45 +256,84 @@ export function StaffAnnouncementsScreen() {
         />
 
         {/* Filter Chip Kategori */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.filterScroll}
+        <View
+          style={[
+            styles.filterSection,
+            { marginHorizontal: -responsiveHorizontalPadding },
+          ]}
         >
-          <Chip
-            label="Semua"
-            selected={selectedCategory === "ALL"}
-            onPress={() => setSelectedCategory("ALL")}
-            count={announcements.length}
-            accessibilityLabel={`Semua pengumuman, ${announcements.length} item`}
-          />
-          <Chip
-            label="Sekolah"
-            selected={selectedCategory === AnnouncementCategory.SEKOLAH}
-            onPress={() => setSelectedCategory(AnnouncementCategory.SEKOLAH)}
-            accessibilityLabel="Filter pengumuman kategori sekolah"
-          />
-          <Chip
-            label="Kelas"
-            selected={selectedCategory === AnnouncementCategory.KELAS}
-            onPress={() => setSelectedCategory(AnnouncementCategory.KELAS)}
-            accessibilityLabel="Filter pengumuman kategori kelas"
-          />
-          <Chip
-            label="Kegiatan"
-            selected={selectedCategory === AnnouncementCategory.KEGIATAN}
-            onPress={() => setSelectedCategory(AnnouncementCategory.KEGIATAN)}
-            accessibilityLabel="Filter pengumuman kategori kegiatan"
-          />
-          {isAdmin && (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            scrollEventThrottle={16}
+            decelerationRate="normal"
+            bounces={true}
+            style={styles.filterScrollView}
+            contentContainerStyle={[
+              styles.filterScroll,
+              { paddingHorizontal: responsiveHorizontalPadding },
+            ]}
+          >
             <Chip
-              label="Darurat"
-              selected={selectedCategory === AnnouncementCategory.DARURAT}
-              onPress={() => setSelectedCategory(AnnouncementCategory.DARURAT)}
-              accessibilityLabel="Filter pengumuman kategori darurat"
+              label="Semua"
+              selected={selectedCategory === "ALL"}
+              onPress={() => setSelectedCategory("ALL")}
+              count={announcements.length}
+              style={styles.filterChip}
+              accessibilityLabel={`Semua pengumuman, ${announcements.length} item`}
             />
-          )}
-        </ScrollView>
+            <Chip
+              label="Sekolah"
+              selected={selectedCategory === AnnouncementCategory.SEKOLAH}
+              onPress={() => setSelectedCategory(AnnouncementCategory.SEKOLAH)}
+              count={
+                announcements.filter(
+                  (a) => a.category === AnnouncementCategory.SEKOLAH
+                ).length
+              }
+              style={styles.filterChip}
+              accessibilityLabel="Filter pengumuman kategori sekolah"
+            />
+            <Chip
+              label="Kelas"
+              selected={selectedCategory === AnnouncementCategory.KELAS}
+              onPress={() => setSelectedCategory(AnnouncementCategory.KELAS)}
+              count={
+                announcements.filter(
+                  (a) => a.category === AnnouncementCategory.KELAS
+                ).length
+              }
+              style={styles.filterChip}
+              accessibilityLabel="Filter pengumuman kategori kelas"
+            />
+            <Chip
+              label="Kegiatan"
+              selected={selectedCategory === AnnouncementCategory.KEGIATAN}
+              onPress={() => setSelectedCategory(AnnouncementCategory.KEGIATAN)}
+              count={
+                announcements.filter(
+                  (a) => a.category === AnnouncementCategory.KEGIATAN
+                ).length
+              }
+              style={styles.filterChip}
+              accessibilityLabel="Filter pengumuman kategori kegiatan"
+            />
+            {isAdmin && (
+              <Chip
+                label="Darurat"
+                selected={selectedCategory === AnnouncementCategory.DARURAT}
+                onPress={() => setSelectedCategory(AnnouncementCategory.DARURAT)}
+                count={
+                  announcements.filter(
+                    (a) => a.category === AnnouncementCategory.DARURAT
+                  ).length
+                }
+                style={styles.filterChip}
+                accessibilityLabel="Filter pengumuman kategori darurat"
+              />
+            )}
+          </ScrollView>
+        </View>
 
         {loading && !refreshing ? (
           <StateView type="loading" message="Memuat daftar pengumuman..." />
@@ -434,6 +476,7 @@ export function StaffAnnouncementsScreen() {
                     accessibilityLabel={`Pilih kategori ${cat}`}
                   >
                     <Text
+                      numberOfLines={1}
                       style={[
                         styles.choiceChipText,
                         isSelected ? styles.choiceChipTextSelected : styles.choiceChipTextUnselected,
@@ -453,6 +496,7 @@ export function StaffAnnouncementsScreen() {
                 <ScrollView
                   horizontal
                   showsHorizontalScrollIndicator={false}
+                  style={styles.filterScrollView}
                   contentContainerStyle={styles.classChipsScroll}
                 >
                   {availableClasses.map((cls) => {
@@ -470,6 +514,7 @@ export function StaffAnnouncementsScreen() {
                         accessibilityLabel={`Target rombel ${cls.name}`}
                       >
                         <Text
+                          numberOfLines={1}
                           style={[
                             styles.choiceChipText,
                             isSelected
@@ -527,11 +572,22 @@ const styles = StyleSheet.create({
     flexGrow: 1,
   },
   actionCardMargin: {
-    marginBottom: spacing.md,
+    marginBottom: spacing.xs,
+  },
+  filterSection: {
+    width: "100%",
+  },
+  filterScrollView: {
+    flexGrow: 0,
   },
   filterScroll: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
     paddingVertical: spacing.xs,
-    marginBottom: spacing.md,
+  },
+  filterChip: {
+    minWidth: 108,
   },
   announcementsContainer: {
     backgroundColor: shadcn.card,
@@ -601,17 +657,18 @@ const styles = StyleSheet.create({
   optionsWrap: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: spacing.xs,
+    gap: spacing.sm,
     marginBottom: spacing.xs,
   },
   choiceChip: {
+    height: touchTarget.minHeight,
     minHeight: touchTarget.minHeight,
-    paddingHorizontal: spacing.md,
-    borderRadius: radius.md,
+    minWidth: 96,
+    paddingHorizontal: 14,
+    borderRadius: radius.full,
     borderWidth: 1,
     alignItems: "center",
     justifyContent: "center",
-    marginRight: spacing.xs,
   },
   choiceChipSelected: {
     backgroundColor: shadcn.primary,
@@ -638,6 +695,9 @@ const styles = StyleSheet.create({
     marginTop: spacing.xs,
   },
   classChipsScroll: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
     paddingVertical: spacing.xs,
   },
   switchRow: {

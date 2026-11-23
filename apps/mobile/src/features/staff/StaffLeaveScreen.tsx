@@ -47,6 +47,9 @@ export function StaffLeaveScreen() {
   const router = useRouter();
   const { width } = useWindowDimensions();
   const isTablet = width >= breakpoints.tablet;
+  const responsiveHorizontalPadding = isTablet
+    ? layout.tabletPaddingX
+    : layout.mobilePaddingX;
   const { user, unreadNotificationCount } = useAuth();
 
   const [items, setItems] = useState<LeaveRequest[]>([]);
@@ -175,40 +178,58 @@ export function StaffLeaveScreen() {
           onPressNotifications={() => router.push("/notifications")}
           onPressProfile={() => router.push("/(staff)/profil" as any)}
         />
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.filterRow}
+        <View
+          style={[
+            styles.filterSection,
+            { marginHorizontal: -responsiveHorizontalPadding },
+          ]}
         >
-          <Chip
-            label="Menunggu"
-            selected={filter === "PENDING"}
-            onPress={() => setFilter("PENDING")}
-            count={pendingCount}
-            accessibilityLabel={`Filter pengajuan izin menunggu, ${pendingCount} berkas`}
-          />
-          <Chip
-            label="Disetujui"
-            selected={filter === "APPROVED"}
-            onPress={() => setFilter("APPROVED")}
-            count={approvedCount}
-            accessibilityLabel={`Filter pengajuan izin disetujui, ${approvedCount} berkas`}
-          />
-          <Chip
-            label="Ditolak"
-            selected={filter === "REJECTED"}
-            onPress={() => setFilter("REJECTED")}
-            count={rejectedCount}
-            accessibilityLabel={`Filter pengajuan izin ditolak, ${rejectedCount} berkas`}
-          />
-          <Chip
-            label="Semua"
-            selected={filter === "ALL"}
-            onPress={() => setFilter("ALL")}
-            count={items.length}
-            accessibilityLabel={`Filter semua pengajuan izin, total ${items.length} berkas`}
-          />
-        </ScrollView>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            scrollEventThrottle={16}
+            decelerationRate="normal"
+            bounces={true}
+            style={styles.filterScrollView}
+            contentContainerStyle={[
+              styles.filterRow,
+              { paddingHorizontal: responsiveHorizontalPadding },
+            ]}
+          >
+            <Chip
+              label="Menunggu"
+              selected={filter === "PENDING"}
+              onPress={() => setFilter("PENDING")}
+              count={pendingCount}
+              style={styles.filterChip}
+              accessibilityLabel={`Filter pengajuan izin menunggu, ${pendingCount} berkas`}
+            />
+            <Chip
+              label="Disetujui"
+              selected={filter === "APPROVED"}
+              onPress={() => setFilter("APPROVED")}
+              count={approvedCount}
+              style={styles.filterChip}
+              accessibilityLabel={`Filter pengajuan izin disetujui, ${approvedCount} berkas`}
+            />
+            <Chip
+              label="Ditolak"
+              selected={filter === "REJECTED"}
+              onPress={() => setFilter("REJECTED")}
+              count={rejectedCount}
+              style={styles.filterChip}
+              accessibilityLabel={`Filter pengajuan izin ditolak, ${rejectedCount} berkas`}
+            />
+            <Chip
+              label="Semua"
+              selected={filter === "ALL"}
+              onPress={() => setFilter("ALL")}
+              count={items.length}
+              style={styles.filterChip}
+              accessibilityLabel={`Filter semua pengajuan izin, total ${items.length} berkas`}
+            />
+          </ScrollView>
+        </View>
 
         {loading && !refreshing ? (
           <StateView type="loading" message="Memuat daftar pengajuan izin..." />
@@ -453,9 +474,20 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
   },
+  filterSection: {
+    width: "100%",
+  },
+  filterScrollView: {
+    flexGrow: 0,
+  },
   filterRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
     paddingVertical: spacing.xs,
-    marginBottom: spacing.md,
+  },
+  filterChip: {
+    minWidth: 112,
   },
   requestsList: {
     gap: spacing.md,

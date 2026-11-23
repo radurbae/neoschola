@@ -257,6 +257,7 @@ export function AnnouncementsScreen() {
               scrollEventThrottle={16}
               decelerationRate="normal"
               bounces={true}
+              style={styles.filterScrollView}
               contentContainerStyle={[
                 styles.filterScroll,
                 { paddingHorizontal: responsiveHorizontalPadding },
@@ -271,6 +272,7 @@ export function AnnouncementsScreen() {
                     selected={selectedCategory === cat.key}
                     count={count}
                     onPress={() => setSelectedCategory(cat.key)}
+                    style={styles.filterChip}
                     accessibilityLabel={`Kategori ${cat.label}, ${count} pengumuman`}
                   />
                 );
@@ -486,11 +488,19 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   filterSection: {
+    width: "100%",
     paddingVertical: spacing.xs,
+  },
+  filterScrollView: {
+    flexGrow: 0,
   },
   filterScroll: {
     flexDirection: "row",
-    gap: spacing.xs,
+    alignItems: "center",
+    gap: spacing.sm,
+  },
+  filterChip: {
+    minWidth: 108,
   },
   listScrollView: {
     flex: 1,

@@ -637,6 +637,7 @@ const styles = StyleSheet.create({
   },
   filterChipRow: {
     flexDirection: "row",
+    flexWrap: "wrap",
     gap: spacing.sm,
     marginBottom: spacing.md,
   },

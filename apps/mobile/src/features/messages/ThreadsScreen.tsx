@@ -335,6 +335,7 @@ export function ThreadsScreen() {
               <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
+                style={styles.studentChipsScrollView}
                 contentContainerStyle={styles.studentChipsScroll}
               >
                 {students.map((student) => (
@@ -553,9 +554,13 @@ const styles = StyleSheet.create({
   formGroup: {
     marginBottom: spacing.md,
   },
+  studentChipsScrollView: {
+    flexGrow: 0,
+  },
   studentChipsScroll: {
     flexDirection: "row",
-    gap: spacing.xs,
+    alignItems: "center",
+    gap: spacing.sm,
     paddingVertical: spacing.xs,
   },
   formSeparator: {

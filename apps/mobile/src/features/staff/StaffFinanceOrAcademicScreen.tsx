@@ -55,6 +55,9 @@ export function StaffFinanceOrAcademicScreen() {
   const router = useRouter();
   const { width } = useWindowDimensions();
   const isTablet = width >= breakpoints.tablet;
+  const responsiveHorizontalPadding = isTablet
+    ? layout.tabletPaddingX
+    : layout.mobilePaddingX;
 
   const { user, classes, unreadNotificationCount } = useAuth();
   const isAdmin = user?.role === Role.ADMIN;
@@ -478,40 +481,58 @@ export function StaffFinanceOrAcademicScreen() {
           />
 
           {/* Filter Chips */}
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.filterChipsRow}
+          <View
+            style={[
+              styles.filterSection,
+              { marginHorizontal: -responsiveHorizontalPadding },
+            ]}
           >
-            <Chip
-              label="Verifikasi"
-              selected={invoiceFilter === "WAITING"}
-              onPress={() => setInvoiceFilter("WAITING")}
-              count={waitingInvoices.length}
-              accessibilityLabel={`Filter tagihan menunggu verifikasi, ${waitingInvoices.length} item`}
-            />
-            <Chip
-              label="Belum Lunas"
-              selected={invoiceFilter === "UNPAID"}
-              onPress={() => setInvoiceFilter("UNPAID")}
-              count={unpaidInvoices.length}
-              accessibilityLabel={`Filter tagihan belum lunas, ${unpaidInvoices.length} item`}
-            />
-            <Chip
-              label="Lunas"
-              selected={invoiceFilter === "PAID"}
-              onPress={() => setInvoiceFilter("PAID")}
-              count={paidInvoices.length}
-              accessibilityLabel={`Filter tagihan lunas, ${paidInvoices.length} item`}
-            />
-            <Chip
-              label="Semua"
-              selected={invoiceFilter === "ALL"}
-              onPress={() => setInvoiceFilter("ALL")}
-              count={invoices.length}
-              accessibilityLabel={`Filter semua tagihan, total ${invoices.length} item`}
-            />
-          </ScrollView>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              scrollEventThrottle={16}
+              decelerationRate="normal"
+              bounces={true}
+              style={styles.filterScrollView}
+              contentContainerStyle={[
+                styles.filterChipsRow,
+                { paddingHorizontal: responsiveHorizontalPadding },
+              ]}
+            >
+              <Chip
+                label="Verifikasi"
+                selected={invoiceFilter === "WAITING"}
+                onPress={() => setInvoiceFilter("WAITING")}
+                count={waitingInvoices.length}
+                style={styles.filterChip}
+                accessibilityLabel={`Filter tagihan menunggu verifikasi, ${waitingInvoices.length} item`}
+              />
+              <Chip
+                label="Belum Lunas"
+                selected={invoiceFilter === "UNPAID"}
+                onPress={() => setInvoiceFilter("UNPAID")}
+                count={unpaidInvoices.length}
+                style={styles.filterChip}
+                accessibilityLabel={`Filter tagihan belum lunas, ${unpaidInvoices.length} item`}
+              />
+              <Chip
+                label="Lunas"
+                selected={invoiceFilter === "PAID"}
+                onPress={() => setInvoiceFilter("PAID")}
+                count={paidInvoices.length}
+                style={styles.filterChip}
+                accessibilityLabel={`Filter tagihan lunas, ${paidInvoices.length} item`}
+              />
+              <Chip
+                label="Semua"
+                selected={invoiceFilter === "ALL"}
+                onPress={() => setInvoiceFilter("ALL")}
+                count={invoices.length}
+                style={styles.filterChip}
+                accessibilityLabel={`Filter semua tagihan, total ${invoices.length} item`}
+              />
+            </ScrollView>
+          </View>
 
           {/* State Loading / Error / Empty */}
           {invoicesLoading && !invoicesRefreshing ? (
@@ -934,6 +955,7 @@ export function StaffFinanceOrAcademicScreen() {
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
+              style={[styles.filterScrollView, styles.studentChipsScrollContainer]}
               contentContainerStyle={styles.studentChipsScroll}
             >
               {students.map((st) => {
@@ -950,6 +972,7 @@ export function StaffFinanceOrAcademicScreen() {
                     accessibilityLabel={`Pilih siswa ${st.full_name}`}
                   >
                     <Text
+                      numberOfLines={1}
                       style={[
                         styles.choiceChipText,
                         isSelected
@@ -1164,25 +1187,42 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
     minHeight: touchTarget.minHeight,
   },
+  filterSection: {
+    width: "100%",
+  },
+  filterScrollView: {
+    flexGrow: 0,
+  },
   filterChipsRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
     paddingVertical: spacing.xs,
-    marginBottom: spacing.md,
+  },
+  filterChip: {
+    minWidth: 112,
   },
   tabsRail: {
     marginBottom: spacing.md,
   },
-  studentChipsScroll: {
-    paddingVertical: spacing.xs,
+  studentChipsScrollContainer: {
     marginBottom: spacing.md,
   },
+  studentChipsScroll: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+    paddingVertical: spacing.xs,
+  },
   choiceChip: {
+    height: touchTarget.minHeight,
     minHeight: touchTarget.minHeight,
-    paddingHorizontal: spacing.md,
-    borderRadius: radius.md,
+    minWidth: 96,
+    paddingHorizontal: 14,
+    borderRadius: radius.full,
     borderWidth: 1,
     alignItems: "center",
     justifyContent: "center",
-    marginRight: spacing.xs,
   },
   choiceChipSelected: {
     backgroundColor: shadcn.primary,

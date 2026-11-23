@@ -368,6 +368,7 @@ export function FinanceScreen() {
             scrollEventThrottle={16}
             decelerationRate="normal"
             bounces={true}
+            style={styles.filterScrollView}
             contentContainerStyle={styles.filterScroll}
           >
             <Chip
@@ -375,6 +376,7 @@ export function FinanceScreen() {
               count={filterCounts.SEMUA}
               selected={selectedFilter === "SEMUA"}
               onPress={() => setSelectedFilter("SEMUA")}
+              style={styles.filterChip}
               accessibilityLabel={`Semua tagihan, ${filterCounts.SEMUA} tagihan`}
             />
             <Chip
@@ -382,6 +384,7 @@ export function FinanceScreen() {
               count={filterCounts.BELUM_LUNAS}
               selected={selectedFilter === "BELUM_LUNAS"}
               onPress={() => setSelectedFilter("BELUM_LUNAS")}
+              style={styles.filterChip}
               accessibilityLabel={`Tagihan belum lunas, ${filterCounts.BELUM_LUNAS} tagihan`}
             />
             <Chip
@@ -389,6 +392,7 @@ export function FinanceScreen() {
               count={filterCounts.MENUNGGU_VERIFIKASI}
               selected={selectedFilter === "MENUNGGU_VERIFIKASI"}
               onPress={() => setSelectedFilter("MENUNGGU_VERIFIKASI")}
+              style={styles.filterChip}
               accessibilityLabel={`Tagihan menunggu verifikasi, ${filterCounts.MENUNGGU_VERIFIKASI} tagihan`}
             />
             <Chip
@@ -396,6 +400,7 @@ export function FinanceScreen() {
               count={filterCounts.LUNAS}
               selected={selectedFilter === "LUNAS"}
               onPress={() => setSelectedFilter("LUNAS")}
+              style={styles.filterChip}
               accessibilityLabel={`Tagihan lunas, ${filterCounts.LUNAS} tagihan`}
             />
           </ScrollView>
@@ -856,11 +861,20 @@ const styles = StyleSheet.create({
     alignSelf: "stretch",
   },
 
-  filterSection: {},
+  filterSection: {
+    width: "100%",
+  },
+  filterScrollView: {
+    flexGrow: 0,
+  },
   filterScroll: {
     flexDirection: "row",
-    gap: spacing.xs,
+    alignItems: "center",
+    gap: spacing.sm,
     paddingVertical: spacing.xs,
+  },
+  filterChip: {
+    minWidth: 112,
   },
 
   invoiceList: {
@@ -928,7 +942,7 @@ const styles = StyleSheet.create({
   paymentMethodChips: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: spacing.xs,
+    gap: spacing.sm,
     marginTop: spacing.xs,
   },
   bankInfoBox: {

@@ -469,6 +469,7 @@ export function Chip({
       }
     >
       <Text
+        numberOfLines={1}
         style={[
           styles.chipText,
           selected ? styles.chipTextSelected : styles.chipTextUnselected,
@@ -983,15 +984,18 @@ const styles = StyleSheet.create({
 
   // Chip
   chip: {
+    height: touchTarget.minHeight,
     minHeight: touchTarget.minHeight,
-    paddingHorizontal: spacing.lg,
+    minWidth: 92,
+    paddingHorizontal: 14,
     borderRadius: radius.full,
     borderWidth: 1,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    marginRight: spacing.sm,
-    marginBottom: spacing.xs,
+    alignSelf: "flex-start",
+    flexShrink: 0,
+    gap: 6,
   },
   chipSelected: {
     backgroundColor: shadcn.primary,
@@ -1016,10 +1020,12 @@ const styles = StyleSheet.create({
     fontFamily: typography.family.medium,
   },
   chipCountBadge: {
-    marginLeft: spacing.xs,
+    minWidth: 22,
+    height: 20,
     paddingHorizontal: 6,
-    paddingVertical: 2,
     borderRadius: radius.full,
+    alignItems: "center",
+    justifyContent: "center",
   },
   chipCountBadgeSelected: {
     backgroundColor: shadcn.primaryPressed,
@@ -1031,6 +1037,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: typography.weight.bold,
     fontFamily: typography.family.bold,
+    fontVariant: ["tabular-nums"],
   },
   chipCountTextSelected: {
     color: shadcn.primaryForeground,
