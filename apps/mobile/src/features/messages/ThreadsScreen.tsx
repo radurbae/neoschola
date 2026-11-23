@@ -3,9 +3,9 @@ import {
   View,
   Text,
   StyleSheet,
-  TouchableOpacity,
   RefreshControl,
   ScrollView,
+  useWindowDimensions,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -26,11 +26,14 @@ import {
   Avatar,
   Separator,
   StateView,
+  SpringPressable,
 } from "../../components/ui";
 import { useAuth } from "../../store/auth";
 import * as api from "../../lib/api";
 import {
   bento,
+  breakpoints,
+  layout,
   shadcn,
   spacing,
   radius,
@@ -43,6 +46,12 @@ const DEFAULT_TEACHER_NAME = "Ibu Ani Wijayanti, S.Pd. (Wali Kelas)";
 
 export function ThreadsScreen() {
   const router = useRouter();
+  const { width } = useWindowDimensions();
+  const isTablet = width >= breakpoints.tablet;
+  const responsiveHorizontalPadding = isTablet
+    ? layout.tabletPaddingX
+    : layout.mobilePaddingX;
+
   const { user, students } = useAuth();
 
   const [threads, setThreads] = useState<MessageThread[]>([]);
@@ -154,8 +163,18 @@ export function ThreadsScreen() {
 
       <ScrollView
         style={styles.container}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[
+          styles.scrollContent,
+          {
+            paddingHorizontal: responsiveHorizontalPadding,
+            paddingBottom: layout.scrollBottomPad,
+            gap: layout.sectionGap,
+          },
+        ]}
         showsVerticalScrollIndicator={false}
+        scrollEventThrottle={16}
+        decelerationRate="normal"
+        bounces={true}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -219,13 +238,12 @@ export function ThreadsScreen() {
               return (
                 <React.Fragment key={thread.id}>
                   {index > 0 && <Separator />}
-                  <TouchableOpacity
+                  <SpringPressable
                     style={[
                       styles.threadRow,
                       hasUnread && styles.threadRowUnread,
                     ]}
                     onPress={() => router.push(`/chat/${thread.id}`)}
-                    activeOpacity={0.7}
                     accessibilityRole="button"
                     accessibilityLabel={`Percakapan dengan ${teacherName}, terkait siswa ${studentName}, subjek ${thread.subject}. ${
                       hasUnread ? `${thread.unread_count} pesan belum dibaca.` : ""
@@ -275,7 +293,7 @@ export function ThreadsScreen() {
                         )}
                       </View>
                     </View>
-                  </TouchableOpacity>
+                  </SpringPressable>
                 </React.Fragment>
               );
             })}
@@ -397,15 +415,10 @@ const styles = StyleSheet.create({
     backgroundColor: bento.surface,
   },
   scrollContent: {
-    padding: spacing.lg,
-    paddingBottom: spacing.xxxl,
+    paddingVertical: spacing.md,
   },
-  serviceAlert: {
-    marginBottom: spacing.md,
-  },
-  actionCard: {
-    marginBottom: spacing.lg,
-  },
+  serviceAlert: {},
+  actionCard: {},
   threadsCard: {
     borderRadius: radius.xl,
     padding: 0,
@@ -437,12 +450,14 @@ const styles = StyleSheet.create({
   threadTeacherName: {
     fontSize: typography.size.sm,
     fontWeight: typography.weight.semibold,
+    fontFamily: typography.family.semibold,
     color: shadcn.foreground,
     flex: 1,
     marginRight: spacing.sm,
   },
   threadTimeText: {
     fontSize: typography.size.xs,
+    fontFamily: typography.family.regular,
     color: shadcn.mutedForeground,
     fontVariant: ["tabular-nums"],
   },
@@ -458,6 +473,7 @@ const styles = StyleSheet.create({
   threadSubject: {
     fontSize: typography.size.sm,
     fontWeight: typography.weight.medium,
+    fontFamily: typography.family.medium,
     color: shadcn.foreground,
     flex: 1,
   },
@@ -470,6 +486,7 @@ const styles = StyleSheet.create({
   },
   threadSnippet: {
     fontSize: typography.size.xs,
+    fontFamily: typography.family.regular,
     color: shadcn.mutedForeground,
     lineHeight: typography.lineHeight.xs + 2,
     flex: 1,
@@ -477,6 +494,7 @@ const styles = StyleSheet.create({
   threadSnippetUnread: {
     color: shadcn.foreground,
     fontWeight: typography.weight.medium,
+    fontFamily: typography.family.medium,
   },
   unreadPill: {
     backgroundColor: bento.obsidian,
@@ -491,6 +509,7 @@ const styles = StyleSheet.create({
     color: bento.obsidianForeground,
     fontSize: 11,
     fontWeight: typography.weight.bold,
+    fontFamily: typography.family.bold,
     fontVariant: ["tabular-nums"],
   },
 
@@ -516,10 +535,12 @@ const styles = StyleSheet.create({
   recipientName: {
     fontSize: typography.size.sm,
     fontWeight: typography.weight.semibold,
+    fontFamily: typography.family.semibold,
     color: shadcn.foreground,
   },
   recipientRole: {
     fontSize: typography.size.xs,
+    fontFamily: typography.family.regular,
     color: shadcn.mutedForeground,
     marginTop: 2,
   },

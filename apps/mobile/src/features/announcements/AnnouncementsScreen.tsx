@@ -3,9 +3,9 @@ import {
   View,
   Text,
   StyleSheet,
-  TouchableOpacity,
   RefreshControl,
   ScrollView,
+  useWindowDimensions,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -24,11 +24,14 @@ import {
   Alert,
   Separator,
   StateView,
+  SpringPressable,
 } from "../../components/ui";
 import type { BadgeVariant } from "../../components/ui";
 import * as api from "../../lib/api";
 import {
   bento,
+  breakpoints,
+  layout,
   shadcn,
   spacing,
   radius,
@@ -48,6 +51,12 @@ const CATEGORIES: { key: CategoryFilter; label: string }[] = [
 
 export function AnnouncementsScreen() {
   const router = useRouter();
+  const { width } = useWindowDimensions();
+  const isTablet = width >= breakpoints.tablet;
+  const responsiveHorizontalPadding = isTablet
+    ? layout.tabletPaddingX
+    : layout.mobilePaddingX;
+
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<CategoryFilter>("SEMUA");
   const [loading, setLoading] = useState<boolean>(true);
@@ -178,15 +187,14 @@ export function AnnouncementsScreen() {
         title="Pengumuman"
         subtitle="Agenda dan informasi resmi sekolah"
         leftAction={
-          <TouchableOpacity
+          <SpringPressable
             style={styles.backButton}
             onPress={() => router.back()}
-            activeOpacity={0.7}
             accessibilityRole="button"
             accessibilityLabel="Kembali ke layar sebelumnya"
           >
             <Ionicons name="arrow-back" size={20} color={shadcn.foreground} />
-          </TouchableOpacity>
+          </SpringPressable>
         }
       />
 
@@ -195,7 +203,13 @@ export function AnnouncementsScreen() {
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.filterScroll}
+          scrollEventThrottle={16}
+          decelerationRate="normal"
+          bounces={true}
+          contentContainerStyle={[
+            styles.filterScroll,
+            { paddingHorizontal: responsiveHorizontalPadding },
+          ]}
         >
           {CATEGORIES.map((cat) => {
             const count = categoryCounts[cat.key];
@@ -239,8 +253,18 @@ export function AnnouncementsScreen() {
       ) : (
         <ScrollView
           style={styles.listScrollView}
-          contentContainerStyle={styles.listScrollContent}
+          contentContainerStyle={[
+            styles.listScrollContent,
+            {
+              paddingHorizontal: responsiveHorizontalPadding,
+              paddingBottom: layout.scrollBottomPad,
+              gap: layout.sectionGap,
+            },
+          ]}
           showsVerticalScrollIndicator={false}
+          scrollEventThrottle={16}
+          decelerationRate="normal"
+          bounces={true}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
@@ -442,15 +466,13 @@ const styles = StyleSheet.create({
     backgroundColor: bento.surface,
   },
   listScrollContent: {
-    padding: spacing.lg,
-    paddingBottom: spacing.xxxl,
+    paddingVertical: spacing.md,
   },
-  emergencyCard: {
-    marginBottom: spacing.md,
-  },
+  emergencyCard: {},
   announcementsCard: {
     borderRadius: radius.xl,
-    padding: 0,
+    paddingHorizontal: layout.cardPadding,
+    paddingVertical: spacing.xs,
     overflow: "hidden",
     borderWidth: 1,
     borderColor: shadcn.border,
@@ -475,6 +497,7 @@ const styles = StyleSheet.create({
   sheetTitle: {
     fontSize: typography.size.xl,
     fontWeight: typography.weight.semibold,
+    fontFamily: typography.family.semibold,
     color: shadcn.foreground,
     lineHeight: typography.lineHeight.xl,
     letterSpacing: typography.tracking.tight,
@@ -492,6 +515,7 @@ const styles = StyleSheet.create({
   },
   sheetInfoText: {
     fontSize: typography.size.sm,
+    fontFamily: typography.family.regular,
     color: shadcn.mutedForeground,
     fontVariant: ["tabular-nums"],
     flexShrink: 1,
@@ -501,6 +525,7 @@ const styles = StyleSheet.create({
   },
   sheetContentText: {
     fontSize: typography.size.base,
+    fontFamily: typography.family.regular,
     color: shadcn.foreground,
     lineHeight: typography.lineHeight.base + 2,
   },
