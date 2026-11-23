@@ -79,14 +79,14 @@ Panduan desain visual, interaksi, dan sistem token untuk aplikasi mobile dan web
 
 ---
 
-## 3. Geometri, Elevasi, dan Tipografi
+## 3. Geometri, Elevasi, Tipografi, dan Tata Letak
 
 ### Radius Sudut (Border Radius)
 Sistem radius diperluas untuk mendukung estetika Bento modern:
-- `sm: 6pt`: Lencana status (Badge), tag kecil, trigger tabs.
+- `sm: 6pt`: Lencana status (Badge), tag kecil, trigger tabs, batang sparkline MiniTrendChart.
 - `md: 8pt`: Kolom input formulir, container tabs, kotak peringatan (Alert).
 - `lg: 12pt`: Kartu konten hairline standar, wadah grup item, logo badge samping.
-- `xl: 20pt`: Kartu statistik pastel (PastelStatCard) borderless.
+- `xl: 20pt`: Kartu statistik pastel (PastelStatCard) borderless dan Card standar.
 - `xxl: 24pt`: Modul bento besar (MiniTrendChart, DarkActionCard), kanvas tablet, dan dock bawah.
 - `full: 9999pt`: Tombol pill CTA, avatar, tombol lingkaran utilitas, titik status.
 
@@ -101,14 +101,39 @@ Sistem radius diperluas untuk mendukung estetika Bento modern:
   - Android: `elevation: 2`
   - Web: `boxShadow: "0 1px 3px rgba(9, 9, 11, 0.06)"`
 
-### Tipografi Sistem Native
-- **Heading**: Bobot `bold` (700) atau `semibold` (600) dengan letter spacing negatif:
-  - Nilai hero statistik bento: `fontSize: 28pt`, `fontWeight: "700"`, `fontVariant: ["tabular-nums"]`.
-  - Judul layar utilitas atas: `fontSize: 24pt`, `fontWeight: "700"`, `letterSpacing: -0.5`.
-  - Judul kartu aksi: `fontSize: 20pt`, `fontWeight: "700"`, `letterSpacing: -0.3`.
-  - Nilai kartu statistik: `fontSize: 18pt`, `fontWeight: "700"`, `fontVariant: ["tabular-nums"]`.
-  - Judul seksi dan kartu standar: `fontSize: 16pt` atau `18pt`, `letterSpacing: -0.2`.
-- **Angka Finansial, Skor, dan Jam**: Wajib menyertakan `fontVariant: ["tabular-nums"]` agar seluruh digit angka sejajar vertikal saat dibandingkan.
+### Tipografi Plus Jakarta Sans
+Seluruh antarmuka menggunakan keluarga font resmi **Plus Jakarta Sans** untuk kenyamanan membaca:
+- `typography.family.regular`: `PlusJakartaSans_400Regular` (bobot 400 untuk teks isi dan label sekunder).
+- `typography.family.medium`: `PlusJakartaSans_500Medium` (bobot 500 untuk label tombol dan deskripsi).
+- `typography.family.semibold`: `PlusJakartaSans_600SemiBold` (bobot 600 untuk judul kartu, tab aktif, dan teks sorotan).
+- `typography.family.bold`: `PlusJakartaSans_700Bold` (bobot 700 untuk angka metrik, judul layar, dan headline aksi).
+
+Tinggi baris (line height) disempurnakan agar lebih lega dan nyaman di mata:
+- `xs: 18pt`, `sm: 21pt`, `base: 24pt`, `lg: 27pt`, `xl: 29pt`, `xxl: 33pt`, `xxxl: 40pt`.
+
+Heading dan Angka Tabular:
+- Nilai hero statistik bento: `fontSize: 28pt`, `fontFamily: typography.family.bold`, `fontVariant: ["tabular-nums"]`.
+- Judul layar utilitas atas: `fontSize: 24pt`, `fontFamily: typography.family.bold`, `letterSpacing: -0.5`.
+- Judul kartu aksi: `fontSize: 20pt`, `fontFamily: typography.family.bold`, `letterSpacing: -0.3`.
+- Nilai kartu statistik: `fontSize: 18pt`, `fontFamily: typography.family.bold`, `fontVariant: ["tabular-nums"]`.
+- Judul seksi dan kartu standar: `fontSize: 16pt` atau `18pt`, `fontFamily: typography.family.semibold`.
+- Angka Finansial, Skor, dan Jam: Wajib menyertakan `fontVariant: ["tabular-nums"]` agar seluruh digit angka sejajar vertikal saat dibandingkan.
+
+### Token Tata Letak dan Ruang Napas (Layout Tokens)
+Untuk menjaga konsistensi jarak antar komponen di berbagai ukuran layar:
+- `layout.mobilePaddingX`: `20pt` (jarak horizontal tepi layar ponsel).
+- `layout.tabletPaddingX`: `32pt` (jarak horizontal tepi layar tablet).
+- `layout.tabletPaddingY`: `24pt` (jarak vertikal tepi kanvas tablet).
+- `layout.sectionGap`: `24pt` (jarak antar seksi konten).
+- `layout.bentoGap`: `18pt` (jarak antar modul bento).
+- `layout.cardPadding`: `20pt` (ruang dalam kartu standar).
+- `layout.heroPadding`: `24pt` (ruang dalam kartu hero dan aksi utama).
+- `layout.scrollBottomPad`: `48pt` (ruang napas bawah scroll agar tidak tertutup dock).
+
+### Transisi dan Gerak Halus (Motion System)
+- **SpringPressable**: Feedback sentuhan responsif dengan animasi pegas alami (`scale: 1 -> 0.975 -> 1`) dan opasitas `0.94` saat disentuh, tanpa jeda visual.
+- **FadeSlideView**: Transisi perpindahan halaman dan modul dengan kombinasi fade (`opacity: 0.2 -> 1`) dan slide halus vertikal (`translateY: 8 -> 0`) berdurasi `220ms` menggunakan kurva `Easing.out(Easing.cubic)`.
+- **Navigasi Layar**: Stack navigasi berpindah dengan animasi `fade` `220ms`, sementara layar detail seperti notifikasi, pengumuman, dan obrolan menggunakan transisi geser dari kanan (`slide_from_right`).
 
 ---
 
@@ -116,27 +141,28 @@ Sistem radius diperluas untuk mendukung estetika Bento modern:
 
 1. **ResponsiveShell**
    - Rangka aplikasi adaptif yang berpindah mulus berdasarkan lebar layar (`useWindowDimensions()`).
-   - Mode Tablet (lebar >= 768px): Dark Obsidian Left Rail (#141416) selebar 64px dengan logo badge krem "NS" di atas, deretan ikon navigasi vertikal di tengah dengan pill sorotan saat aktif, serta tombol keluar akun di bagian bawah. Di sampingnya terdapat kanvas konten putih (#FFFFFF) dengan sudut melengkung 24pt.
-   - Mode Ponsel (lebar < 768px): Kanvas konten putih penuh (#FFFFFF) dengan Floating Dark Bottom Dock (#141416) setinggi 60pt ber-radius 24pt di bagian bawah layar yang menampilkan hingga 5 ikon navigasi dan indikator titik aktif Ice Blue.
+   - Mode Tablet (lebar >= 768px): Dark Obsidian Left Rail (#141416) selebar 72px dengan padding vertikal 20pt, logo badge krem "NS" di atas, deretan ikon navigasi vertikal di tengah dengan pill sorotan saat aktif, serta tombol keluar akun di bagian bawah. Tablet outer frame memiliki padding 16pt dan gap 12pt. Kanvas konten putih (#FFFFFF) dilengkapi transisi halus `FadeSlideView` saat berpindah navigasi.
+   - Mode Ponsel (lebar < 768px): Kanvas konten putih penuh (#FFFFFF) dengan Floating Dark Bottom Dock (#141416) setinggi 64pt ber-radius 24pt, margin horizontal 20pt, margin bawah 14pt (atau 22pt di iOS), serta padding horizontal 12pt yang menampilkan hingga 5 ikon navigasi dan indikator titik aktif Ice Blue.
 2. **TopUtilityBar**
    - Bilah utilitas atas layar yang bersih dan ringkas.
+   - Menggunakan padding responsif: padding horizontal 32pt di tablet dan 20pt di ponsel, padding atas 24pt di tablet dan 16pt di ponsel, padding bawah 14pt, dan gap 12pt.
    - Sisi kiri: Judul tebal 24pt dengan letter-spacing -0.5, subjudul opsional, serta slot aksi kiri (misalnya tombol kembali).
-   - Sisi kanan: Tombol bundar 44x44pt warna Pill Surface untuk notifikasi (dilengkapi dot merah penanda pesan baru) dan pengumuman, serta Profile Pill dengan avatar ringkas dan nama depan pengguna.
+   - Sisi kanan: Tombol bundar 44x44pt warna Pill Surface dengan `SpringPressable` untuk notifikasi (dilengkapi dot merah penanda pesan baru) dan pengumuman, serta Profile Pill dengan avatar ringkas dan nama depan pengguna.
 3. **PastelStatCard**
-   - Kartu metrik bento borderless dengan radius 20pt dan padding 16pt.
+   - Kartu metrik bento borderless dengan radius 20pt, padding 20pt, minHeight 168pt, dan struktur fleksibel seimbang (`flex: 1`, `alignSelf: stretch`, `justifyContent: space-between`).
    - Pilihan nuansa pastel: `iceBlue`, `lavender`, `mint`, dan `butter`.
-   - Menampilkan angka nilai besar 18pt tebal tabular, label keterangan abu-abu gelap (#3F3F46), kotak ikon putih 36x36pt di sudut kiri bawah, serta persentase atau teks tren dengan warna kontras AA di sisi kanan.
+   - Menampilkan angka nilai besar 18pt tebal tabular, label keterangan abu-abu gelap (#3F3F46), kotak ikon putih 36x36pt di sudut kiri bawah, serta persentase atau teks tren dengan warna kontras AA di sisi kanan. Menggunakan `SpringPressable` saat dapat ditekan.
 4. **MiniTrendChart**
-   - Kartu tren interaktif bernuansa Soft Ice Blue (#EAF3FE) ber-radius 24pt dengan padding 20pt.
+   - Kartu tren interaktif bernuansa Soft Ice Blue (#EAF3FE) ber-radius 24pt dengan padding 24pt, minHeight 232pt, dan penataan seimbang (`justifyContent: space-between`).
    - Menampilkan angka metrik utama 28pt tebal tabular, keterangan subjudul, serta lencana callout obsidian di sudut kanan atas.
-   - Grafik batang sparkline murni dibangun menggunakan React Native View tanpa dependensi pustaka grafik luar, dengan batang warna Ice Blue Bar dan aksen khusus pada batang data terakhir.
-   - Baris pengalih periode waktu (Period Switcher) di bagian bawah dengan target sentuh aman minimal 44pt (menggunakan hitSlop).
+   - Grafik batang sparkline murni dibangun menggunakan React Native View setinggi 76pt dengan batang selebar 18pt dan radius 6pt warna Ice Blue Bar dan aksen khusus pada batang data terakhir.
+   - Baris pengalih periode waktu (Period Switcher) di bagian bawah dengan target sentuh aman minimal 44pt menggunakan `SpringPressable`.
 5. **DarkActionCard**
-   - Kartu aksi utama bernuansa Obsidian gelap (#141416) dengan radius 24pt dan padding 20pt.
+   - Kartu aksi utama bernuansa Obsidian gelap (#141416) dengan radius 24pt, padding 24pt, minHeight 220pt, dan `justifyContent: space-between`.
    - Dihiasi dua garis aksen geometris halus di sudut kanan bawah tanpa menghalangi interaksi sentuh.
-   - Memuat tag label opsi di atas judul, judul tebal putih 20pt, paragraf deskripsi yang jelas, serta tombol pill Ice Blue CTA yang mudah ditekan.
+   - Memuat tag label opsi di atas judul, judul tebal putih 20pt, paragraf deskripsi yang jelas, serta tombol pill Ice Blue CTA `SpringPressable` yang mudah ditekan.
 6. **DarkIconRow**
-   - Baris daftar informasi dan transaksi dengan tinggi minimal 56pt.
+   - Baris daftar informasi dan transaksi dengan tinggi minimal 64pt, padding vertikal 12pt, dan padding horizontal 4pt menggunakan `SpringPressable`.
    - Bagian kiri memuat kotak ikon gelap 40x40pt ber-radius 12pt dengan ikon putih.
    - Bagian tengah memuat judul dan subjudul yang fleksibel terpotong rapi.
    - Bagian kanan memuat teks angka utama tabular serta label status semantik dengan rasio kontras warna yang aman.

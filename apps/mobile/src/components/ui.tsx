@@ -3,7 +3,6 @@ import {
   View,
   Text,
   StyleSheet,
-  TouchableOpacity,
   Pressable,
   ScrollView,
   SafeAreaView,
@@ -12,6 +11,7 @@ import {
   Modal,
   KeyboardAvoidingView,
   Platform,
+  useWindowDimensions,
   StyleProp,
   ViewStyle,
   TextStyle,
@@ -19,12 +19,25 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import type { Student } from "@neoschola/shared";
-import { colors, shadows, spacing, radius, typography, touchTarget, shadcn, bento } from "../theme/tokens";
+import {
+  colors,
+  shadows,
+  spacing,
+  radius,
+  typography,
+  touchTarget,
+  shadcn,
+  bento,
+  breakpoints,
+  layout,
+} from "../theme/tokens";
 import { Avatar } from "./ui/shadcn";
+import { SpringPressable } from "./ui/motion";
 
-// Re-export seluruh primitif shadcn/ui dan komponen bento
+// Re-export seluruh primitif shadcn/ui, bento, dan motion
 export * from "./ui/shadcn";
 export * from "./ui/bento";
+export * from "./ui/motion";
 
 export interface ScreenProps {
   children: React.ReactNode;
@@ -47,15 +60,34 @@ export function Screen({
   contentContainerStyle,
   headerShown = true,
 }: ScreenProps) {
+  const { width } = useWindowDimensions();
+  const isTablet = width >= breakpoints.tablet;
   const hasHeader = headerShown && (Boolean(title) || Boolean(rightAction));
+
+  const dynamicPadding = {
+    paddingHorizontal: isTablet ? layout.tabletPaddingX : layout.mobilePaddingX,
+    paddingTop: spacing.lg,
+    paddingBottom: layout.scrollBottomPad,
+  };
 
   return (
     <SafeAreaView style={[styles.screenSafeArea, style]}>
       {hasHeader && (
-        <View style={styles.screenHeader}>
+        <View
+          style={[
+            styles.screenHeader,
+            {
+              paddingHorizontal: isTablet
+                ? layout.tabletPaddingX
+                : layout.mobilePaddingX,
+            },
+          ]}
+        >
           <View style={styles.screenHeaderTitleContainer}>
             {Boolean(title) && <Text style={styles.screenTitle}>{title}</Text>}
-            {Boolean(subtitle) && <Text style={styles.screenSubtitle}>{subtitle}</Text>}
+            {Boolean(subtitle) && (
+              <Text style={styles.screenSubtitle}>{subtitle}</Text>
+            )}
           </View>
           {Boolean(rightAction) && (
             <View style={styles.screenRightAction}>{rightAction}</View>
@@ -65,14 +97,27 @@ export function Screen({
       {scroll ? (
         <ScrollView
           style={styles.screenScrollView}
-          contentContainerStyle={[styles.screenContentContainer, contentContainerStyle]}
+          contentContainerStyle={[
+            styles.screenContentContainer,
+            dynamicPadding,
+            contentContainerStyle,
+          ]}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
+          scrollEventThrottle={16}
+          decelerationRate="normal"
+          bounces={true}
         >
           {children}
         </ScrollView>
       ) : (
-        <View style={[styles.screenStaticContainer, contentContainerStyle]}>
+        <View
+          style={[
+            styles.screenStaticContainer,
+            dynamicPadding,
+            contentContainerStyle,
+          ]}
+        >
           {children}
         </View>
       )}
@@ -97,16 +142,15 @@ export function Card({
 }: CardProps) {
   if (onPress) {
     return (
-      <TouchableOpacity
+      <SpringPressable
         style={[styles.card, styles.cardTouchable, style]}
         onPress={onPress}
-        activeOpacity={0.7}
         accessibilityRole="button"
         accessibilityLabel={accessibilityLabel}
         testID={testID}
       >
         {children}
-      </TouchableOpacity>
+      </SpringPressable>
     );
   }
 
@@ -164,7 +208,13 @@ export function Button({
   const isDisabled = disabled || loading;
 
   // Normalisasi varian lama ke standar shadcn
-  const normalizedVariant: "default" | "secondary" | "outline" | "ghost" | "destructive" | "link" =
+  const normalizedVariant:
+    | "default"
+    | "secondary"
+    | "outline"
+    | "ghost"
+    | "destructive"
+    | "link" =
     variant === "primary"
       ? "default"
       : variant === "danger"
@@ -199,8 +249,12 @@ export function Button({
         };
       case "destructive":
         return {
-          backgroundColor: pressed ? shadcn.destructivePressed : shadcn.destructive,
-          borderColor: pressed ? shadcn.destructivePressed : shadcn.destructive,
+          backgroundColor: pressed
+            ? shadcn.destructivePressed
+            : shadcn.destructive,
+          borderColor: pressed
+            ? shadcn.destructivePressed
+            : shadcn.destructive,
           borderWidth: 1,
         };
       case "link":
@@ -276,13 +330,12 @@ export function Button({
       ]}
     >
       {loading ? (
-        <ActivityIndicator
-          size="small"
-          color={getTextColor()}
-        />
+        <ActivityIndicator size="small" color={getTextColor()} />
       ) : (
         <View style={styles.buttonContent}>
-          {Boolean(leftIcon) && <View style={styles.buttonIconLeft}>{leftIcon}</View>}
+          {Boolean(leftIcon) && (
+            <View style={styles.buttonIconLeft}>{leftIcon}</View>
+          )}
           {displayTitle ? (
             <Text
               style={[
@@ -297,7 +350,9 @@ export function Button({
           ) : (
             children
           )}
-          {Boolean(rightIcon) && <View style={styles.buttonIconRight}>{rightIcon}</View>}
+          {Boolean(rightIcon) && (
+            <View style={styles.buttonIconRight}>{rightIcon}</View>
+          )}
         </View>
       )}
     </Pressable>
@@ -377,13 +432,7 @@ export function Badge({
         style,
       ]}
     >
-      <Text
-        style={[
-          styles.badgeText,
-          { color: badgeColor.text },
-          textStyle,
-        ]}
-      >
+      <Text style={[styles.badgeText, { color: badgeColor.text }, textStyle]}>
         {label}
       </Text>
     </View>
@@ -408,16 +457,18 @@ export function Chip({
   accessibilityLabel,
 }: ChipProps) {
   return (
-    <TouchableOpacity
+    <SpringPressable
       style={[
         styles.chip,
         selected ? styles.chipSelected : styles.chipUnselected,
         style,
       ]}
       onPress={onPress}
-      activeOpacity={0.7}
       accessibilityRole="button"
-      accessibilityLabel={accessibilityLabel || `${label}${count !== undefined ? ` (${count})` : ""}`}
+      accessibilityLabel={
+        accessibilityLabel ||
+        `${label}${count !== undefined ? ` (${count})` : ""}`
+      }
     >
       <Text
         style={[
@@ -431,20 +482,24 @@ export function Chip({
         <View
           style={[
             styles.chipCountBadge,
-            selected ? styles.chipCountBadgeSelected : styles.chipCountBadgeUnselected,
+            selected
+              ? styles.chipCountBadgeSelected
+              : styles.chipCountBadgeUnselected,
           ]}
         >
           <Text
             style={[
               styles.chipCountText,
-              selected ? styles.chipCountTextSelected : styles.chipCountTextUnselected,
+              selected
+                ? styles.chipCountTextSelected
+                : styles.chipCountTextUnselected,
             ]}
           >
             {count}
           </Text>
         </View>
       )}
-    </TouchableOpacity>
+    </SpringPressable>
   );
 }
 
@@ -595,27 +650,32 @@ export function ChildSwitcher({
           const isActive = student.id === activeStudentId;
           const studentName = student.nickname || student.full_name;
           return (
-            <TouchableOpacity
+            <SpringPressable
               key={student.id}
               style={[
                 styles.childTabItem,
-                isActive ? styles.childTabItemActive : styles.childTabItemInactive,
+                isActive
+                  ? styles.childTabItemActive
+                  : styles.childTabItemInactive,
               ]}
               onPress={() => onSelectStudent(student.id)}
-              activeOpacity={0.7}
               accessibilityRole="button"
               accessibilityLabel={`Pilih ${studentName}, ${student.class_name || ""}`}
             >
               <View
                 style={[
                   styles.childTabAvatar,
-                  isActive ? styles.childTabAvatarActive : styles.childTabAvatarInactive,
+                  isActive
+                    ? styles.childTabAvatarActive
+                    : styles.childTabAvatarInactive,
                 ]}
               >
                 <Text
                   style={[
                     styles.childTabAvatarText,
-                    isActive ? styles.childTabAvatarTextActive : styles.childTabAvatarTextInactive,
+                    isActive
+                      ? styles.childTabAvatarTextActive
+                      : styles.childTabAvatarTextInactive,
                   ]}
                 >
                   {studentName ? studentName.slice(0, 1).toUpperCase() : "A"}
@@ -625,7 +685,9 @@ export function ChildSwitcher({
                 <Text
                   style={[
                     styles.childTabName,
-                    isActive ? styles.childTabNameActive : styles.childTabNameInactive,
+                    isActive
+                      ? styles.childTabNameActive
+                      : styles.childTabNameInactive,
                   ]}
                   numberOfLines={1}
                 >
@@ -634,13 +696,15 @@ export function ChildSwitcher({
                 <Text
                   style={[
                     styles.childTabClass,
-                    isActive ? styles.childTabClassActive : styles.childTabClassInactive,
+                    isActive
+                      ? styles.childTabClassActive
+                      : styles.childTabClassInactive,
                   ]}
                 >
                   {student.class_name || "Siswa"}
                 </Text>
               </View>
-            </TouchableOpacity>
+            </SpringPressable>
           );
         })}
       </ScrollView>
@@ -682,7 +746,11 @@ export function StateView({
     return (
       <View style={[styles.stateViewContainer, style]}>
         <View style={styles.stateIconCircle}>
-          <Ionicons name="file-tray-outline" size={28} color={shadcn.mutedForeground} />
+          <Ionicons
+            name="file-tray-outline"
+            size={28}
+            color={shadcn.mutedForeground}
+          />
         </View>
         <Text style={styles.stateTitle}>{title || "Belum Ada Data"}</Text>
         <Text style={styles.stateMessage}>
@@ -704,11 +772,16 @@ export function StateView({
   return (
     <View style={[styles.stateViewContainer, style]}>
       <View style={[styles.stateIconCircle, styles.stateErrorIconCircle]}>
-        <Ionicons name="alert-circle-outline" size={28} color={shadcn.status.danger.text} />
+        <Ionicons
+          name="alert-circle-outline"
+          size={28}
+          color={shadcn.status.danger.text}
+        />
       </View>
       <Text style={styles.stateTitle}>{title || "Terjadi Kendala"}</Text>
       <Text style={styles.stateMessage}>
-        {message || "Gagal memuat data. Periksa koneksi internet Anda dan coba lagi."}
+        {message ||
+          "Gagal memuat data. Periksa koneksi internet Anda dan coba lagi."}
       </Text>
       <Button
         title={actionLabel || "Coba Lagi"}
@@ -758,15 +831,14 @@ export function ModalSheet({
           </View>
           <View style={styles.modalTitleRow}>
             <Text style={styles.modalTitleText}>{title || ""}</Text>
-            <TouchableOpacity
+            <SpringPressable
               style={styles.modalCloseButton}
               onPress={onClose}
-              activeOpacity={0.7}
               accessibilityRole="button"
               accessibilityLabel="Tutup formulir"
             >
               <Ionicons name="close" size={20} color={shadcn.foreground} />
-            </TouchableOpacity>
+            </SpringPressable>
           </View>
           <ScrollView
             style={styles.modalScrollBody}
@@ -798,15 +870,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   screenContentContainer: {
-    padding: spacing.lg,
-    paddingBottom: spacing.max,
     maxWidth: 1120,
     alignSelf: "center",
     width: "100%",
   },
   screenStaticContainer: {
     flex: 1,
-    padding: spacing.lg,
     maxWidth: 1120,
     alignSelf: "center",
     width: "100%",
@@ -815,7 +884,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
     backgroundColor: bento.surface,
     borderBottomWidth: 1,
@@ -827,11 +895,13 @@ const styles = StyleSheet.create({
   screenTitle: {
     fontSize: typography.size.xl,
     fontWeight: typography.weight.semibold,
+    fontFamily: typography.family.semibold,
     color: colors.textPrimary,
     letterSpacing: typography.tracking.tight,
   },
   screenSubtitle: {
     fontSize: typography.size.xs,
+    fontFamily: typography.family.regular,
     color: colors.textSecondary,
     marginTop: 2,
   },
@@ -844,10 +914,10 @@ const styles = StyleSheet.create({
   // Card
   card: {
     backgroundColor: colors.card,
-    borderRadius: radius.lg,
+    borderRadius: radius.xl,
     borderWidth: 1,
     borderColor: colors.border,
-    padding: spacing.lg,
+    padding: layout.cardPadding,
     marginBottom: spacing.md,
     ...Platform.select({
       ios: {
@@ -886,6 +956,7 @@ const styles = StyleSheet.create({
   buttonText: {
     fontSize: typography.size.sm,
     fontWeight: typography.weight.medium,
+    fontFamily: typography.family.medium,
     textAlign: "center",
   },
   buttonTextLink: {
@@ -909,6 +980,7 @@ const styles = StyleSheet.create({
   badgeText: {
     fontSize: typography.size.xs,
     fontWeight: typography.weight.medium,
+    fontFamily: typography.family.medium,
   },
 
   // Chip
@@ -933,14 +1005,17 @@ const styles = StyleSheet.create({
   },
   chipText: {
     fontSize: typography.size.sm,
+    fontFamily: typography.family.medium,
   },
   chipTextSelected: {
     color: shadcn.primaryForeground,
     fontWeight: typography.weight.semibold,
+    fontFamily: typography.family.semibold,
   },
   chipTextUnselected: {
     color: colors.textSecondary,
     fontWeight: typography.weight.medium,
+    fontFamily: typography.family.medium,
   },
   chipCountBadge: {
     marginLeft: spacing.xs,
@@ -957,6 +1032,7 @@ const styles = StyleSheet.create({
   chipCountText: {
     fontSize: 10,
     fontWeight: typography.weight.bold,
+    fontFamily: typography.family.bold,
   },
   chipCountTextSelected: {
     color: shadcn.primaryForeground,
@@ -972,6 +1048,7 @@ const styles = StyleSheet.create({
   inputLabel: {
     fontSize: typography.size.sm,
     fontWeight: typography.weight.medium,
+    fontFamily: typography.family.medium,
     color: colors.textPrimary,
     marginBottom: 6,
   },
@@ -1000,6 +1077,7 @@ const styles = StyleSheet.create({
   inputField: {
     flex: 1,
     fontSize: typography.size.base,
+    fontFamily: typography.family.regular,
     color: colors.textPrimary,
     minHeight: touchTarget.minHeight,
     paddingVertical: 0,
@@ -1019,11 +1097,13 @@ const styles = StyleSheet.create({
   },
   inputErrorText: {
     fontSize: typography.size.xs,
+    fontFamily: typography.family.regular,
     color: shadcn.status.danger.text,
     marginTop: spacing.xs,
   },
   inputHelperText: {
     fontSize: typography.size.xs,
+    fontFamily: typography.family.regular,
     color: colors.textSecondary,
     marginTop: spacing.xs,
   },
@@ -1042,11 +1122,13 @@ const styles = StyleSheet.create({
   sectionHeaderTitle: {
     fontSize: typography.size.lg,
     fontWeight: typography.weight.semibold,
+    fontFamily: typography.family.semibold,
     color: colors.textPrimary,
     letterSpacing: typography.tracking.snug,
   },
   sectionHeaderSubtitle: {
     fontSize: typography.size.xs,
+    fontFamily: typography.family.regular,
     color: colors.textSecondary,
     marginTop: 2,
   },
@@ -1076,11 +1158,13 @@ const styles = StyleSheet.create({
   childSingleName: {
     fontSize: typography.size.base,
     fontWeight: typography.weight.semibold,
+    fontFamily: typography.family.semibold,
     color: colors.textPrimary,
     letterSpacing: typography.tracking.snug,
   },
   childSingleClass: {
     fontSize: typography.size.xs,
+    fontFamily: typography.family.regular,
     color: colors.textSecondary,
     marginTop: 2,
   },
@@ -1090,6 +1174,7 @@ const styles = StyleSheet.create({
   childSwitcherLabel: {
     fontSize: typography.size.xs,
     fontWeight: typography.weight.medium,
+    fontFamily: typography.family.medium,
     color: colors.textSecondary,
     marginBottom: spacing.xs,
   },
@@ -1131,6 +1216,7 @@ const styles = StyleSheet.create({
   childTabAvatarText: {
     fontSize: typography.size.xs,
     fontWeight: typography.weight.bold,
+    fontFamily: typography.family.bold,
   },
   childTabAvatarTextActive: {
     color: shadcn.primaryForeground,
@@ -1143,17 +1229,21 @@ const styles = StyleSheet.create({
   },
   childTabName: {
     fontSize: typography.size.sm,
+    fontFamily: typography.family.medium,
   },
   childTabNameActive: {
     color: shadcn.primaryForeground,
     fontWeight: typography.weight.semibold,
+    fontFamily: typography.family.semibold,
   },
   childTabNameInactive: {
     color: colors.textPrimary,
     fontWeight: typography.weight.medium,
+    fontFamily: typography.family.medium,
   },
   childTabClass: {
     fontSize: 11,
+    fontFamily: typography.family.regular,
   },
   childTabClassActive: {
     color: colors.textInverseMuted,
@@ -1172,6 +1262,7 @@ const styles = StyleSheet.create({
   stateLoadingText: {
     marginTop: spacing.md,
     fontSize: typography.size.sm,
+    fontFamily: typography.family.regular,
     color: colors.textSecondary,
   },
   stateIconCircle: {
@@ -1192,6 +1283,7 @@ const styles = StyleSheet.create({
   stateTitle: {
     fontSize: typography.size.lg,
     fontWeight: typography.weight.semibold,
+    fontFamily: typography.family.semibold,
     color: colors.textPrimary,
     letterSpacing: typography.tracking.snug,
     marginBottom: spacing.xs,
@@ -1199,6 +1291,7 @@ const styles = StyleSheet.create({
   },
   stateMessage: {
     fontSize: typography.size.sm,
+    fontFamily: typography.family.regular,
     color: colors.textSecondary,
     textAlign: "center",
     lineHeight: typography.lineHeight.sm,
@@ -1261,6 +1354,7 @@ const styles = StyleSheet.create({
   modalTitleText: {
     fontSize: typography.size.lg,
     fontWeight: typography.weight.semibold,
+    fontFamily: typography.family.semibold,
     letterSpacing: typography.tracking.snug,
     color: colors.textPrimary,
     flex: 1,

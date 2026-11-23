@@ -12,10 +12,12 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@expo-google-fonts/plus-jakarta-sans": "^0.4.2",
     "@expo/vector-icons": "^14.0.4",
     "@neoschola/shared": "*",
     "expo": "~52.0.37",
     "expo-constants": "~17.0.7",
+    "expo-font": "^58.0.12",
     "expo-linking": "~7.0.5",
     "expo-router": "~4.0.17",
     "expo-status-bar": "~2.0.1",

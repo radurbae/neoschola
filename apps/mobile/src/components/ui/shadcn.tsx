@@ -3,7 +3,6 @@ import {
   View,
   Text,
   StyleSheet,
-  TouchableOpacity,
   StyleProp,
   ViewStyle,
   TextStyle,
@@ -11,6 +10,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { shadcn, shadows, radius, spacing, typography, touchTarget } from "../../theme/tokens";
+import { SpringPressable } from "./motion";
 
 export interface CardHeaderProps {
   children: React.ReactNode;
@@ -246,10 +246,9 @@ export function Tabs({
       {items.map((item) => {
         const isActive = item.value === value;
         return (
-          <TouchableOpacity
+          <SpringPressable
             key={item.value}
             onPress={() => onValueChange(item.value)}
-            activeOpacity={0.7}
             accessibilityRole="tab"
             accessibilityState={{ selected: isActive }}
             accessibilityLabel={item.accessibilityLabel || item.label}
@@ -283,7 +282,7 @@ export function Tabs({
                 </Text>
               </View>
             )}
-          </TouchableOpacity>
+          </SpringPressable>
         );
       })}
     </View>
@@ -325,11 +324,13 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: typography.size.lg,
     fontWeight: typography.weight.semibold,
+    fontFamily: typography.family.semibold,
     color: shadcn.cardForeground,
     letterSpacing: typography.tracking.snug,
   },
   cardDescription: {
     fontSize: typography.size.sm,
+    fontFamily: typography.family.regular,
     color: shadcn.mutedForeground,
     lineHeight: typography.lineHeight.sm,
     marginTop: 2,
@@ -352,12 +353,14 @@ const styles = StyleSheet.create({
   label: {
     fontSize: typography.size.sm,
     fontWeight: typography.weight.medium,
+    fontFamily: typography.family.medium,
     color: shadcn.foreground,
   },
   labelAsterisk: {
     color: shadcn.destructive,
     fontSize: typography.size.sm,
     fontWeight: typography.weight.bold,
+    fontFamily: typography.family.bold,
     marginLeft: 3,
   },
 
@@ -395,6 +398,7 @@ const styles = StyleSheet.create({
   avatarTextBase: {
     color: shadcn.primary,
     fontWeight: typography.weight.semibold,
+    fontFamily: typography.family.semibold,
   },
   avatarTextSm: {
     fontSize: 12,
@@ -423,10 +427,12 @@ const styles = StyleSheet.create({
   alertTitleBase: {
     fontSize: typography.size.sm,
     fontWeight: typography.weight.semibold,
+    fontFamily: typography.family.semibold,
     marginBottom: 2,
   },
   alertDescriptionBase: {
     fontSize: typography.size.sm,
+    fontFamily: typography.family.regular,
     lineHeight: typography.lineHeight.sm,
   },
   alertDefault: {
@@ -512,14 +518,17 @@ const styles = StyleSheet.create({
   },
   tabTriggerText: {
     fontSize: typography.size.sm,
+    fontFamily: typography.family.medium,
   },
   tabTriggerTextActive: {
     color: shadcn.foreground,
     fontWeight: typography.weight.semibold,
+    fontFamily: typography.family.semibold,
   },
   tabTriggerTextInactive: {
     color: shadcn.mutedForeground,
     fontWeight: typography.weight.medium,
+    fontFamily: typography.family.medium,
   },
   tabCountBadge: {
     marginLeft: 6,
@@ -536,6 +545,7 @@ const styles = StyleSheet.create({
   tabCountText: {
     fontSize: 10,
     fontWeight: typography.weight.bold,
+    fontFamily: typography.family.bold,
   },
   tabCountTextActive: {
     color: shadcn.primaryForeground,

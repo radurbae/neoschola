@@ -8,6 +8,17 @@ export const breakpoints = {
   tablet: 768,
 } as const;
 
+export const layout = {
+  mobilePaddingX: 20,
+  tabletPaddingX: 32,
+  tabletPaddingY: 24,
+  sectionGap: 24,
+  bentoGap: 18,
+  cardPadding: 20,
+  heroPadding: 24,
+  scrollBottomPad: 48,
+} as const;
+
 export const bento = {
   obsidian: "#141416",
   obsidianHover: "#27272A",
@@ -160,6 +171,12 @@ export const radius = {
 } as const;
 
 export const typography = {
+  family: {
+    regular: "PlusJakartaSans_400Regular",
+    medium: "PlusJakartaSans_500Medium",
+    semibold: "PlusJakartaSans_600SemiBold",
+    bold: "PlusJakartaSans_700Bold",
+  },
   size: {
     xs: 12,
     sm: 14,
@@ -170,13 +187,13 @@ export const typography = {
     xxxl: 30,
   },
   lineHeight: {
-    xs: 16,
-    sm: 20,
+    xs: 18,
+    sm: 21,
     base: 24,
-    lg: 26,
-    xl: 28,
-    xxl: 32,
-    xxxl: 38,
+    lg: 27,
+    xl: 29,
+    xxl: 33,
+    xxxl: 40,
   },
   weight: {
     regular: "400" as const,

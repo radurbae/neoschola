@@ -3,7 +3,6 @@ import {
   View,
   Text,
   StyleSheet,
-  TouchableOpacity,
   Platform,
   useWindowDimensions,
   StyleProp,
@@ -13,6 +12,7 @@ import { Ionicons } from "@expo/vector-icons";
 import {
   bento,
   breakpoints,
+  layout,
   radius,
   shadcn,
   spacing,
@@ -20,6 +20,7 @@ import {
   typography,
 } from "../../theme/tokens";
 import { Avatar } from "./shadcn";
+import { FadeSlideView, SpringPressable } from "./motion";
 
 export interface ShellNavItem {
   key: string;
@@ -60,7 +61,7 @@ export function ResponsiveShell({
             {navItems.map((item) => {
               const isActive = item.key === activeKey;
               return (
-                <TouchableOpacity
+                <SpringPressable
                   key={item.key}
                   onPress={() => onSelect(item.href)}
                   style={[
@@ -70,7 +71,6 @@ export function ResponsiveShell({
                   accessibilityRole="button"
                   accessibilityState={{ selected: isActive }}
                   accessibilityLabel={item.accessibilityLabel || item.label}
-                  activeOpacity={0.7}
                 >
                   <Ionicons
                     name={isActive ? item.activeIcon : item.icon}
@@ -81,27 +81,30 @@ export function ResponsiveShell({
                         : bento.obsidianMuted
                     }
                   />
-                </TouchableOpacity>
+                </SpringPressable>
               );
             })}
           </View>
 
-          <TouchableOpacity
+          <SpringPressable
             onPress={onLogout}
             style={styles.tabletLogoutButton}
             accessibilityRole="button"
             accessibilityLabel="Keluar akun"
-            activeOpacity={0.7}
           >
             <Ionicons
               name="log-out-outline"
               size={22}
               color={bento.obsidianMuted}
             />
-          </TouchableOpacity>
+          </SpringPressable>
         </View>
 
-        <View style={styles.tabletContentArea}>{children}</View>
+        <View style={styles.tabletContentArea}>
+          <FadeSlideView transitionKey={activeKey} style={styles.fillArea}>
+            {children}
+          </FadeSlideView>
+        </View>
       </View>
     );
   }
@@ -110,20 +113,23 @@ export function ResponsiveShell({
 
   return (
     <View style={styles.mobileContainer}>
-      <View style={styles.mobileContentArea}>{children}</View>
+      <View style={styles.mobileContentArea}>
+        <FadeSlideView transitionKey={activeKey} style={styles.fillArea}>
+          {children}
+        </FadeSlideView>
+      </View>
 
       <View style={styles.mobileDock}>
         {mobileNavItems.map((item) => {
           const isActive = item.key === activeKey;
           return (
-            <TouchableOpacity
+            <SpringPressable
               key={item.key}
               onPress={() => onSelect(item.href)}
               style={styles.mobileDockButton}
               accessibilityRole="button"
               accessibilityState={{ selected: isActive }}
               accessibilityLabel={item.accessibilityLabel || item.label}
-              activeOpacity={0.7}
             >
               <Ionicons
                 name={isActive ? item.activeIcon : item.icon}
@@ -140,7 +146,7 @@ export function ResponsiveShell({
                   isActive && styles.mobileActiveDotVisible,
                 ]}
               />
-            </TouchableOpacity>
+            </SpringPressable>
           );
         })}
       </View>
@@ -169,10 +175,19 @@ export function TopUtilityBar({
   profileName,
   onPressProfile,
 }: TopUtilityBarProps) {
+  const { width } = useWindowDimensions();
+  const isTablet = width >= breakpoints.tablet;
   const firstName = profileName ? profileName.trim().split(/\s+/)[0] : "Profil";
 
+  const dynamicBarPadding = {
+    paddingHorizontal: isTablet ? layout.tabletPaddingX : layout.mobilePaddingX,
+    paddingTop: isTablet ? 24 : 16,
+    paddingBottom: 14,
+    gap: 12,
+  };
+
   return (
-    <View style={styles.topUtilityBar}>
+    <View style={[styles.topUtilityBar, dynamicBarPadding]}>
       <View style={styles.topUtilityLeft}>
         {Boolean(leftAction) && (
           <View style={styles.topUtilityLeftAction}>{leftAction}</View>
@@ -191,28 +206,26 @@ export function TopUtilityBar({
 
       <View style={styles.topUtilityRight}>
         {Boolean(onPressAnnouncements) && (
-          <TouchableOpacity
+          <SpringPressable
             onPress={onPressAnnouncements}
             style={styles.utilityIconButton}
             accessibilityRole="button"
             accessibilityLabel="Pengumuman sekolah"
-            activeOpacity={0.7}
           >
             <Ionicons
               name="megaphone-outline"
               size={20}
               color={shadcn.foreground}
             />
-          </TouchableOpacity>
+          </SpringPressable>
         )}
 
         {Boolean(onPressNotifications) && (
-          <TouchableOpacity
+          <SpringPressable
             onPress={onPressNotifications}
             style={styles.utilityIconButton}
             accessibilityRole="button"
             accessibilityLabel="Notifikasi"
-            activeOpacity={0.7}
           >
             <Ionicons
               name="notifications-outline"
@@ -220,16 +233,15 @@ export function TopUtilityBar({
               color={shadcn.foreground}
             />
             {unreadCount > 0 && <View style={styles.notificationDot} />}
-          </TouchableOpacity>
+          </SpringPressable>
         )}
 
         {(Boolean(profileName) || Boolean(onPressProfile)) && (
-          <TouchableOpacity
+          <SpringPressable
             onPress={onPressProfile}
             style={styles.profilePill}
             accessibilityRole="button"
             accessibilityLabel="Profil pengguna"
-            activeOpacity={0.7}
             disabled={!onPressProfile}
           >
             <Avatar name={profileName || "User"} size="sm" />
@@ -241,7 +253,7 @@ export function TopUtilityBar({
               size={16}
               color={bento.pastelMutedText}
             />
-          </TouchableOpacity>
+          </SpringPressable>
         )}
       </View>
     </View>
@@ -303,8 +315,10 @@ export function PastelStatCard({
         style,
       ]}
     >
-      <Text style={styles.statCardValue}>{value}</Text>
-      <Text style={styles.statCardLabel}>{label}</Text>
+      <View>
+        <Text style={styles.statCardValue}>{value}</Text>
+        <Text style={styles.statCardLabel}>{label}</Text>
+      </View>
 
       <View style={styles.statCardBottomRow}>
         <View style={styles.statCardIconBox}>
@@ -326,19 +340,22 @@ export function PastelStatCard({
 
   if (onPress) {
     return (
-      <TouchableOpacity
+      <SpringPressable
         onPress={onPress}
         accessibilityRole="button"
         accessibilityLabel={accessibilityLabel || label}
-        activeOpacity={0.7}
         style={styles.statCardTouchWrapper}
       >
         {content}
-      </TouchableOpacity>
+      </SpringPressable>
     );
   }
 
-  return content;
+  return (
+    <View style={styles.statCardTouchWrapper}>
+      {content}
+    </View>
+  );
 }
 
 export interface TrendPoint {
@@ -392,7 +409,7 @@ export function MiniTrendChart({
       <View style={styles.sparklineContainer}>
         {points.map((point, index) => {
           const isLast = index === points.length - 1;
-          const barHeight = Math.max((point.value / maxValue) * 44, 4);
+          const barHeight = Math.max((point.value / maxValue) * 52, 6);
 
           return (
             <View key={point.label + index} style={styles.sparklineBarColumn}>
@@ -418,10 +435,10 @@ export function MiniTrendChart({
           {periods?.map((period) => {
             const isActive = period.key === activePeriod;
             return (
-              <TouchableOpacity
+              <SpringPressable
                 key={period.key}
                 onPress={() => onPeriodChange?.(period.key)}
-                hitSlop={{ top: 4, bottom: 4, left: 4, right: 4 }}
+                hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
                 style={[
                   styles.periodButton,
                   isActive
@@ -431,7 +448,6 @@ export function MiniTrendChart({
                 accessibilityRole="button"
                 accessibilityState={{ selected: isActive }}
                 accessibilityLabel={period.label}
-                activeOpacity={0.7}
               >
                 <Text
                   style={[
@@ -443,7 +459,7 @@ export function MiniTrendChart({
                 >
                   {period.label}
                 </Text>
-              </TouchableOpacity>
+              </SpringPressable>
             );
           })}
         </View>
@@ -474,24 +490,25 @@ export function DarkActionCard({
       <View pointerEvents="none" style={styles.darkActionAccentOne} />
       <View pointerEvents="none" style={styles.darkActionAccentTwo} />
 
-      {Boolean(eyebrow) && (
-        <View style={styles.darkActionEyebrowContainer}>
-          <Text style={styles.darkActionEyebrowText}>{eyebrow}</Text>
-        </View>
-      )}
+      <View>
+        {Boolean(eyebrow) && (
+          <View style={styles.darkActionEyebrowContainer}>
+            <Text style={styles.darkActionEyebrowText}>{eyebrow}</Text>
+          </View>
+        )}
 
-      <Text style={styles.darkActionTitle}>{title}</Text>
-      <Text style={styles.darkActionDescription}>{description}</Text>
+        <Text style={styles.darkActionTitle}>{title}</Text>
+        <Text style={styles.darkActionDescription}>{description}</Text>
+      </View>
 
-      <TouchableOpacity
+      <SpringPressable
         onPress={onPress}
         style={styles.darkActionCtaButton}
         accessibilityRole="button"
         accessibilityLabel={ctaLabel}
-        activeOpacity={0.8}
       >
         <Text style={styles.darkActionCtaText}>{ctaLabel}</Text>
-      </TouchableOpacity>
+      </SpringPressable>
     </View>
   );
 }
@@ -572,15 +589,14 @@ export function DarkIconRow({
 
   if (onPress) {
     return (
-      <TouchableOpacity
+      <SpringPressable
         onPress={onPress}
         style={styles.iconRowTouchContainer}
         accessibilityRole="button"
         accessibilityLabel={accessibilityLabel || title}
-        activeOpacity={0.7}
       >
         {rowContent}
-      </TouchableOpacity>
+      </SpringPressable>
     );
   }
 
@@ -588,17 +604,21 @@ export function DarkIconRow({
 }
 
 const styles = StyleSheet.create({
+  fillArea: {
+    flex: 1,
+  },
   tabletOuterFrame: {
     flex: 1,
     flexDirection: "row",
     backgroundColor: bento.obsidian,
-    padding: 10,
+    padding: 16,
+    gap: 12,
   },
   tabletRail: {
-    width: 64,
+    width: 72,
     alignItems: "center",
     justifyContent: "space-between",
-    paddingVertical: spacing.md,
+    paddingVertical: 20,
   },
   tabletBadgeContainer: {
     width: 44,
@@ -611,6 +631,7 @@ const styles = StyleSheet.create({
   tabletBadgeText: {
     fontSize: typography.size.base,
     fontWeight: typography.weight.bold,
+    fontFamily: typography.family.bold,
     color: bento.obsidian,
   },
   tabletNavList: {
@@ -657,13 +678,13 @@ const styles = StyleSheet.create({
   mobileDock: {
     backgroundColor: bento.obsidian,
     borderRadius: radius.xxl,
-    height: 60,
-    marginHorizontal: 14,
-    marginBottom: Platform.OS === "ios" ? 18 : 10,
+    height: 64,
+    marginHorizontal: 20,
+    marginBottom: Platform.OS === "ios" ? 22 : 14,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-around",
-    paddingHorizontal: spacing.sm,
+    paddingHorizontal: 12,
   },
   mobileDockButton: {
     width: 44,
@@ -689,8 +710,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
     backgroundColor: bento.surface,
     minHeight: 56,
   },
@@ -709,11 +728,13 @@ const styles = StyleSheet.create({
   topUtilityTitle: {
     fontSize: typography.size.xxl,
     fontWeight: typography.weight.bold,
+    fontFamily: typography.family.bold,
     letterSpacing: -0.5,
     color: shadcn.foreground,
   },
   topUtilitySubtitle: {
     fontSize: 13,
+    fontFamily: typography.family.regular,
     color: bento.pastelMutedText,
     marginTop: 2,
   },
@@ -754,6 +775,7 @@ const styles = StyleSheet.create({
   profilePillName: {
     fontSize: typography.size.sm,
     fontWeight: typography.weight.semibold,
+    fontFamily: typography.family.semibold,
     color: shadcn.foreground,
     marginHorizontal: 6,
     maxWidth: 90,
@@ -761,21 +783,28 @@ const styles = StyleSheet.create({
 
   // PastelStatCard
   statCardTouchWrapper: {
+    flex: 1,
+    alignSelf: "stretch",
     minHeight: touchTarget.minHeight,
   },
   statCardContainer: {
+    flex: 1,
+    minHeight: 168,
+    padding: 20,
+    justifyContent: "space-between",
     borderRadius: radius.xl,
-    padding: spacing.lg,
     borderWidth: 0,
   },
   statCardValue: {
     fontSize: typography.size.lg,
     fontWeight: typography.weight.bold,
+    fontFamily: typography.family.bold,
     fontVariant: ["tabular-nums"],
     color: shadcn.foreground,
   },
   statCardLabel: {
     fontSize: 13,
+    fontFamily: typography.family.regular,
     color: bento.pastelMutedText,
     marginTop: 4,
   },
@@ -796,14 +825,18 @@ const styles = StyleSheet.create({
   statCardTrendText: {
     fontSize: typography.size.xs,
     fontWeight: typography.weight.semibold,
+    fontFamily: typography.family.semibold,
     fontVariant: ["tabular-nums"],
   },
 
   // MiniTrendChart
   trendCard: {
+    flex: 1,
+    minHeight: 232,
+    padding: 24,
+    justifyContent: "space-between",
     backgroundColor: bento.iceBlue,
     borderRadius: radius.xxl,
-    padding: spacing.xl,
     borderWidth: 0,
   },
   trendHeader: {
@@ -817,11 +850,13 @@ const styles = StyleSheet.create({
   trendHeroValue: {
     fontSize: 28,
     fontWeight: typography.weight.bold,
+    fontFamily: typography.family.bold,
     fontVariant: ["tabular-nums"],
     color: shadcn.foreground,
   },
   trendHeroLabel: {
     fontSize: 13,
+    fontFamily: typography.family.regular,
     color: bento.pastelMutedText,
     marginTop: 2,
   },
@@ -835,10 +870,11 @@ const styles = StyleSheet.create({
     color: bento.obsidianForeground,
     fontSize: typography.size.xs,
     fontWeight: typography.weight.semibold,
+    fontFamily: typography.family.semibold,
     fontVariant: ["tabular-nums"],
   },
   sparklineContainer: {
-    height: 64,
+    height: 76,
     flexDirection: "row",
     alignItems: "flex-end",
     justifyContent: "space-between",
@@ -850,11 +886,12 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
   },
   sparklineBar: {
-    width: 14,
-    borderRadius: radius.sm,
+    width: 18,
+    borderRadius: 6,
   },
   sparklineBarLabel: {
     fontSize: 10,
+    fontFamily: typography.family.medium,
     color: bento.pastelMutedText,
     marginTop: 4,
     textAlign: "center",
@@ -884,15 +921,22 @@ const styles = StyleSheet.create({
   periodButtonTextActive: {
     color: bento.obsidianForeground,
     fontWeight: typography.weight.semibold,
+    fontFamily: typography.family.semibold,
   },
   periodButtonTextInactive: {
     color: bento.pastelMutedText,
     fontWeight: typography.weight.medium,
+    fontFamily: typography.family.medium,
   },
+
+  // DarkActionCard
   darkActionCard: {
+    flex: 1,
+    minHeight: 220,
+    padding: 24,
+    justifyContent: "space-between",
     backgroundColor: bento.obsidian,
     borderRadius: radius.xxl,
-    padding: spacing.xl,
     overflow: "hidden",
     position: "relative",
   },
@@ -928,6 +972,7 @@ const styles = StyleSheet.create({
   darkActionEyebrowText: {
     fontSize: 11,
     fontWeight: typography.weight.semibold,
+    fontFamily: typography.family.semibold,
     color: bento.obsidianForeground,
     textTransform: "uppercase",
     letterSpacing: 0.5,
@@ -935,11 +980,13 @@ const styles = StyleSheet.create({
   darkActionTitle: {
     fontSize: typography.size.xl,
     fontWeight: typography.weight.bold,
+    fontFamily: typography.family.bold,
     color: bento.obsidianForeground,
     letterSpacing: -0.3,
   },
   darkActionDescription: {
     fontSize: typography.size.sm,
+    fontFamily: typography.family.regular,
     lineHeight: typography.lineHeight.sm,
     color: bento.obsidianMuted,
     marginTop: 6,
@@ -957,23 +1004,25 @@ const styles = StyleSheet.create({
   darkActionCtaText: {
     fontSize: typography.size.sm,
     fontWeight: typography.weight.semibold,
+    fontFamily: typography.family.semibold,
     color: shadcn.foreground,
   },
 
   // DarkIconRow
   iconRowTouchContainer: {
-    minHeight: 56,
+    minHeight: 64,
     justifyContent: "center",
   },
   iconRowContainer: {
-    minHeight: 56,
+    minHeight: 64,
     justifyContent: "center",
   },
   iconRowContent: {
-    minHeight: 56,
+    minHeight: 64,
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: spacing.sm,
+    paddingVertical: 12,
+    paddingHorizontal: 4,
   },
   iconRowBox: {
     width: 40,
@@ -991,10 +1040,12 @@ const styles = StyleSheet.create({
   iconRowTitle: {
     fontSize: 15,
     fontWeight: typography.weight.semibold,
+    fontFamily: typography.family.semibold,
     color: shadcn.foreground,
   },
   iconRowSubtitle: {
     fontSize: 13,
+    fontFamily: typography.family.regular,
     color: bento.pastelMutedText,
     marginTop: 2,
   },
@@ -1005,11 +1056,13 @@ const styles = StyleSheet.create({
   iconRowRightPrimary: {
     fontSize: 15,
     fontWeight: typography.weight.semibold,
+    fontFamily: typography.family.semibold,
     fontVariant: ["tabular-nums"],
     color: shadcn.foreground,
   },
   iconRowRightSecondary: {
     fontSize: typography.size.xs,
     fontWeight: typography.weight.medium,
+    fontFamily: typography.family.medium,
   },
 });
