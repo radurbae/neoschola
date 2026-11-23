@@ -21,6 +21,7 @@ import { useAuth } from "../../store/auth";
 import * as api from "../../lib/api";
 import {
   breakpoints,
+  layout,
   radius,
   shadcn,
   spacing,
@@ -116,8 +117,21 @@ export function StaffDashboardScreen() {
       />
 
       <ScrollView
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[
+          styles.scrollContent,
+          {
+            paddingHorizontal: isTablet
+              ? layout.tabletPaddingX
+              : layout.mobilePaddingX,
+            paddingTop: 12,
+            paddingBottom: layout.scrollBottomPad,
+            gap: layout.sectionGap,
+          },
+        ]}
         showsVerticalScrollIndicator={false}
+        scrollEventThrottle={16}
+        decelerationRate="normal"
+        bounces={true}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -139,7 +153,7 @@ export function StaffDashboardScreen() {
           />
         ) : (
           <View style={styles.bentoContent}>
-            <View style={isTablet ? styles.rowTablet : styles.rowMobile}>
+            <View style={isTablet ? styles.rowTablet1 : styles.rowMobile}>
               <View style={isTablet ? styles.colChartTablet : styles.colMobile}>
                 <MiniTrendChart
                   heroValue="96%"
@@ -158,55 +172,109 @@ export function StaffDashboardScreen() {
                   ]}
                   activePeriod={trendPeriod}
                   onPeriodChange={setTrendPeriod}
+                  style={isTablet ? styles.chartFullHeight : undefined}
                 />
               </View>
 
-              <View style={isTablet ? styles.colStatsTablet : styles.colStatsMobile}>
-                <PastelStatCard
-                  tone="lavender"
-                  value={String(metrics.studentCount)}
-                  label="Siswa Terpantau"
-                  icon="people-outline"
-                  trendText="Aktif di rombel"
-                  style={styles.statCardItem}
-                />
-                <PastelStatCard
-                  tone="mint"
-                  value={String(metrics.pendingLeaveCount)}
-                  label="Antrean Izin"
-                  icon="hourglass-outline"
-                  trendText="Menunggu ditinjau"
-                  onPress={() => router.push("/(staff)/izin" as any)}
-                  accessibilityLabel={`Tinjau ${metrics.pendingLeaveCount} permohonan izin pending`}
-                  style={styles.statCardItem}
-                />
-                <PastelStatCard
-                  tone="butter"
-                  value={
-                    isAdmin
-                      ? String(metrics.waitingInvoiceCount)
-                      : String(metrics.unreadMessageCount)
-                  }
-                  label={isAdmin ? "Verifikasi SPP" : "Pesan Wali"}
-                  icon={isAdmin ? "wallet-outline" : "chatbubble-ellipses-outline"}
-                  trendText={isAdmin ? "Perlu konfirmasi" : "Pesan baru"}
-                  onPress={() =>
-                    router.push(
-                      (isAdmin ? "/(staff)/keuangan" : "/(staff)/pesan") as any
-                    )
-                  }
-                  accessibilityLabel={
-                    isAdmin
-                      ? `Verifikasi ${metrics.waitingInvoiceCount} pembayaran tagihan`
-                      : `Buka ${metrics.unreadMessageCount} pesan wali murid belum dibaca`
-                  }
-                  style={styles.statCardItem}
-                />
-              </View>
+              {isTablet ? (
+                <View style={styles.colStatsTablet}>
+                  <PastelStatCard
+                    tone="lavender"
+                    value={String(metrics.studentCount)}
+                    label="Siswa Terpantau"
+                    icon="people-outline"
+                    trendText="Aktif di rombel"
+                    style={styles.statCardItemTablet}
+                  />
+                  <PastelStatCard
+                    tone="mint"
+                    value={String(metrics.pendingLeaveCount)}
+                    label="Antrean Izin"
+                    icon="hourglass-outline"
+                    trendText="Menunggu ditinjau"
+                    onPress={() => router.push("/(staff)/izin" as any)}
+                    accessibilityLabel={`Tinjau ${metrics.pendingLeaveCount} permohonan izin pending`}
+                    style={styles.statCardItemTablet}
+                  />
+                  <PastelStatCard
+                    tone="butter"
+                    value={
+                      isAdmin
+                        ? String(metrics.waitingInvoiceCount)
+                        : String(metrics.unreadMessageCount)
+                    }
+                    label={isAdmin ? "Verifikasi SPP" : "Pesan Wali"}
+                    icon={isAdmin ? "wallet-outline" : "chatbubble-ellipses-outline"}
+                    trendText={isAdmin ? "Perlu konfirmasi" : "Pesan baru"}
+                    onPress={() =>
+                      router.push(
+                        (isAdmin ? "/(staff)/keuangan" : "/(staff)/pesan") as any
+                      )
+                    }
+                    accessibilityLabel={
+                      isAdmin
+                        ? `Verifikasi ${metrics.waitingInvoiceCount} pembayaran tagihan`
+                        : `Buka ${metrics.unreadMessageCount} pesan wali murid belum dibaca`
+                    }
+                    style={styles.statCardItemTablet}
+                  />
+                </View>
+              ) : (
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  snapToInterval={188}
+                  decelerationRate="fast"
+                  snapToAlignment="start"
+                  contentContainerStyle={styles.mobileStripContent}
+                  style={styles.mobileStrip}
+                >
+                  <PastelStatCard
+                    tone="lavender"
+                    value={String(metrics.studentCount)}
+                    label="Siswa Terpantau"
+                    icon="people-outline"
+                    trendText="Aktif di rombel"
+                    style={styles.statCardItemMobile}
+                  />
+                  <PastelStatCard
+                    tone="mint"
+                    value={String(metrics.pendingLeaveCount)}
+                    label="Antrean Izin"
+                    icon="hourglass-outline"
+                    trendText="Menunggu ditinjau"
+                    onPress={() => router.push("/(staff)/izin" as any)}
+                    accessibilityLabel={`Tinjau ${metrics.pendingLeaveCount} permohonan izin pending`}
+                    style={styles.statCardItemMobile}
+                  />
+                  <PastelStatCard
+                    tone="butter"
+                    value={
+                      isAdmin
+                        ? String(metrics.waitingInvoiceCount)
+                        : String(metrics.unreadMessageCount)
+                    }
+                    label={isAdmin ? "Verifikasi SPP" : "Pesan Wali"}
+                    icon={isAdmin ? "wallet-outline" : "chatbubble-ellipses-outline"}
+                    trendText={isAdmin ? "Perlu konfirmasi" : "Pesan baru"}
+                    onPress={() =>
+                      router.push(
+                        (isAdmin ? "/(staff)/keuangan" : "/(staff)/pesan") as any
+                      )
+                    }
+                    accessibilityLabel={
+                      isAdmin
+                        ? `Verifikasi ${metrics.waitingInvoiceCount} pembayaran tagihan`
+                        : `Buka ${metrics.unreadMessageCount} pesan wali murid belum dibaca`
+                    }
+                    style={styles.statCardItemMobile}
+                  />
+                </ScrollView>
+              )}
             </View>
 
-            <View style={isTablet ? styles.rowTablet : styles.rowMobile}>
-              <View style={isTablet ? styles.colFlexTablet : styles.colMobile}>
+            <View style={isTablet ? styles.rowTablet2 : styles.rowMobile}>
+              <View style={isTablet ? styles.colActionsTablet : styles.colMobile}>
                 <View style={styles.actionsBox}>
                   <DarkIconRow
                     icon="calendar-outline"
@@ -284,13 +352,14 @@ export function StaffDashboardScreen() {
                 </View>
               </View>
 
-              <View style={isTablet ? styles.colFlexTablet : styles.colMobile}>
+              <View style={isTablet ? styles.colActionCardTablet : styles.colMobile}>
                 <DarkActionCard
                   eyebrow="Harian"
                   title="Input Presensi Kelas Hari Ini"
                   description="Presensi kehadiran siswa kelas Anda untuk hari ini belum tersimpan lengkap. Segera lakukan perekaman presensi."
                   ctaLabel="Mulai Presensi"
                   onPress={() => router.push("/(staff)/presensi" as any)}
+                  style={isTablet ? styles.actionCardFullHeight : undefined}
                 />
               </View>
             </View>
@@ -307,47 +376,72 @@ const styles = StyleSheet.create({
     backgroundColor: shadcn.background,
   },
   scrollContent: {
-    padding: spacing.lg,
-    paddingBottom: spacing.max,
+    flexGrow: 1,
   },
   bentoContent: {
-    gap: spacing.lg,
+    gap: layout.sectionGap,
   },
-  rowTablet: {
+  rowTablet1: {
     flexDirection: "row",
-    gap: spacing.lg,
     alignItems: "stretch",
+    gap: 20,
+  },
+  rowTablet2: {
+    flexDirection: "row",
+    alignItems: "stretch",
+    gap: 20,
   },
   rowMobile: {
     flexDirection: "column",
-    gap: spacing.lg,
+    gap: layout.bentoGap,
   },
   colChartTablet: {
-    flex: 1.2,
+    flex: 1.05,
+  },
+  chartFullHeight: {
+    height: "100%",
   },
   colStatsTablet: {
-    flex: 1,
-    gap: spacing.md,
+    flex: 1.35,
+    flexDirection: "row",
+    alignItems: "stretch",
+    gap: 14,
   },
-  colStatsMobile: {
-    flexDirection: "column",
-    gap: spacing.md,
-  },
-  colFlexTablet: {
+  statCardItemTablet: {
     flex: 1,
+    minHeight: 164,
+  },
+  mobileStrip: {
+    marginHorizontal: -layout.mobilePaddingX,
+  },
+  mobileStripContent: {
+    paddingHorizontal: layout.mobilePaddingX,
+    gap: 12,
+  },
+  statCardItemMobile: {
+    width: 176,
+    minHeight: 164,
+  },
+  colActionsTablet: {
+    flex: 1.55,
+  },
+  colActionCardTablet: {
+    flex: 1,
+    alignItems: "stretch",
+  },
+  actionCardFullHeight: {
+    height: "100%",
+    justifyContent: "space-between",
   },
   colMobile: {
     width: "100%",
-  },
-  statCardItem: {
-    flex: 1,
   },
   actionsBox: {
     backgroundColor: shadcn.card,
     borderRadius: radius.xxl,
     borderWidth: 1,
     borderColor: shadcn.border,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
+    paddingHorizontal: layout.cardPadding,
+    paddingVertical: 8,
   },
 });

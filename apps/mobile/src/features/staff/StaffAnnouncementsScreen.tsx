@@ -8,6 +8,7 @@ import {
   RefreshControl,
   Alert as NativeAlert,
   Switch,
+  useWindowDimensions,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import {
@@ -34,6 +35,8 @@ import {
 import { useAuth } from "../../store/auth";
 import * as api from "../../lib/api";
 import {
+  breakpoints,
+  layout,
   radius,
   shadcn,
   spacing,
@@ -43,6 +46,8 @@ import {
 
 export function StaffAnnouncementsScreen() {
   const router = useRouter();
+  const { width } = useWindowDimensions();
+  const isTablet = width >= breakpoints.tablet;
   const { user, classes } = useAuth();
   const isAdmin = user?.role === Role.ADMIN;
 
@@ -208,8 +213,20 @@ export function StaffAnnouncementsScreen() {
       />
 
       <ScrollView
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[
+          styles.scrollContent,
+          {
+            paddingHorizontal: isTablet
+              ? layout.tabletPaddingX
+              : layout.mobilePaddingX,
+            gap: layout.sectionGap,
+            paddingBottom: layout.scrollBottomPad,
+          },
+        ]}
         showsVerticalScrollIndicator={false}
+        scrollEventThrottle={16}
+        decelerationRate="normal"
+        bounces={true}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -501,8 +518,7 @@ const styles = StyleSheet.create({
     backgroundColor: shadcn.background,
   },
   scrollContent: {
-    padding: spacing.lg,
-    paddingBottom: spacing.max,
+    flexGrow: 1,
   },
   actionCardMargin: {
     marginBottom: spacing.md,
@@ -529,15 +545,18 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   sheetDetailCategory: {
+    fontFamily: typography.family.semibold,
     fontSize: typography.size.xs,
     fontWeight: typography.weight.semibold,
     color: shadcn.status.info.text,
   },
   sheetDetailDate: {
+    fontFamily: typography.family.regular,
     fontSize: 11,
     color: shadcn.mutedForeground,
   },
   sheetDetailTitle: {
+    fontFamily: typography.family.bold,
     fontSize: typography.size.lg,
     fontWeight: typography.weight.bold,
     color: shadcn.foreground,
@@ -546,6 +565,7 @@ const styles = StyleSheet.create({
     marginVertical: spacing.xs,
   },
   sheetDetailContent: {
+    fontFamily: typography.family.regular,
     fontSize: typography.size.sm,
     color: shadcn.foreground,
     lineHeight: 22,
@@ -557,6 +577,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.xs,
   },
   sheetDetailAuthor: {
+    fontFamily: typography.family.regular,
     fontSize: 11,
     color: shadcn.mutedForeground,
   },
@@ -595,13 +616,16 @@ const styles = StyleSheet.create({
     borderColor: shadcn.border,
   },
   choiceChipText: {
+    fontFamily: typography.family.medium,
     fontSize: typography.size.xs,
     fontWeight: typography.weight.medium,
   },
   choiceChipTextSelected: {
+    fontFamily: typography.family.semibold,
     color: shadcn.primaryForeground,
   },
   choiceChipTextUnselected: {
+    fontFamily: typography.family.medium,
     color: shadcn.foreground,
   },
   classTargetSection: {
@@ -622,11 +646,13 @@ const styles = StyleSheet.create({
     marginRight: spacing.md,
   },
   switchTitle: {
+    fontFamily: typography.family.medium,
     fontSize: typography.size.sm,
     fontWeight: typography.weight.medium,
     color: shadcn.foreground,
   },
   switchDescription: {
+    fontFamily: typography.family.regular,
     fontSize: typography.size.xs,
     color: shadcn.mutedForeground,
   },

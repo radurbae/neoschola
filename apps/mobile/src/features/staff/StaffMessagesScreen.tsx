@@ -2,9 +2,9 @@ import React, { useState, useEffect, useCallback } from "react";
 import {
   View,
   StyleSheet,
-  TouchableOpacity,
   ScrollView,
   RefreshControl,
+  useWindowDimensions,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -16,18 +16,24 @@ import {
   Alert,
   Separator,
   DarkIconRow,
+  SpringPressable,
 } from "../../components/ui";
 import * as api from "../../lib/api";
 import {
   bento,
+  breakpoints,
+  layout,
   radius,
   shadcn,
   spacing,
   touchTarget,
+  typography,
 } from "../../theme/tokens";
 
 export function StaffMessagesScreen() {
   const router = useRouter();
+  const { width } = useWindowDimensions();
+  const isTablet = width >= breakpoints.tablet;
   const [threads, setThreads] = useState<MessageThread[]>([]);
   const [serviceHours, setServiceHours] = useState<string>(
     "Jam Layanan: Senin - Jumat, 07:00 - 15:00 WIB"
@@ -85,21 +91,32 @@ export function StaffMessagesScreen() {
         title="Pesan Wali"
         subtitle="Komunikasi dan konsultasi dengan wali siswa"
         leftAction={
-          <TouchableOpacity
+          <SpringPressable
             style={styles.backButton}
             onPress={handleBack}
-            activeOpacity={0.7}
             accessibilityRole="button"
             accessibilityLabel="Kembali ke Dasbor Staf"
           >
             <Ionicons name="arrow-back" size={20} color={shadcn.foreground} />
-          </TouchableOpacity>
+          </SpringPressable>
         }
       />
 
       <ScrollView
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[
+          styles.scrollContent,
+          {
+            paddingHorizontal: isTablet
+              ? layout.tabletPaddingX
+              : layout.mobilePaddingX,
+            gap: layout.sectionGap,
+            paddingBottom: layout.scrollBottomPad,
+          },
+        ]}
         showsVerticalScrollIndicator={false}
+        scrollEventThrottle={16}
+        decelerationRate="normal"
+        bounces={true}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -182,8 +199,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   scrollContent: {
-    padding: spacing.lg,
-    paddingBottom: spacing.max,
+    flexGrow: 1,
   },
   serviceAlert: {
     marginBottom: spacing.md,
