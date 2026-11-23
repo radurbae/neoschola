@@ -458,18 +458,21 @@ const styles = StyleSheet.create({
   },
   statCardItemTablet: {
     flex: 1,
+    height: 168,
     minHeight: 164,
   },
   mobileStrip: {
     marginHorizontal: -layout.mobilePaddingX,
+    flexGrow: 0,
   },
   mobileStripContent: {
+    alignItems: "center",
     paddingHorizontal: layout.mobilePaddingX,
     gap: 12,
   },
   statCardItemMobile: {
     width: 176,
-    minHeight: 164,
+    height: 164,
   },
   colActionsTablet: {
     flex: 1.55,

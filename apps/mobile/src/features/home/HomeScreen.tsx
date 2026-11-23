@@ -624,16 +624,18 @@ const styles = StyleSheet.create({
   },
   statCardsMobileStrip: {
     marginHorizontal: -layout.mobilePaddingX,
+    flexGrow: 0,
   },
   statCardsScrollMobile: {
     flexDirection: "row",
+    alignItems: "center",
     gap: 12,
     paddingHorizontal: layout.mobilePaddingX,
     paddingVertical: spacing.xs,
   },
   statCardItemMobile: {
     width: 176,
-    minHeight: 164,
+    height: 164,
   },
   filterChipRow: {
     flexDirection: "row",

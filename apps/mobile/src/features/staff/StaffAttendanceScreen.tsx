@@ -275,43 +275,45 @@ export function StaffAttendanceScreen() {
             />
           </View>
         ) : (
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            snapToInterval={188}
-            decelerationRate="fast"
-            snapToAlignment="start"
-            contentContainerStyle={styles.mobileStripContent}
-            style={styles.mobileStrip}
-          >
-            <PastelStatCard
-              tone="mint"
-              value={String(summaryCounts[AttendanceStatus.HADIR])}
-              label="Hadir"
-              icon="checkmark-circle-outline"
-              trendText="Tepat waktu"
-              style={styles.statCardItemMobile}
-            />
-            <PastelStatCard
-              tone="butter"
-              value={String(summaryCounts[AttendanceStatus.SAKIT])}
-              label="Sakit"
-              icon="medkit-outline"
-              trendText="Perlu istirahat"
-              style={styles.statCardItemMobile}
-            />
-            <PastelStatCard
-              tone="iceBlue"
-              value={String(
-                summaryCounts[AttendanceStatus.IZIN] +
-                  summaryCounts[AttendanceStatus.ALPA]
-              )}
-              label="Izin & Alpa"
-              icon="alert-circle-outline"
-              trendText={`${summaryCounts[AttendanceStatus.IZIN]} Izin / ${summaryCounts[AttendanceStatus.ALPA]} Alpa`}
-              style={styles.statCardItemMobile}
-            />
-          </ScrollView>
+          <View style={styles.mobileStripSection}>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              snapToInterval={188}
+              decelerationRate="fast"
+              snapToAlignment="start"
+              contentContainerStyle={styles.mobileStripContent}
+              style={styles.mobileStrip}
+            >
+              <PastelStatCard
+                tone="mint"
+                value={String(summaryCounts[AttendanceStatus.HADIR])}
+                label="Hadir"
+                icon="checkmark-circle-outline"
+                trendText="Tepat waktu"
+                style={styles.statCardItemMobile}
+              />
+              <PastelStatCard
+                tone="butter"
+                value={String(summaryCounts[AttendanceStatus.SAKIT])}
+                label="Sakit"
+                icon="medkit-outline"
+                trendText="Perlu istirahat"
+                style={styles.statCardItemMobile}
+              />
+              <PastelStatCard
+                tone="iceBlue"
+                value={String(
+                  summaryCounts[AttendanceStatus.IZIN] +
+                    summaryCounts[AttendanceStatus.ALPA]
+                )}
+                label="Izin & Alpa"
+                icon="alert-circle-outline"
+                trendText={`${summaryCounts[AttendanceStatus.IZIN]} Izin / ${summaryCounts[AttendanceStatus.ALPA]} Alpa`}
+                style={styles.statCardItemMobile}
+              />
+            </ScrollView>
+          </View>
         )}
 
         <Card style={styles.controlCard}>
@@ -625,18 +627,24 @@ const styles = StyleSheet.create({
   },
   statCardItemTablet: {
     flex: 1,
+    height: 168,
     minHeight: 164,
+  },
+  mobileStripSection: {
+    width: "100%",
   },
   mobileStrip: {
     marginHorizontal: -layout.mobilePaddingX,
+    flexGrow: 0,
   },
   mobileStripContent: {
+    alignItems: "center",
     paddingHorizontal: layout.mobilePaddingX,
     gap: 12,
   },
   statCardItemMobile: {
     width: 176,
-    minHeight: 164,
+    height: 164,
   },
   controlCard: {
     backgroundColor: shadcn.card,

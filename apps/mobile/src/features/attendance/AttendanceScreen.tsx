@@ -320,40 +320,42 @@ export default function AttendanceScreen() {
                 />
               </View>
             ) : (
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                snapToInterval={180}
-                decelerationRate="fast"
-                snapToAlignment="start"
-                style={styles.statCardsMobileStrip}
-                contentContainerStyle={styles.statCardsScrollMobile}
-              >
-                <PastelStatCard
-                  tone="mint"
-                  value={`${summary.hadir} Hari`}
-                  label="Kehadiran Hadir"
-                  trendText={`${summary.percentage}% Total`}
-                  icon="checkmark-circle-outline"
-                  style={styles.statCardItemMobile}
-                />
-                <PastelStatCard
-                  tone="butter"
-                  value={`${summary.sakit} Hari`}
-                  label="Izin Sakit"
-                  trendText="Izin Medis"
-                  icon="medkit-outline"
-                  style={styles.statCardItemMobile}
-                />
-                <PastelStatCard
-                  tone="iceBlue"
-                  value={`${summary.izin} Hari`}
-                  label="Izin Keperluan"
-                  trendText="Dispensasi"
-                  icon="calendar-outline"
-                  style={styles.statCardItemMobile}
-                />
-              </ScrollView>
+              <View style={styles.statCardsMobileSection}>
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  snapToInterval={188}
+                  decelerationRate="fast"
+                  snapToAlignment="start"
+                  style={styles.statCardsMobileStrip}
+                  contentContainerStyle={styles.statCardsScrollMobile}
+                >
+                  <PastelStatCard
+                    tone="mint"
+                    value={`${summary.hadir} Hari`}
+                    label="Kehadiran Hadir"
+                    trendText={`${summary.percentage}% Total`}
+                    icon="checkmark-circle-outline"
+                    style={styles.statCardItemMobile}
+                  />
+                  <PastelStatCard
+                    tone="butter"
+                    value={`${summary.sakit} Hari`}
+                    label="Izin Sakit"
+                    trendText="Izin Medis"
+                    icon="medkit-outline"
+                    style={styles.statCardItemMobile}
+                  />
+                  <PastelStatCard
+                    tone="iceBlue"
+                    value={`${summary.izin} Hari`}
+                    label="Izin Keperluan"
+                    trendText="Dispensasi"
+                    icon="calendar-outline"
+                    style={styles.statCardItemMobile}
+                  />
+                </ScrollView>
+              </View>
             )}
 
             {/* 2. DarkActionCard untuk Membuka Sheet Form Izin */}
@@ -665,25 +667,32 @@ const styles = StyleSheet.create({
   },
   statCardItemTablet: {
     flex: 1,
+    height: 168,
     alignSelf: "stretch",
+  },
+  statCardsMobileSection: {
+    width: "100%",
   },
   statCardsMobileStrip: {
     marginHorizontal: -layout.mobilePaddingX,
+    flexGrow: 0,
   },
   statCardsScrollMobile: {
     flexDirection: "row",
+    alignItems: "center",
     gap: 12,
     paddingHorizontal: layout.mobilePaddingX,
     paddingVertical: spacing.xs,
   },
   statCardItemMobile: {
-    width: 168,
-    minHeight: 164,
+    width: 176,
+    height: 164,
   },
   sectionContainer: {
     gap: spacing.sm,
   },
   listCard: {
+    width: "100%",
     backgroundColor: bento.surface,
     borderRadius: radius.xxl,
     borderWidth: 1,

@@ -322,7 +322,52 @@ export function PastelStatCard({
     }
   };
 
-  const content = (
+  if (onPress) {
+    return (
+      <SpringPressable
+        onPress={onPress}
+        accessibilityRole="button"
+        accessibilityLabel={accessibilityLabel || label}
+        style={[styles.statCardTouchWrapper, style]}
+      >
+        <View
+          style={[
+            styles.statCardContainer,
+            styles.statCardFillInner,
+            { backgroundColor: getToneBackground() },
+          ]}
+        >
+          <View>
+            <Text style={styles.statCardValue} numberOfLines={1}>
+              {value}
+            </Text>
+            <Text style={styles.statCardLabel} numberOfLines={1}>
+              {label}
+            </Text>
+          </View>
+
+          <View style={styles.statCardBottomRow}>
+            <View style={styles.statCardIconBox}>
+              <Ionicons name={icon} size={18} color={shadcn.foreground} />
+            </View>
+            {Boolean(trendText) && (
+              <Text
+                numberOfLines={1}
+                style={[
+                  styles.statCardTrendText,
+                  { color: getTrendTextColor() },
+                ]}
+              >
+                {trendText}
+              </Text>
+            )}
+          </View>
+        </View>
+      </SpringPressable>
+    );
+  }
+
+  return (
     <View
       style={[
         styles.statCardContainer,
@@ -331,8 +376,12 @@ export function PastelStatCard({
       ]}
     >
       <View>
-        <Text style={styles.statCardValue}>{value}</Text>
-        <Text style={styles.statCardLabel}>{label}</Text>
+        <Text style={styles.statCardValue} numberOfLines={1}>
+          {value}
+        </Text>
+        <Text style={styles.statCardLabel} numberOfLines={1}>
+          {label}
+        </Text>
       </View>
 
       <View style={styles.statCardBottomRow}>
@@ -341,6 +390,7 @@ export function PastelStatCard({
         </View>
         {Boolean(trendText) && (
           <Text
+            numberOfLines={1}
             style={[
               styles.statCardTrendText,
               { color: getTrendTextColor() },
@@ -350,25 +400,6 @@ export function PastelStatCard({
           </Text>
         )}
       </View>
-    </View>
-  );
-
-  if (onPress) {
-    return (
-      <SpringPressable
-        onPress={onPress}
-        accessibilityRole="button"
-        accessibilityLabel={accessibilityLabel || label}
-        style={styles.statCardTouchWrapper}
-      >
-        {content}
-      </SpringPressable>
-    );
-  }
-
-  return (
-    <View style={styles.statCardTouchWrapper}>
-      {content}
     </View>
   );
 }
@@ -995,17 +1026,20 @@ const styles = StyleSheet.create({
 
   // PastelStatCard
   statCardTouchWrapper: {
-    flex: 1,
-    alignSelf: "stretch",
     minHeight: touchTarget.minHeight,
+    flexShrink: 0,
+  },
+  statCardFillInner: {
+    flex: 1,
+    width: "100%",
   },
   statCardContainer: {
-    flex: 1,
-    minHeight: 168,
+    minHeight: 164,
     padding: 20,
     justifyContent: "space-between",
     borderRadius: radius.xl,
     borderWidth: 0,
+    flexShrink: 0,
   },
   statCardValue: {
     fontSize: typography.size.lg,
@@ -1039,6 +1073,9 @@ const styles = StyleSheet.create({
     fontWeight: typography.weight.semibold,
     fontFamily: typography.family.semibold,
     fontVariant: ["tabular-nums"],
+    flexShrink: 1,
+    marginLeft: spacing.sm,
+    textAlign: "right",
   },
 
   // MiniTrendChart

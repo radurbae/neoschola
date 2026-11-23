@@ -243,40 +243,42 @@ export default function AcademicScreen() {
                 />
               </View>
             ) : (
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                snapToInterval={180}
-                decelerationRate="fast"
-                snapToAlignment="start"
-                style={styles.statCardsMobileStrip}
-                contentContainerStyle={styles.statCardsScrollMobile}
-              >
-                <PastelStatCard
-                  tone="iceBlue"
-                  value={`${schedules.length} Mapel`}
-                  label="Jadwal Belajar"
-                  trendText={selectedDay}
-                  icon="time-outline"
-                  style={styles.statCardItemMobile}
-                />
-                <PastelStatCard
-                  tone="lavender"
-                  value={`${assignments.length} Tugas`}
-                  label="Tugas Aktif"
-                  trendText="PR dan Tugas"
-                  icon="document-text-outline"
-                  style={styles.statCardItemMobile}
-                />
-                <PastelStatCard
-                  tone="mint"
-                  value={`${grades.length} Rilis`}
-                  label="Catatan Nilai"
-                  trendText="Evaluasi"
-                  icon="ribbon-outline"
-                  style={styles.statCardItemMobile}
-                />
-              </ScrollView>
+              <View style={styles.statCardsMobileSection}>
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  snapToInterval={188}
+                  decelerationRate="fast"
+                  snapToAlignment="start"
+                  style={styles.statCardsMobileStrip}
+                  contentContainerStyle={styles.statCardsScrollMobile}
+                >
+                  <PastelStatCard
+                    tone="iceBlue"
+                    value={`${schedules.length} Mapel`}
+                    label="Jadwal Belajar"
+                    trendText={selectedDay}
+                    icon="time-outline"
+                    style={styles.statCardItemMobile}
+                  />
+                  <PastelStatCard
+                    tone="lavender"
+                    value={`${assignments.length} Tugas`}
+                    label="Tugas Aktif"
+                    trendText="PR dan Tugas"
+                    icon="document-text-outline"
+                    style={styles.statCardItemMobile}
+                  />
+                  <PastelStatCard
+                    tone="mint"
+                    value={`${grades.length} Rilis`}
+                    label="Catatan Nilai"
+                    trendText="Evaluasi"
+                    icon="ribbon-outline"
+                    style={styles.statCardItemMobile}
+                  />
+                </ScrollView>
+              </View>
             )}
 
             {/* Segmented Tab Navigation dengan Komponen Tabs shadcn/ui */}
@@ -462,25 +464,32 @@ const styles = StyleSheet.create({
   },
   statCardItemTablet: {
     flex: 1,
+    height: 168,
     alignSelf: "stretch",
+  },
+  statCardsMobileSection: {
+    width: "100%",
   },
   statCardsMobileStrip: {
     marginHorizontal: -layout.mobilePaddingX,
+    flexGrow: 0,
   },
   statCardsScrollMobile: {
     flexDirection: "row",
+    alignItems: "center",
     gap: 12,
     paddingHorizontal: layout.mobilePaddingX,
     paddingVertical: spacing.xs,
   },
   statCardItemMobile: {
-    width: 168,
-    minHeight: 164,
+    width: 176,
+    height: 164,
   },
   tabBarWrapper: {
     marginTop: spacing.xs,
   },
   tabContentContainer: {
+    width: "100%",
     gap: spacing.sm,
   },
   daySelectorScroll: {
@@ -493,6 +502,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.xs,
   },
   listCard: {
+    width: "100%",
     backgroundColor: bento.surface,
     borderRadius: radius.xxl,
     borderWidth: 1,
