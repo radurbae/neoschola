@@ -3,11 +3,11 @@ import {
   View,
   Text,
   StyleSheet,
-  TouchableOpacity,
   RefreshControl,
   ScrollView,
+  useWindowDimensions,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import {
   formatTanggalId,
   LeaveType,
@@ -18,28 +18,42 @@ import {
 } from "@neoschola/shared";
 import {
   Screen,
-  Card,
-  Badge,
-  Button,
-  Input,
-  Label,
+  TopUtilityBar,
+  PastelStatCard,
+  DarkActionCard,
+  DarkIconRow,
   Tabs,
+  Separator,
+  Sheet,
+  Button,
+  Label,
+  Input,
   Alert,
-  SectionHeader,
   ChildSwitcher,
   StateView,
-  ModalSheet,
-  Separator,
 } from "../../components/ui";
-import type { BadgeVariant } from "../../components/ui";
 import { useAuth } from "../../store/auth";
 import * as api from "../../lib/api";
-import { shadcn, spacing, radius, typography, touchTarget } from "../../theme/tokens";
+import {
+  bento,
+  shadcn,
+  breakpoints,
+  spacing,
+  radius,
+  typography,
+  touchTarget,
+} from "../../theme/tokens";
 
 export default function AttendanceScreen() {
-  const { students, activeStudent, activeStudentId, setActiveStudentId } = useAuth();
+  const router = useRouter();
+  const { width } = useWindowDimensions();
+  const isTablet = width >= breakpoints.tablet;
 
-  const [dashboardData, setDashboardData] = useState<StudentDashboardResponse | null>(null);
+  const { user, students, activeStudent, activeStudentId, setActiveStudentId } =
+    useAuth();
+
+  const [dashboardData, setDashboardData] =
+    useState<StudentDashboardResponse | null>(null);
   const [attendanceList, setAttendanceList] = useState<Attendance[]>([]);
   const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -85,7 +99,8 @@ export default function AttendanceScreen() {
         setLeaveRequests(leaveRes.items || []);
       } catch (err: any) {
         setErrorMessage(
-          err?.message || "Gagal memuat data presensi. Periksa koneksi internet Anda."
+          err?.message ||
+            "Gagal memuat data presensi. Periksa koneksi internet Anda."
         );
       } finally {
         setLoading(false);
@@ -110,20 +125,20 @@ export default function AttendanceScreen() {
     setModalVisible(true);
   };
 
-  // Validasi form & submit
   const handleSubmitLeave = async () => {
     const errors: { [key: string]: string } = {};
 
-    // Validasi format YYYY-MM-DD
     const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
     if (!startDate.trim() || !dateRegex.test(startDate.trim())) {
       errors.startDate = "Format tanggal mulai harus YYYY-MM-DD (cth: 2026-11-22)";
     }
     if (!endDate.trim() || !dateRegex.test(endDate.trim())) {
-      errors.endDate = "Format tanggal selesai harus YYYY-MM-DD (cth: 2026-11-22)";
+      errors.endDate =
+        "Format tanggal selesai harus YYYY-MM-DD (cth: 2026-11-22)";
     }
     if (startDate.trim() && endDate.trim() && startDate.trim() > endDate.trim()) {
-      errors.endDate = "Tanggal selesai tidak boleh lebih awal dari tanggal mulai";
+      errors.endDate =
+        "Tanggal selesai tidak boleh lebih awal dari tanggal mulai";
     }
 
     if (!reason.trim() || reason.trim().length < 3) {
@@ -151,57 +166,26 @@ export default function AttendanceScreen() {
 
       setModalVisible(false);
       setSuccessBanner(
-        `Pengajuan ${leaveType === "SAKIT" ? "sakit" : "izin"} berhasil dikirim ke wali kelas.`
+        `Pengajuan ${
+          leaveType === "SAKIT" ? "sakit" : "izin"
+        } berhasil dikirim ke wali kelas.`
       );
-      // Auto clear banner setelah 5 detik
       setTimeout(() => {
         setSuccessBanner(null);
       }, 5000);
 
-      // Refresh list
       await fetchData(true);
     } catch (err: any) {
       setFormErrors({
         general:
-          err?.message || "Gagal mengirim formulir izin. Silakan coba beberapa saat lagi.",
+          err?.message ||
+          "Gagal mengirim formulir izin. Silakan coba beberapa saat lagi.",
       });
     } finally {
       setSubmitting(false);
     }
   };
 
-  const getAttendanceBadge = (
-    status: AttendanceStatus
-  ): { label: string; variant: BadgeVariant } => {
-    switch (status) {
-      case AttendanceStatus.HADIR:
-        return { label: "Hadir", variant: "success" };
-      case AttendanceStatus.SAKIT:
-        return { label: "Sakit", variant: "warning" };
-      case AttendanceStatus.IZIN:
-        return { label: "Izin", variant: "info" };
-      case AttendanceStatus.ALPA:
-        return { label: "Alpa", variant: "destructive" };
-      default:
-        return { label: status, variant: "neutral" };
-    }
-  };
-
-  const getLeaveStatusBadge = (
-    status: string
-  ): { label: string; variant: BadgeVariant } => {
-    switch (status) {
-      case "APPROVED":
-        return { label: "Disetujui", variant: "success" };
-      case "REJECTED":
-        return { label: "Ditolak", variant: "destructive" };
-      case "PENDING":
-      default:
-        return { label: "Menunggu Verifikasi", variant: "warning" };
-    }
-  };
-
-  // Ringkasan kehadiran
   const summary = dashboardData?.attendance_summary || {
     hadir: attendanceList.filter((a) => a.status === AttendanceStatus.HADIR).length,
     sakit: attendanceList.filter((a) => a.status === AttendanceStatus.SAKIT).length,
@@ -210,7 +194,8 @@ export default function AttendanceScreen() {
     percentage:
       attendanceList.length > 0
         ? Math.round(
-            (attendanceList.filter((a) => a.status === AttendanceStatus.HADIR).length /
+            (attendanceList.filter((a) => a.status === AttendanceStatus.HADIR)
+              .length /
               attendanceList.length) *
               100
           )
@@ -219,7 +204,16 @@ export default function AttendanceScreen() {
 
   return (
     <Screen scroll={false} headerShown={false} style={styles.screen}>
-      {/* Top Child Switcher */}
+      {/* Top Utility Bar */}
+      <TopUtilityBar
+        title="Presensi"
+        subtitle={activeStudent ? activeStudent.full_name : undefined}
+        profileName={user?.name || "Wali Murid"}
+        onPressNotifications={() => router.push("/notifications")}
+        onPressProfile={() => router.push("/(tabs)/profil")}
+      />
+
+      {/* Child Switcher Component */}
       {students.length > 0 && (
         <View style={styles.childSwitcherWrapper}>
           <ChildSwitcher
@@ -233,16 +227,7 @@ export default function AttendanceScreen() {
       {/* Success Notification Banner */}
       {Boolean(successBanner) && (
         <View style={styles.successBannerContainer}>
-          <Ionicons name="checkmark-circle-outline" size={18} color={shadcn.status.success.text} />
           <Text style={styles.successBannerText}>{successBanner}</Text>
-          <TouchableOpacity
-            onPress={() => setSuccessBanner(null)}
-            style={styles.successBannerClose}
-            accessibilityRole="button"
-            accessibilityLabel="Tutup pemberitahuan"
-          >
-            <Ionicons name="close" size={18} color={shadcn.status.success.text} />
-          </TouchableOpacity>
         </View>
       )}
 
@@ -250,7 +235,7 @@ export default function AttendanceScreen() {
       {loading ? (
         <StateView
           type="loading"
-          message="Memuat data presensi dan riwayat izin..."
+          message="Memuat catatan presensi peserta didik..."
         />
       ) : errorMessage ? (
         <StateView
@@ -281,200 +266,225 @@ export default function AttendanceScreen() {
             />
           }
         >
-          {/* 1. Kartu Ringkasan Statistik Kehadiran 4 Kolom + Separator */}
-          <Card style={styles.summaryCard}>
-            <View style={styles.summaryHeaderRow}>
-              <View>
-                <Text style={styles.summaryCardTitle}>Statistik Kehadiran</Text>
-                <Text style={styles.summaryCardSubtitle}>Semester Berjalan</Text>
-              </View>
-              <View style={styles.percentageBadge}>
-                <Text style={styles.percentageValue}>{summary.percentage}%</Text>
-                <Text style={styles.percentageLabel}>Tingkat Hadir</Text>
-              </View>
-            </View>
-
-            <Separator style={styles.summarySeparator} />
-
-            <View style={styles.statsGrid}>
-              <View style={styles.statBox}>
-                <Text style={[styles.statValue, { color: shadcn.status.success.text }]}>
-                  {summary.hadir}
-                </Text>
-                <Text style={styles.statLabel}>Hadir</Text>
-              </View>
-
-              <View style={styles.statBox}>
-                <Text style={[styles.statValue, { color: shadcn.status.warning.text }]}>
-                  {summary.sakit}
-                </Text>
-                <Text style={styles.statLabel}>Sakit</Text>
-              </View>
-
-              <View style={styles.statBox}>
-                <Text style={[styles.statValue, { color: shadcn.status.info.text }]}>
-                  {summary.izin}
-                </Text>
-                <Text style={styles.statLabel}>Izin</Text>
-              </View>
-
-              <View style={styles.statBox}>
-                <Text style={[styles.statValue, { color: shadcn.status.danger.text }]}>
-                  {summary.alpa}
-                </Text>
-                <Text style={styles.statLabel}>Alpa</Text>
-              </View>
-            </View>
-          </Card>
-
-          {/* 2. Tombol Utama Ajukan Izin / Sakit */}
-          <View style={styles.actionButtonContainer}>
-            <Button
-              title="Ajukan Izin / Sakit"
-              onPress={handleOpenModal}
-              variant="default"
-              leftIcon={<Ionicons name="add" size={18} color={shadcn.primaryForeground} />}
-              style={styles.mainActionButton}
-              accessibilityLabel="Buka formulir untuk mengajukan izin atau sakit siswa"
-            />
+          {/* 1. Strip 3 PastelStatCard (Hadir, Sakit, Izin) */}
+          <View style={styles.sectionHeaderRow}>
+            <Text style={styles.sectionHeading}>Ringkasan Kehadiran</Text>
           </View>
 
-          {/* 3. Daftar Status Pengajuan Izin (1 Card + Separator) */}
-          <View style={styles.sectionContainer}>
-            <SectionHeader
-              title="Status Pengajuan Izin"
-              subtitle={`${leaveRequests.length} permohonan diajukan`}
-            />
+          {isTablet ? (
+            <View style={styles.statCardsRowTablet}>
+              <PastelStatCard
+                tone="mint"
+                value={`${summary.hadir} Hari`}
+                label="Kehadiran Hadir"
+                trendText={`${summary.percentage}% Total`}
+                icon="checkmark-circle-outline"
+                style={styles.statCardItemTablet}
+              />
+              <PastelStatCard
+                tone="butter"
+                value={`${summary.sakit} Hari`}
+                label="Izin Sakit"
+                trendText="Izin Medis"
+                icon="medkit-outline"
+                style={styles.statCardItemTablet}
+              />
+              <PastelStatCard
+                tone="iceBlue"
+                value={`${summary.izin} Hari`}
+                label="Izin Keperluan"
+                trendText="Dispensasi"
+                icon="calendar-outline"
+                style={styles.statCardItemTablet}
+              />
+            </View>
+          ) : (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.statCardsScrollMobile}
+            >
+              <PastelStatCard
+                tone="mint"
+                value={`${summary.hadir} Hari`}
+                label="Kehadiran Hadir"
+                trendText={`${summary.percentage}% Total`}
+                icon="checkmark-circle-outline"
+                style={styles.statCardItemMobile}
+              />
+              <PastelStatCard
+                tone="butter"
+                value={`${summary.sakit} Hari`}
+                label="Izin Sakit"
+                trendText="Izin Medis"
+                icon="medkit-outline"
+                style={styles.statCardItemMobile}
+              />
+              <PastelStatCard
+                tone="iceBlue"
+                value={`${summary.izin} Hari`}
+                label="Izin Keperluan"
+                trendText="Dispensasi"
+                icon="calendar-outline"
+                style={styles.statCardItemMobile}
+              />
+            </ScrollView>
+          )}
 
-            <Card style={styles.listCard}>
+          {/* 2. DarkActionCard untuk Membuka Sheet Form Izin */}
+          <DarkActionCard
+            eyebrow="Layanan Mandiri"
+            title="Ajukan Izin atau Sakit"
+            description="Kirimkan surat permohonan izin atau surat keterangan sakit anak ke wali kelas secara praktis dan terpantau."
+            ctaLabel="Buka Formulir Izin"
+            onPress={handleOpenModal}
+          />
+
+          {/* 3. Daftar Pengajuan Izin memakai DarkIconRow dipisah Separator */}
+          <View style={styles.sectionContainer}>
+            <View style={styles.sectionHeaderRow}>
+              <Text style={styles.sectionHeading}>Status Pengajuan Izin</Text>
+              <Text style={styles.sectionSubheading}>
+                {leaveRequests.length} permohonan diajukan
+              </Text>
+            </View>
+
+            <View style={styles.listCard}>
               {leaveRequests.length === 0 ? (
                 <View style={styles.emptyInlineRow}>
                   <Text style={styles.emptyInlineText}>
-                    Belum ada pengajuan izin atau sakit yang diajukan.
+                    Belum ada riwayat permohonan izin atau sakit yang diajukan.
                   </Text>
                 </View>
               ) : (
                 leaveRequests.map((item, idx) => {
-                  const badgeInfo = getLeaveStatusBadge(item.status);
                   const isSakit = item.leave_type === LeaveType.SAKIT;
                   const dateRange =
                     item.start_date === item.end_date
-                      ? formatTanggalId(item.start_date, { includeDay: true, shortMonth: true })
-                      : `${formatTanggalId(item.start_date, { shortMonth: true })} s/d ${formatTanggalId(item.end_date, { includeDay: true, shortMonth: true })}`;
+                      ? formatTanggalId(item.start_date, {
+                          includeDay: true,
+                          shortMonth: true,
+                        })
+                      : `${formatTanggalId(item.start_date, {
+                          shortMonth: true,
+                        })} sampai ${formatTanggalId(item.end_date, {
+                          includeDay: true,
+                          shortMonth: true,
+                        })}`;
+
+                  const statusLabel =
+                    item.status === "APPROVED"
+                      ? "Disetujui"
+                      : item.status === "REJECTED"
+                      ? "Ditolak"
+                      : "Menunggu";
+
+                  const statusTone =
+                    item.status === "APPROVED"
+                      ? "success"
+                      : item.status === "REJECTED"
+                      ? "danger"
+                      : "warning";
 
                   return (
                     <React.Fragment key={item.id}>
                       {idx > 0 && <Separator />}
-                      <View style={styles.leaveRow}>
-                        <View style={styles.leaveHeaderRow}>
-                          <View style={styles.leaveTypeLine}>
-                            <Ionicons
-                              name={isSakit ? "medkit-outline" : "calendar-outline"}
-                              size={15}
-                              color={shadcn.foreground}
-                            />
-                            <Text style={styles.leaveTypeText}>
-                              {isSakit ? "Izin Sakit" : "Izin Keperluan"}
-                            </Text>
-                          </View>
-                          <Badge label={badgeInfo.label} variant={badgeInfo.variant} />
-                        </View>
-
-                        <Text style={styles.leaveDateRange}>{dateRange}</Text>
-
-                        <Text style={styles.leaveReasonText}>
-                          <Text style={styles.leaveReasonPrefix}>Alasan: </Text>
-                          {item.reason}
-                        </Text>
-
-                        {Boolean(item.attachment_url) && (
-                          <View style={styles.attachmentRow}>
-                            <Ionicons name="attach-outline" size={14} color={shadcn.mutedForeground} />
-                            <Text style={styles.attachmentText} numberOfLines={1}>
-                              Lampiran: {item.attachment_url}
-                            </Text>
-                          </View>
-                        )}
-
-                        {Boolean(item.review_notes) && (
-                          <View style={styles.reviewNotesBox}>
-                            <Text style={styles.reviewNotesTitle}>Catatan Wali Kelas:</Text>
-                            <Text style={styles.reviewNotesBody}>{item.review_notes}</Text>
-                          </View>
-                        )}
-                      </View>
+                      <DarkIconRow
+                        icon={isSakit ? "medkit-outline" : "calendar-outline"}
+                        title={isSakit ? "Izin Sakit" : "Izin Keperluan"}
+                        subtitle={`${dateRange} • ${item.reason}${
+                          item.review_notes
+                            ? ` (Catatan: ${item.review_notes})`
+                            : ""
+                        }`}
+                        rightPrimary={statusLabel}
+                        rightSecondary={item.status}
+                        rightSecondaryTone={statusTone}
+                        accessibilityLabel={`Pengajuan ${
+                          isSakit ? "sakit" : "izin"
+                        }: ${statusLabel}, tanggal ${dateRange}`}
+                      />
                     </React.Fragment>
                   );
                 })
               )}
-            </Card>
+            </View>
           </View>
 
-          {/* 4. Daftar Riwayat Presensi Harian (1 Card + Separator) */}
+          {/* 4. Riwayat Presensi Harian memakai DarkIconRow dipisah Separator */}
           <View style={styles.sectionContainer}>
-            <SectionHeader
-              title="Riwayat Presensi Harian"
-              subtitle="Catatan kehadiran dari sistem absensi kelas"
-            />
+            <View style={styles.sectionHeaderRow}>
+              <Text style={styles.sectionHeading}>Riwayat Presensi Harian</Text>
+              <Text style={styles.sectionSubheading}>
+                Catatan absensi harian kelas
+              </Text>
+            </View>
 
-            <Card style={styles.listCard}>
+            <View style={styles.listCard}>
               {attendanceList.length === 0 ? (
                 <View style={styles.emptyInlineRow}>
                   <Text style={styles.emptyInlineText}>
-                    Catatan absensi harian peserta didik untuk bulan ini belum terekam.
+                    Catatan absensi harian peserta didik belum terekam bulan ini.
                   </Text>
                 </View>
               ) : (
                 attendanceList.map((att, idx) => {
-                  const badgeInfo = getAttendanceBadge(att.status);
-                  const formattedDate = formatTanggalId(att.date, { includeDay: true });
+                  const formattedDate = formatTanggalId(att.date, {
+                    includeDay: true,
+                  });
+
+                  const iconName =
+                    att.status === AttendanceStatus.HADIR
+                      ? "checkmark-circle-outline"
+                      : att.status === AttendanceStatus.SAKIT
+                      ? "medkit-outline"
+                      : att.status === AttendanceStatus.IZIN
+                      ? "calendar-outline"
+                      : "alert-circle-outline";
+
+                  const tone =
+                    att.status === AttendanceStatus.HADIR
+                      ? "success"
+                      : att.status === AttendanceStatus.SAKIT
+                      ? "warning"
+                      : att.status === AttendanceStatus.IZIN
+                      ? "info"
+                      : "danger";
 
                   return (
                     <React.Fragment key={att.id}>
                       {idx > 0 && <Separator />}
-                      <View style={styles.historyRow}>
-                        <View style={styles.historyHeaderRow}>
-                          <Text style={styles.historyDateText}>{formattedDate}</Text>
-                          <Badge label={badgeInfo.label} variant={badgeInfo.variant} />
-                        </View>
-
-                        <View style={styles.historyTimeRow}>
-                          <View style={styles.historyTimeCol}>
-                            <Text style={styles.historyTimeLabel}>Jam Masuk</Text>
-                            <Text style={styles.historyTimeValue}>
-                              {att.check_in_time ? `${att.check_in_time} WIB` : "-"}
-                            </Text>
-                          </View>
-
-                          <View style={styles.historyTimeCol}>
-                            <Text style={styles.historyTimeLabel}>Jam Pulang</Text>
-                            <Text style={styles.historyTimeValue}>
-                              {att.check_out_time ? `${att.check_out_time} WIB` : "-"}
-                            </Text>
-                          </View>
-
-                          <View style={styles.historyTimeCol}>
-                            <Text style={styles.historyTimeLabel}>Keterangan</Text>
-                            <Text style={styles.historyNotesValue} numberOfLines={1}>
-                              {att.notes || "Sesuai jadwal"}
-                            </Text>
-                          </View>
-                        </View>
-                      </View>
+                      <DarkIconRow
+                        icon={iconName}
+                        title={formattedDate}
+                        subtitle={`Masuk: ${
+                          att.check_in_time ? `${att.check_in_time} WIB` : "-"
+                        } • Pulang: ${
+                          att.check_out_time ? `${att.check_out_time} WIB` : "-"
+                        } • ${att.notes || "Sesuai jadwal"}`}
+                        rightPrimary={att.status}
+                        rightSecondary={
+                          att.status === AttendanceStatus.HADIR
+                            ? "Tepat Waktu"
+                            : "Tercatat"
+                        }
+                        rightSecondaryTone={tone}
+                        accessibilityLabel={`Presensi tanggal ${formattedDate}: ${att.status}`}
+                      />
                     </React.Fragment>
                   );
                 })
               )}
-            </Card>
+            </View>
           </View>
         </ScrollView>
       )}
 
-      {/* Modal Sheet Formulir Pengajuan Izin / Sakit Bersih */}
-      <ModalSheet
+      {/* Modal Sheet Formulir Pengajuan Izin */}
+      <Sheet
         visible={modalVisible}
         onClose={() => setModalVisible(false)}
-        title="Formulir Izin / Sakit"
+        title="Formulir Izin atau Sakit"
       >
         <View style={styles.modalBody}>
           <View style={styles.studentTargetBox}>
@@ -540,11 +550,11 @@ export default function AttendanceScreen() {
 
           {/* Lampiran */}
           <View style={styles.formGroup}>
-            <Label>Keterangan Surat / Tautan Dokumen (Opsional)</Label>
+            <Label>Keterangan Surat atau Tautan Dokumen (Opsional)</Label>
             <Input
               value={attachmentUrl}
               onChangeText={setAttachmentUrl}
-              placeholder="Tautan foto surat dokter atau nomor rujukan..."
+              placeholder="Tautan foto surat dokter atau keterangan..."
               helperText="Opsional. Cantumkan keterangan surat dokter jika sakit lebih dari 2 hari."
               accessibilityLabel="Input tautan dokumen atau surat dokter"
             />
@@ -572,25 +582,21 @@ export default function AttendanceScreen() {
             />
           </View>
         </View>
-      </ModalSheet>
+      </Sheet>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
   screen: {
-    backgroundColor: shadcn.canvas,
+    backgroundColor: bento.surface,
   },
   childSwitcherWrapper: {
-    backgroundColor: shadcn.background,
-    borderBottomWidth: 1,
-    borderBottomColor: shadcn.border,
+    backgroundColor: bento.surface,
     paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
+    paddingVertical: spacing.xs,
   },
   successBannerContainer: {
-    flexDirection: "row",
-    alignItems: "center",
     backgroundColor: shadcn.status.success.bg,
     borderBottomWidth: 1,
     borderBottomColor: shadcn.status.success.border,
@@ -598,17 +604,9 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
   },
   successBannerText: {
-    flex: 1,
     fontSize: typography.size.sm,
     fontWeight: typography.weight.medium,
     color: shadcn.status.success.text,
-    marginLeft: spacing.sm,
-  },
-  successBannerClose: {
-    width: touchTarget.minWidth,
-    height: touchTarget.minHeight,
-    alignItems: "center",
-    justifyContent: "center",
   },
   scrollBody: {
     flex: 1,
@@ -616,208 +614,76 @@ const styles = StyleSheet.create({
   scrollContent: {
     padding: spacing.lg,
     paddingBottom: spacing.max,
+    gap: spacing.xl,
   },
-  // Summary Card
-  summaryCard: {
-    padding: spacing.md,
-    marginBottom: spacing.md,
+  sectionHeaderRow: {
+    marginBottom: spacing.xs,
   },
-  summaryHeaderRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  summaryCardTitle: {
+  sectionHeading: {
     fontSize: typography.size.base,
-    fontWeight: typography.weight.semibold,
+    fontWeight: typography.weight.bold,
     color: shadcn.foreground,
     letterSpacing: typography.tracking.snug,
   },
-  summaryCardSubtitle: {
+  sectionSubheading: {
     fontSize: typography.size.xs,
-    color: shadcn.mutedForeground,
-    marginTop: 1,
-  },
-  percentageBadge: {
-    alignItems: "flex-end",
-  },
-  percentageValue: {
-    fontSize: typography.size.xxl,
-    fontWeight: typography.weight.bold,
-    color: shadcn.foreground,
-    fontVariant: ["tabular-nums"],
-  },
-  percentageLabel: {
-    fontSize: 11,
-    color: shadcn.mutedForeground,
-  },
-  summarySeparator: {
-    marginVertical: spacing.md,
-  },
-  statsGrid: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  statBox: {
-    flex: 1,
-    alignItems: "center",
-  },
-  statValue: {
-    fontSize: typography.size.xl,
-    fontWeight: typography.weight.bold,
-    fontVariant: ["tabular-nums"],
-  },
-  statLabel: {
-    fontSize: typography.size.xs,
-    color: shadcn.mutedForeground,
+    color: bento.pastelMutedText,
     marginTop: 2,
   },
-  actionButtonContainer: {
-    marginBottom: spacing.lg,
+  statCardsRowTablet: {
+    flexDirection: "row",
+    gap: spacing.md,
   },
-  mainActionButton: {
-    width: "100%",
+  statCardItemTablet: {
+    flex: 1,
+  },
+  statCardsScrollMobile: {
+    flexDirection: "row",
+    gap: spacing.md,
+    paddingVertical: spacing.xs,
+  },
+  statCardItemMobile: {
+    width: 220,
   },
   sectionContainer: {
-    marginBottom: spacing.lg,
+    gap: spacing.sm,
   },
   listCard: {
-    padding: 0,
+    backgroundColor: bento.surface,
+    borderRadius: radius.xxl,
+    borderWidth: 1,
+    borderColor: shadcn.border,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
     overflow: "hidden",
   },
   emptyInlineRow: {
     padding: spacing.lg,
     alignItems: "center",
     justifyContent: "center",
+    minHeight: touchTarget.minHeight,
   },
   emptyInlineText: {
     fontSize: typography.size.xs,
-    color: shadcn.mutedForeground,
+    color: bento.pastelMutedText,
     textAlign: "center",
   },
-  // Leave Rows
-  leaveRow: {
-    padding: spacing.md,
-  },
-  leaveHeaderRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: spacing.xs,
-  },
-  leaveTypeLine: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.xs,
-  },
-  leaveTypeText: {
-    fontSize: typography.size.sm,
-    fontWeight: typography.weight.semibold,
-    color: shadcn.foreground,
-  },
-  leaveDateRange: {
-    fontSize: typography.size.sm,
-    fontWeight: typography.weight.medium,
-    color: shadcn.foreground,
-    marginBottom: 4,
-  },
-  leaveReasonPrefix: {
-    fontSize: 11,
-    color: shadcn.mutedForeground,
-  },
-  leaveReasonText: {
-    fontSize: typography.size.sm,
-    color: shadcn.foreground,
-    lineHeight: 18,
-  },
-  attachmentRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: spacing.xs,
-    gap: 4,
-  },
-  attachmentText: {
-    fontSize: typography.size.xs,
-    color: shadcn.mutedForeground,
-    flex: 1,
-  },
-  reviewNotesBox: {
-    marginTop: spacing.sm,
-    backgroundColor: shadcn.secondary,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: shadcn.border,
-    padding: spacing.sm,
-  },
-  reviewNotesTitle: {
-    fontSize: 11,
-    fontWeight: typography.weight.semibold,
-    color: shadcn.foreground,
-    marginBottom: 2,
-  },
-  reviewNotesBody: {
-    fontSize: typography.size.xs,
-    color: shadcn.mutedForeground,
-    lineHeight: 16,
-  },
-  // Attendance History Rows
-  historyRow: {
-    padding: spacing.md,
-  },
-  historyHeaderRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: spacing.xs,
-  },
-  historyDateText: {
-    fontSize: typography.size.sm,
-    fontWeight: typography.weight.semibold,
-    color: shadcn.foreground,
-  },
-  historyTimeRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: spacing.xs,
-  },
-  historyTimeCol: {
-    flex: 1,
-  },
-  historyTimeLabel: {
-    fontSize: 11,
-    color: shadcn.mutedForeground,
-  },
-  historyTimeValue: {
-    fontSize: typography.size.sm,
-    fontWeight: typography.weight.medium,
-    color: shadcn.foreground,
-    fontVariant: ["tabular-nums"],
-    marginTop: 1,
-  },
-  historyNotesValue: {
-    fontSize: typography.size.xs,
-    color: shadcn.mutedForeground,
-    marginTop: 2,
-  },
-  // Modal Sheet Body
   modalBody: {
-    paddingVertical: spacing.xs,
+    paddingVertical: spacing.md,
   },
   studentTargetBox: {
-    backgroundColor: shadcn.secondary,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: shadcn.border,
+    backgroundColor: bento.iceBlue,
+    borderRadius: radius.lg,
     padding: spacing.md,
     marginBottom: spacing.md,
   },
   studentTargetLabel: {
     fontSize: 11,
-    color: shadcn.mutedForeground,
+    color: bento.pastelMutedText,
   },
   studentTargetName: {
     fontSize: typography.size.sm,
-    fontWeight: typography.weight.semibold,
+    fontWeight: typography.weight.bold,
     color: shadcn.foreground,
     marginTop: 2,
   },
@@ -828,8 +694,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   modalSubmitWrapper: {
-    marginTop: spacing.sm,
-    marginBottom: spacing.md,
+    marginTop: spacing.md,
   },
   submitBtn: {
     width: "100%",

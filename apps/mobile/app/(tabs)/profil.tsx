@@ -11,15 +11,22 @@ import { Ionicons } from "@expo/vector-icons";
 import { formatTanggalId } from "@neoschola/shared";
 import {
   Screen,
-  Card,
+  TopUtilityBar,
+  Avatar,
   Badge,
   Button,
-  Avatar,
+  DarkIconRow,
   Separator,
-  SectionHeader,
 } from "../../src/components/ui";
 import { useAuth } from "../../src/store/auth";
-import { shadcn, spacing, radius, typography, touchTarget } from "../../src/theme/tokens";
+import {
+  bento,
+  shadcn,
+  spacing,
+  radius,
+  typography,
+  touchTarget,
+} from "../../src/theme/tokens";
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -50,216 +57,199 @@ export default function ProfileScreen() {
   };
 
   return (
-    <Screen
-      scroll={true}
-      headerShown={true}
-      title="Profil & Pengaturan"
-      subtitle="Informasi akun dan kontak sekolah"
-      rightAction={
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => router.back()}
-          activeOpacity={0.7}
-          accessibilityRole="button"
-          accessibilityLabel="Kembali ke layar sebelumnya"
-        >
-          <Ionicons name="arrow-back" size={22} color={shadcn.foreground} />
-        </TouchableOpacity>
-      }
-      style={styles.screen}
-    >
-      {/* 1. Kartu Profil Pengguna */}
-      <Card style={styles.profileCard}>
-        <View style={styles.profileHeaderRow}>
-          <Avatar name={user?.name || "Pengguna"} size="lg" />
-          <View style={styles.profileInfoCol}>
-            <Text style={styles.profileName}>{user?.name || "Nama Pengguna"}</Text>
-            <Text style={styles.profileEmail}>{user?.email || "email@sekolah.id"}</Text>
-            <View style={styles.roleBadgeRow}>
-              <Badge
-                label={getRoleName(user?.role)}
-                variant="secondary"
-              />
-            </View>
-          </View>
-        </View>
+    <Screen scroll={false} headerShown={false} style={styles.screen}>
+      {/* Top Utility Bar */}
+      <TopUtilityBar
+        title="Profil"
+        subtitle="Informasi akun dan kontak sekolah"
+        leftAction={
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => router.back()}
+            activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel="Kembali ke layar sebelumnya"
+          >
+            <Ionicons name="arrow-back" size={22} color={shadcn.foreground} />
+          </TouchableOpacity>
+        }
+      />
 
-        <Separator style={styles.cardSeparator} />
-
-        <View style={styles.profileMetaRow}>
-          <View style={styles.profileMetaItem}>
-            <Text style={styles.metaLabel}>Nomor Telepon</Text>
-            <Text style={styles.metaValue}>{user?.phone || "-"}</Text>
-          </View>
-          <View style={styles.profileMetaItem}>
-            <Text style={styles.metaLabel}>ID Pengguna</Text>
-            <Text style={styles.metaValue}>{user?.id || "-"}</Text>
-          </View>
-        </View>
-      </Card>
-
-      {/* 2. Daftar Anak Asuh (Khusus Wali Murid) */}
-      {user?.role === "GUARDIAN" && (
-        <View style={styles.sectionContainer}>
-          <SectionHeader
-            title="Daftar Anak Asuh"
-            subtitle={`${students.length} siswa terhubung dengan akun ini`}
-          />
-
-          {students.length === 0 ? (
-            <Card style={styles.emptyCard}>
-              <Text style={styles.emptyText}>
-                Belum ada data anak asuh yang terhubung. Hubungi Tata Usaha jika data anak Anda belum muncul.
+      <ScrollView
+        style={styles.scrollBody}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* 1. Kartu Profil Soft Ice Blue */}
+        <View style={styles.profileCardIceBlue}>
+          <View style={styles.profileHeaderRow}>
+            <Avatar name={user?.name || "Pengguna"} size="lg" />
+            <View style={styles.profileInfoCol}>
+              <Text style={styles.profileName}>
+                {user?.name || "Nama Pengguna"}
               </Text>
-            </Card>
-          ) : (
-            <Card style={styles.listCard}>
-              {students.map((student, index) => (
-                <React.Fragment key={student.id}>
-                  {index > 0 && <Separator />}
-                  <View style={styles.studentRow}>
-                    <Avatar name={student.full_name} size="sm" />
-                    <View style={styles.studentInfoCol}>
-                      <View style={styles.studentNameLine}>
-                        <Text style={styles.studentNameText}>{student.full_name}</Text>
-                        <Badge label={student.class_name || "Kelas"} variant="outline" />
-                      </View>
-                      <View style={styles.studentDetailsRow}>
-                        <Text style={styles.studentDetailLabel}>
-                          NIS: <Text style={styles.studentDetailValue}>{student.nis}</Text>
-                        </Text>
-                        <Text style={styles.studentDetailDivider}>•</Text>
-                        <Text style={styles.studentDetailLabel}>
-                          NISN: <Text style={styles.studentDetailValue}>{student.nisn}</Text>
-                        </Text>
-                      </View>
-                      <View style={styles.studentDetailsRow}>
-                        <Text style={styles.studentDetailLabel}>
-                          {student.gender === "L" ? "Laki-laki" : "Perempuan"}
-                        </Text>
-                        <Text style={styles.studentDetailDivider}>•</Text>
-                        <Text style={styles.studentDetailLabel}>
-                          Lahir: {formatTanggalId(student.birth_date)}
-                        </Text>
-                      </View>
-                    </View>
-                  </View>
-                </React.Fragment>
-              ))}
-            </Card>
-          )}
+              <Text style={styles.profileEmail}>
+                {user?.email || "email@sekolah.id"}
+              </Text>
+              <View style={styles.roleBadgeRow}>
+                <Badge label={getRoleName(user?.role)} variant="secondary" />
+              </View>
+            </View>
+          </View>
+
+          <Separator style={styles.cardSeparator} />
+
+          <View style={styles.profileMetaRow}>
+            <View style={styles.profileMetaItem}>
+              <Text style={styles.metaLabel}>Nomor Telepon</Text>
+              <Text style={styles.metaValue}>{user?.phone || "-"}</Text>
+            </View>
+            <View style={styles.profileMetaItem}>
+              <Text style={styles.metaLabel}>ID Pengguna</Text>
+              <Text style={styles.metaValue}>{user?.id || "-"}</Text>
+            </View>
+          </View>
         </View>
-      )}
 
-      {/* 3. Kontak Resmi Sekolah */}
-      <View style={styles.sectionContainer}>
-        <SectionHeader
-          title="Kontak Resmi Sekolah"
-          subtitle="SDN Nusantara Harapan"
-        />
-
-        <Card style={styles.listCard}>
-          <View style={styles.contactRow}>
-            <View style={styles.contactIconCircle}>
-              <Ionicons name="call-outline" size={18} color={shadcn.primary} />
+        {/* 2. Daftar Anak Asuh (Khusus Wali Murid) memakai DarkIconRow */}
+        {user?.role === "GUARDIAN" && (
+          <View style={styles.sectionContainer}>
+            <View style={styles.sectionHeaderRow}>
+              <Text style={styles.sectionHeading}>Daftar Anak Asuh</Text>
+              <Text style={styles.sectionSubheading}>
+                {students.length} siswa terhubung dengan akun ini
+              </Text>
             </View>
-            <View style={styles.contactTextCol}>
-              <Text style={styles.contactLabel}>Tata Usaha & Administrasi</Text>
-              <Text style={styles.contactValue}>(021) 765-4321</Text>
-            </View>
-          </View>
 
-          <Separator />
-
-          <View style={styles.contactRow}>
-            <View style={styles.contactIconCircle}>
-              <Ionicons name="medkit-outline" size={18} color={shadcn.primary} />
-            </View>
-            <View style={styles.contactTextCol}>
-              <Text style={styles.contactLabel}>UKS (Unit Kesehatan Sekolah)</Text>
-              <Text style={styles.contactValue}>0812-3456-7890</Text>
-            </View>
-          </View>
-
-          <Separator />
-
-          <View style={styles.contactRow}>
-            <View style={styles.contactIconCircle}>
-              <Ionicons name="shield-checkmark-outline" size={18} color={shadcn.primary} />
-            </View>
-            <View style={styles.contactTextCol}>
-              <Text style={styles.contactLabel}>Pos Satpam & Keamanan</Text>
-              <Text style={styles.contactValue}>0813-9876-5432</Text>
-            </View>
-          </View>
-
-          <Separator />
-
-          <View style={styles.contactRow}>
-            <View style={styles.contactIconCircle}>
-              <Ionicons name="time-outline" size={18} color={shadcn.primary} />
-            </View>
-            <View style={styles.contactTextCol}>
-              <Text style={styles.contactLabel}>Jam Layanan Kantor</Text>
-              <Text style={styles.contactValue}>Senin - Jumat, 07.00 - 15.00 WIB</Text>
+            <View style={styles.listCard}>
+              {students.length === 0 ? (
+                <View style={styles.emptyInlineRow}>
+                  <Text style={styles.emptyInlineText}>
+                    Belum ada data anak asuh yang terhubung. Hubungi Tata Usaha
+                    jika data anak Anda belum muncul.
+                  </Text>
+                </View>
+              ) : (
+                students.map((student, index) => (
+                  <React.Fragment key={student.id}>
+                    {index > 0 && <Separator />}
+                    <DarkIconRow
+                      icon="person-outline"
+                      title={student.full_name}
+                      subtitle={`Kelas ${
+                        student.class_name || "Peserta Didik"
+                      } • NIS ${student.nis} • NISN ${
+                        student.nisn
+                      } • Lahir ${formatTanggalId(student.birth_date)}`}
+                      rightPrimary="Siswa"
+                      rightSecondary={
+                        student.gender === "L" ? "Laki-laki" : "Perempuan"
+                      }
+                      accessibilityLabel={`Data anak: ${student.full_name}, NIS ${student.nis}`}
+                    />
+                  </React.Fragment>
+                ))
+              )}
             </View>
           </View>
-        </Card>
-      </View>
+        )}
 
-      {/* 4. Info Lingkungan Demo Sintetis */}
-      <View style={styles.sectionContainer}>
-        <SectionHeader
-          title="Tentang Lingkungan Aplikasi"
-          subtitle="NeoSchola v0.1.0"
-        />
-
-        <Card style={styles.demoNoticeCard}>
-          <View style={styles.demoNoticeHeader}>
-            <Ionicons name="information-circle-outline" size={20} color={shadcn.primary} />
-            <Text style={styles.demoNoticeTitle}>Akun & Data Demo Sintetis</Text>
+        {/* 3. Kontak Resmi Sekolah memakai DarkIconRow */}
+        <View style={styles.sectionContainer}>
+          <View style={styles.sectionHeaderRow}>
+            <Text style={styles.sectionHeading}>Kontak Resmi Sekolah</Text>
+            <Text style={styles.sectionSubheading}>SDN Nusantara Harapan</Text>
           </View>
-          <Text style={styles.demoNoticeBody}>
-            Aplikasi ini sedang berjalan dalam mode evaluasi dengan data sintetis aman. Tidak ada data pribadi nyata yang diproses atau disimpan ke server publik.
-          </Text>
-        </Card>
-      </View>
 
-      {/* 5. Tombol Keluar Akun */}
-      <View style={styles.logoutContainer}>
-        <Button
-          title="Keluar Akun"
-          onPress={handleLogout}
-          loading={loggingOut}
-          variant="destructive"
-          leftIcon={
-            <Ionicons
-              name="log-out-outline"
-              size={18}
-              color={shadcn.destructiveForeground}
+          <View style={styles.listCard}>
+            <DarkIconRow
+              icon="call-outline"
+              title="Tata Usaha & Administrasi"
+              subtitle="Layanan surat & administrasi sekolah"
+              rightPrimary="(021) 765-4321"
+              rightSecondary="Aktif"
+              accessibilityLabel="Telepon Tata Usaha: (021) 765-4321"
             />
-          }
-          style={styles.logoutBtn}
-          accessibilityLabel="Keluar dari akun Anda saat ini"
-        />
-      </View>
+            <Separator />
+            <DarkIconRow
+              icon="medkit-outline"
+              title="UKS (Unit Kesehatan Sekolah)"
+              subtitle="Layanan kesehatan peserta didik"
+              rightPrimary="0812-3456-7890"
+              rightSecondary="Darurat"
+              rightSecondaryTone="danger"
+              accessibilityLabel="Telepon UKS: 0812-3456-7890"
+            />
+            <Separator />
+            <DarkIconRow
+              icon="shield-checkmark-outline"
+              title="Pos Satpam & Keamanan"
+              subtitle="Keamanan gerbang dan penjemputan"
+              rightPrimary="0813-9876-5432"
+              rightSecondary="24 Jam"
+              accessibilityLabel="Telepon Satpam: 0813-9876-5432"
+            />
+            <Separator />
+            <DarkIconRow
+              icon="time-outline"
+              title="Jam Layanan Kantor"
+              subtitle="Senin sampai Jumat"
+              rightPrimary="07.00 - 15.00 WIB"
+              rightSecondary="Hari Kerja"
+              accessibilityLabel="Jam layanan kantor: 07.00 sampai 15.00 WIB"
+            />
+          </View>
+        </View>
+
+        {/* 4. Tombol Keluar Akun */}
+        <View style={styles.logoutContainer}>
+          <Button
+            title="Keluar Akun"
+            onPress={handleLogout}
+            loading={loggingOut}
+            variant="destructive"
+            size="lg"
+            leftIcon={
+              <Ionicons
+                name="log-out-outline"
+                size={18}
+                color={shadcn.destructiveForeground}
+              />
+            }
+            style={styles.logoutBtn}
+            accessibilityLabel="Keluar dari akun Anda saat ini"
+          />
+        </View>
+      </ScrollView>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
   screen: {
-    backgroundColor: shadcn.canvas,
+    backgroundColor: bento.surface,
   },
   backButton: {
     width: touchTarget.minWidth,
     height: touchTarget.minHeight,
+    borderRadius: radius.full,
+    backgroundColor: bento.pillSurface,
     alignItems: "center",
     justifyContent: "center",
   },
-  profileCard: {
-    marginBottom: spacing.lg,
-    padding: spacing.md,
+  scrollBody: {
+    flex: 1,
+  },
+  scrollContent: {
+    padding: spacing.lg,
+    paddingBottom: spacing.max,
+    gap: spacing.xl,
+  },
+  profileCardIceBlue: {
+    backgroundColor: bento.iceBlue,
+    borderRadius: radius.xxl,
+    padding: spacing.xl,
+    borderWidth: 0,
   },
   profileHeaderRow: {
     flexDirection: "row",
@@ -270,18 +260,19 @@ const styles = StyleSheet.create({
     marginLeft: spacing.md,
   },
   profileName: {
-    fontSize: typography.size.base,
+    fontSize: typography.size.lg,
     fontWeight: typography.weight.bold,
     color: shadcn.foreground,
     letterSpacing: typography.tracking.snug,
   },
   profileEmail: {
     fontSize: typography.size.xs,
-    color: shadcn.mutedForeground,
+    color: bento.pastelMutedText,
     marginTop: 2,
   },
   roleBadgeRow: {
     marginTop: spacing.xs,
+    alignSelf: "flex-start",
   },
   cardSeparator: {
     marginVertical: spacing.md,
@@ -295,124 +286,54 @@ const styles = StyleSheet.create({
   },
   metaLabel: {
     fontSize: typography.size.xs,
-    color: shadcn.mutedForeground,
+    color: bento.pastelMutedText,
     marginBottom: 2,
   },
   metaValue: {
     fontSize: typography.size.sm,
-    fontWeight: typography.weight.medium,
+    fontWeight: typography.weight.semibold,
     color: shadcn.foreground,
+    fontVariant: ["tabular-nums"],
   },
   sectionContainer: {
-    marginBottom: spacing.lg,
+    gap: spacing.sm,
   },
-  emptyCard: {
-    padding: spacing.md,
-  },
-  emptyText: {
-    fontSize: typography.size.sm,
-    color: shadcn.mutedForeground,
-    lineHeight: typography.lineHeight.sm,
-  },
-  listCard: {
-    padding: 0,
-    overflow: "hidden",
-  },
-  studentRow: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    padding: spacing.md,
-  },
-  studentInfoCol: {
-    flex: 1,
-    marginLeft: spacing.md,
-  },
-  studentNameLine: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 2,
-    gap: spacing.xs,
-  },
-  studentNameText: {
-    fontSize: typography.size.sm,
-    fontWeight: typography.weight.semibold,
-    color: shadcn.foreground,
-    flex: 1,
-  },
-  studentDetailsRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 2,
-  },
-  studentDetailLabel: {
-    fontSize: 11,
-    color: shadcn.mutedForeground,
-  },
-  studentDetailValue: {
-    fontWeight: typography.weight.medium,
-    color: shadcn.foreground,
-    fontVariant: ["tabular-nums"],
-  },
-  studentDetailDivider: {
-    fontSize: 11,
-    color: shadcn.mutedForeground,
-    marginHorizontal: spacing.xs,
-  },
-  contactRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: spacing.md,
-    minHeight: touchTarget.minHeight,
-  },
-  contactIconCircle: {
-    width: 36,
-    height: 36,
-    borderRadius: radius.md,
-    backgroundColor: shadcn.secondary,
-    borderWidth: 1,
-    borderColor: shadcn.border,
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: spacing.md,
-  },
-  contactTextCol: {
-    flex: 1,
-  },
-  contactLabel: {
-    fontSize: typography.size.xs,
-    color: shadcn.mutedForeground,
-  },
-  contactValue: {
-    fontSize: typography.size.sm,
-    fontWeight: typography.weight.semibold,
-    color: shadcn.foreground,
-    marginTop: 1,
-    fontVariant: ["tabular-nums"],
-  },
-  demoNoticeCard: {
-    padding: spacing.md,
-    backgroundColor: shadcn.background,
-  },
-  demoNoticeHeader: {
-    flexDirection: "row",
-    alignItems: "center",
+  sectionHeaderRow: {
     marginBottom: spacing.xs,
   },
-  demoNoticeTitle: {
-    fontSize: typography.size.sm,
-    fontWeight: typography.weight.semibold,
+  sectionHeading: {
+    fontSize: typography.size.base,
+    fontWeight: typography.weight.bold,
     color: shadcn.foreground,
-    marginLeft: spacing.xs,
+    letterSpacing: typography.tracking.snug,
   },
-  demoNoticeBody: {
+  sectionSubheading: {
     fontSize: typography.size.xs,
-    color: shadcn.mutedForeground,
-    lineHeight: typography.lineHeight.xs,
+    color: bento.pastelMutedText,
+    marginTop: 2,
+  },
+  listCard: {
+    backgroundColor: bento.surface,
+    borderRadius: radius.xxl,
+    borderWidth: 1,
+    borderColor: shadcn.border,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+    overflow: "hidden",
+  },
+  emptyInlineRow: {
+    padding: spacing.lg,
+    alignItems: "center",
+    justifyContent: "center",
+    minHeight: touchTarget.minHeight,
+  },
+  emptyInlineText: {
+    fontSize: typography.size.xs,
+    color: bento.pastelMutedText,
+    textAlign: "center",
   },
   logoutContainer: {
-    marginTop: spacing.md,
-    marginBottom: spacing.xxl,
+    marginTop: spacing.xs,
   },
   logoutBtn: {
     width: "100%",
