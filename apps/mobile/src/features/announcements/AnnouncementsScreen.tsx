@@ -13,6 +13,9 @@ import { formatTanggalId } from "@neoschola/shared";
 import type { Announcement, AnnouncementCategory } from "@neoschola/shared";
 import {
   Screen,
+  TopUtilityBar,
+  DarkActionCard,
+  DarkIconRow,
   Card,
   Badge,
   Chip,
@@ -25,6 +28,7 @@ import {
 import type { BadgeVariant } from "../../components/ui";
 import * as api from "../../lib/api";
 import {
+  bento,
   shadcn,
   spacing,
   radius,
@@ -102,13 +106,26 @@ export function AnnouncementsScreen() {
     return counts;
   }, [announcements]);
 
+  // Pisahkan pengumuman DARURAT yang disematkan untuk disorot dengan DarkActionCard
+  const emergencyPinnedAnnouncements = useMemo(() => {
+    return filteredAnnouncements.filter(
+      (item) => item.category === "DARURAT" && item.is_pinned
+    );
+  }, [filteredAnnouncements]);
+
+  // Daftar pengumuman reguler
+  const regularAnnouncements = useMemo(() => {
+    return filteredAnnouncements.filter(
+      (item) => !(item.category === "DARURAT" && item.is_pinned)
+    );
+  }, [filteredAnnouncements]);
+
   const handleAcknowledge = async (item: Announcement) => {
     if (item.is_read || acknowledging) return;
     setAcknowledging(true);
 
     try {
       await api.ackAnnouncement(item.id);
-      // Perbarui state lokal daftar pengumuman & active announcement
       setAnnouncements((prev) =>
         prev.map((ann) => (ann.id === item.id ? { ...ann, is_read: true } : ann))
       );
@@ -116,7 +133,7 @@ export function AnnouncementsScreen() {
         prev && prev.id === item.id ? { ...prev, is_read: true } : prev
       );
     } catch {
-      // Jika gagal, pertahankan state lama
+      // Pertahankan state jika gagal
     } finally {
       setAcknowledging(false);
     }
@@ -139,25 +156,41 @@ export function AnnouncementsScreen() {
     }
   };
 
+  const getCategoryIcon = (category: AnnouncementCategory): keyof typeof Ionicons.glyphMap => {
+    switch (category) {
+      case "DARURAT":
+        return "warning-outline";
+      case "SEKOLAH":
+        return "megaphone-outline";
+      case "KELAS":
+        return "school-outline";
+      case "KEGIATAN":
+        return "calendar-outline";
+      default:
+        return "information-circle-outline";
+    }
+  };
+
   return (
-    <Screen
-      scroll={false}
-      headerShown={true}
-      title="Pengumuman Sekolah"
-      subtitle="Agenda & informasi resmi SDN Nusantara Harapan"
-      rightAction={
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => router.back()}
-          activeOpacity={0.7}
-          accessibilityRole="button"
-          accessibilityLabel="Kembali ke layar sebelumnya"
-        >
-          <Ionicons name="arrow-back" size={20} color={shadcn.foreground} />
-        </TouchableOpacity>
-      }
-    >
-      {/* Filter Kategori Chips */}
+    <Screen scroll={false} headerShown={false}>
+      {/* TopUtilityBar dengan tombol kembali 44x44pt via leftAction */}
+      <TopUtilityBar
+        title="Pengumuman"
+        subtitle="Agenda dan informasi resmi sekolah"
+        leftAction={
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => router.back()}
+            activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel="Kembali ke layar sebelumnya"
+          >
+            <Ionicons name="arrow-back" size={20} color={shadcn.foreground} />
+          </TouchableOpacity>
+        }
+      />
+
+      {/* Filter Kategori Chips Horizontal (Aman di 360px) */}
       <View style={styles.filterSection}>
         <ScrollView
           horizontal
@@ -217,113 +250,48 @@ export function AnnouncementsScreen() {
             />
           }
         >
-          {filteredAnnouncements.map((item) => {
-            const isEmergencyPinned = item.category === "DARURAT" && item.is_pinned;
-            const catBadge = getCategoryBadge(item.category);
+          {/* Pengumuman DARURAT yang disematkan disorot dengan DarkActionCard */}
+          {emergencyPinnedAnnouncements.map((item) => (
+            <DarkActionCard
+              key={item.id}
+              eyebrow="Darurat"
+              title={item.title}
+              description={item.content}
+              ctaLabel="Baca Detail"
+              onPress={() => setActiveAnnouncement(item)}
+              style={styles.emergencyCard}
+            />
+          ))}
 
-            // Pengumuman DARURAT yang disematkan tampil menonjol dengan Alert variant="destructive"
-            if (isEmergencyPinned) {
-              return (
-                <TouchableOpacity
-                  key={item.id}
-                  style={styles.emergencyTouchable}
-                  onPress={() => setActiveAnnouncement(item)}
-                  activeOpacity={0.7}
-                  accessibilityRole="button"
-                  accessibilityLabel={`Pengumuman darurat disematkan: ${item.title}. Status: ${
-                    item.is_read ? "Sudah Dibaca" : "Belum Dibaca"
-                  }`}
-                >
-                  <Alert
-                    variant="destructive"
-                    title={`PENGUMUMAN DARURAT: ${item.title}`}
-                    description={item.content}
-                    style={styles.emergencyAlert}
-                  />
-                  <View style={styles.emergencyMetaRow}>
-                    <View style={styles.badgeGroup}>
-                      <Badge label="Disematkan" variant="destructive" />
-                      <Badge
-                        label={item.is_read ? "Sudah Dibaca" : "Belum Dibaca"}
-                        variant={item.is_read ? "secondary" : "outline"}
-                      />
-                    </View>
-                    <View style={styles.metaInfoRow}>
-                      <Ionicons
-                        name="time-outline"
-                        size={14}
-                        color={shadcn.status.danger.text}
-                      />
-                      <Text style={styles.emergencyDateText}>
-                        {formatTanggalId(item.created_at, { includeDay: true })}
-                      </Text>
-                    </View>
-                  </View>
-                </TouchableOpacity>
-              );
-            }
+          {/* Daftar pengumuman lain memakai DarkIconRow dipisah Separator di dalam Card rounded 20pt */}
+          {regularAnnouncements.length > 0 && (
+            <Card style={styles.announcementsCard}>
+              {regularAnnouncements.map((item, index) => {
+                const catBadge = getCategoryBadge(item.category);
+                const icon = getCategoryIcon(item.category);
+                const dateStr = formatTanggalId(item.created_at, { includeDay: true });
+                const authorStr = item.created_by_name ? ` • ${item.created_by_name}` : "";
 
-            // Pengumuman lain dalam Card hairline rapi
-            return (
-              <Card
-                key={item.id}
-                style={styles.announcementCard}
-                onPress={() => setActiveAnnouncement(item)}
-                accessibilityLabel={`Pengumuman: ${item.title}. Kategori ${catBadge.label}. Status: ${
-                  item.is_read ? "Sudah Dibaca" : "Belum Dibaca"
-                }`}
-              >
-                {/* Header Kartu: Kategori, Pin & Status Baca */}
-                <View style={styles.cardHeaderRow}>
-                  <View style={styles.badgeGroup}>
-                    <Badge
-                      label={catBadge.label}
-                      variant={catBadge.variant}
+                return (
+                  <React.Fragment key={item.id}>
+                    {index > 0 && <Separator />}
+                    <DarkIconRow
+                      icon={icon}
+                      title={item.title}
+                      subtitle={`${dateStr}${authorStr}`}
+                      rightPrimary={catBadge.label}
+                      rightSecondary={item.is_read ? "Sudah Dibaca" : "Belum Dibaca"}
+                      rightSecondaryTone={item.is_read ? "neutral" : "warning"}
+                      onPress={() => setActiveAnnouncement(item)}
+                      accessibilityLabel={`Pengumuman: ${item.title}. Kategori ${catBadge.label}. Status: ${
+                        item.is_read ? "Sudah Dibaca" : "Belum Dibaca"
+                      }`}
                     />
-                    {item.is_pinned && (
-                      <Badge label="Disematkan" variant="secondary" />
-                    )}
-                  </View>
-
-                  <Badge
-                    label={item.is_read ? "Sudah Dibaca" : "Belum Dibaca"}
-                    variant={item.is_read ? "secondary" : "outline"}
-                  />
-                </View>
-
-                {/* Judul Pengumuman */}
-                <Text style={styles.announcementTitle} numberOfLines={2}>
-                  {item.title}
-                </Text>
-
-                {/* Cuplikan Isi */}
-                <Text style={styles.announcementPreview} numberOfLines={2}>
-                  {item.content}
-                </Text>
-
-                <Separator style={styles.cardSeparator} />
-
-                {/* Footer Kartu: Tanggal & Penerbit */}
-                <View style={styles.cardFooterRow}>
-                  <View style={styles.metaInfoRow}>
-                    <Ionicons
-                      name="time-outline"
-                      size={14}
-                      color={shadcn.mutedForeground}
-                    />
-                    <Text style={styles.metaDateText}>
-                      {formatTanggalId(item.created_at, { includeDay: true })}
-                    </Text>
-                  </View>
-                  {Boolean(item.created_by_name) && (
-                    <Text style={styles.metaAuthorText} numberOfLines={1}>
-                      {item.created_by_name}
-                    </Text>
-                  )}
-                </View>
-              </Card>
-            );
-          })}
+                  </React.Fragment>
+                );
+              })}
+            </Card>
+          )}
         </ScrollView>
       )}
 
@@ -453,6 +421,8 @@ const styles = StyleSheet.create({
   backButton: {
     width: touchTarget.minWidth,
     height: touchTarget.minHeight,
+    minWidth: touchTarget.minWidth,
+    minHeight: touchTarget.minHeight,
     alignItems: "center",
     justifyContent: "center",
     borderRadius: radius.md,
@@ -466,88 +436,31 @@ const styles = StyleSheet.create({
   filterScroll: {
     paddingHorizontal: spacing.lg,
     flexDirection: "row",
+    gap: spacing.xs,
   },
   listScrollView: {
     flex: 1,
+    backgroundColor: bento.surface,
   },
   listScrollContent: {
     padding: spacing.lg,
     paddingBottom: spacing.xxxl,
   },
-  emergencyTouchable: {
+  emergencyCard: {
     marginBottom: spacing.md,
-    borderRadius: radius.md,
+  },
+  announcementsCard: {
+    borderRadius: radius.xl,
+    padding: 0,
+    overflow: "hidden",
     borderWidth: 1,
-    borderColor: shadcn.status.danger.border,
-    backgroundColor: shadcn.status.danger.bg,
-    padding: spacing.md,
-  },
-  emergencyAlert: {
-    marginBottom: spacing.sm,
-  },
-  emergencyMetaRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingTop: spacing.xs,
-  },
-  emergencyDateText: {
-    fontSize: typography.size.xs,
-    color: shadcn.status.danger.text,
-    fontVariant: ["tabular-nums"],
-  },
-  announcementCard: {
-    padding: spacing.lg,
-    marginBottom: spacing.md,
-  },
-  cardHeaderRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: spacing.sm,
+    borderColor: shadcn.border,
+    backgroundColor: shadcn.card,
   },
   badgeGroup: {
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.xs,
-  },
-  announcementTitle: {
-    fontSize: typography.size.base,
-    fontWeight: typography.weight.semibold,
-    color: shadcn.foreground,
-    lineHeight: typography.lineHeight.base,
-    marginBottom: spacing.xs,
-    letterSpacing: typography.tracking.snug,
-  },
-  announcementPreview: {
-    fontSize: typography.size.sm,
-    color: shadcn.mutedForeground,
-    lineHeight: typography.lineHeight.sm,
-    marginBottom: spacing.sm,
-  },
-  cardSeparator: {
-    marginVertical: spacing.sm,
-  },
-  cardFooterRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  metaInfoRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-  },
-  metaDateText: {
-    fontSize: typography.size.xs,
-    color: shadcn.mutedForeground,
-    fontVariant: ["tabular-nums"],
-  },
-  metaAuthorText: {
-    fontSize: typography.size.xs,
-    color: shadcn.mutedForeground,
-    fontWeight: typography.weight.medium,
-    maxWidth: 150,
   },
 
   // Sheet Styles
