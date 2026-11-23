@@ -6,7 +6,7 @@ import {
   TouchableOpacity,
   ScrollView,
   RefreshControl,
-  Alert,
+  Alert as NativeAlert,
   Switch,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
@@ -23,13 +23,15 @@ import {
   Chip,
   Button,
   Input,
+  Label,
   StateView,
-  ModalSheet,
-  SectionHeader,
+  Sheet,
+  Alert,
+  Separator,
 } from "../../components/ui";
 import { useAuth } from "../../store/auth";
 import * as api from "../../lib/api";
-import { colors, spacing, radius, typography, touchTarget } from "../../theme/tokens";
+import { shadcn, spacing, radius, typography, touchTarget } from "../../theme/tokens";
 
 export function StaffAnnouncementsScreen() {
   const { user, classes } = useAuth();
@@ -143,7 +145,7 @@ export function StaffAnnouncementsScreen() {
         is_pinned: isPinned,
       });
 
-      Alert.alert("Berhasil", "Pengumuman berhasil diterbitkan.");
+      NativeAlert.alert("Berhasil", "Pengumuman berhasil diterbitkan.");
       handleCloseCreateModal();
       await fetchAnnouncements(true);
     } catch (err: any) {
@@ -162,14 +164,14 @@ export function StaffAnnouncementsScreen() {
   const getCategoryBadgeVariant = (cat: AnnouncementCategory) => {
     switch (cat) {
       case AnnouncementCategory.DARURAT:
-        return "danger";
+        return "destructive";
       case AnnouncementCategory.KEGIATAN:
         return "warning";
       case AnnouncementCategory.KELAS:
         return "info";
       case AnnouncementCategory.SEKOLAH:
       default:
-        return "success";
+        return "secondary";
     }
   };
 
@@ -187,7 +189,7 @@ export function StaffAnnouncementsScreen() {
           accessibilityRole="button"
           accessibilityLabel="Buat pengumuman baru"
         >
-          <Ionicons name="add" size={24} color={colors.primary} />
+          <Ionicons name="add" size={20} color={shadcn.foreground} />
         </TouchableOpacity>
       }
     >
@@ -198,8 +200,8 @@ export function StaffAnnouncementsScreen() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={() => fetchAnnouncements(true)}
-            colors={[colors.primary]}
-            tintColor={colors.primary}
+            colors={[shadcn.primary]}
+            tintColor={shadcn.primary}
           />
         }
       >
@@ -207,9 +209,9 @@ export function StaffAnnouncementsScreen() {
         <Button
           title="Buat Pengumuman Baru"
           onPress={handleOpenCreateModal}
-          variant="primary"
+          variant="default"
           accessibilityLabel="Buat Pengumuman Baru Sekolah"
-          leftIcon={<Ionicons name="megaphone" size={18} color={colors.textInverse} />}
+          leftIcon={<Ionicons name="megaphone-outline" size={18} color={shadcn.primaryForeground} />}
           style={styles.topCreateButton}
         />
 
@@ -273,74 +275,117 @@ export function StaffAnnouncementsScreen() {
           />
         ) : (
           <View style={styles.announcementsList}>
-            {filteredAnnouncements.map((item) => (
-              <Card key={item.id} style={styles.announcementCard}>
-                {/* Header Kartu Pengumuman */}
-                <View style={styles.cardHeader}>
-                  <View style={styles.badgeGroup}>
-                    {item.is_pinned && (
-                      <View style={styles.pinnedBadge}>
-                        <Ionicons name="pin" size={12} color="#854D0E" />
-                        <Text style={styles.pinnedText}>Disematkan</Text>
+            {filteredAnnouncements.map((item) => {
+              const isDarurat = item.category === AnnouncementCategory.DARURAT;
+
+              if (isDarurat) {
+                return (
+                  <Card key={item.id} style={styles.announcementCard}>
+                    <View style={styles.cardHeader}>
+                      <View style={styles.badgeGroup}>
+                        {item.is_pinned && (
+                          <View style={styles.pinnedBadge}>
+                            <Ionicons name="pin" size={12} color={shadcn.status.warning.text} />
+                            <Text style={styles.pinnedText}>Disematkan</Text>
+                          </View>
+                        )}
+                        <Badge label="Darurat" variant="destructive" />
                       </View>
-                    )}
-                    <Badge
-                      label={item.category}
-                      variant={getCategoryBadgeVariant(item.category)}
+                      <Text style={styles.dateText}>
+                        {formatTanggalId(item.created_at, { shortMonth: true })}
+                      </Text>
+                    </View>
+
+                    <Alert
+                      variant="destructive"
+                      title={item.title}
+                      description={item.content}
+                      style={styles.alertEmergency}
                     />
-                    {Boolean(item.class_name) && (
+
+                    <Separator style={styles.footerSeparator} />
+                    <View style={styles.cardFooter}>
+                      <Ionicons name="person-circle-outline" size={16} color={shadcn.mutedForeground} />
+                      <Text style={styles.authorText}>
+                        Oleh: {item.created_by_name || "Staf Sekolah"}
+                      </Text>
+                    </View>
+                  </Card>
+                );
+              }
+
+              return (
+                <Card key={item.id} style={styles.announcementCard}>
+                  {/* Header Kartu Pengumuman */}
+                  <View style={styles.cardHeader}>
+                    <View style={styles.badgeGroup}>
+                      {item.is_pinned && (
+                        <View style={styles.pinnedBadge}>
+                          <Ionicons name="pin" size={12} color={shadcn.status.warning.text} />
+                          <Text style={styles.pinnedText}>Disematkan</Text>
+                        </View>
+                      )}
                       <Badge
-                        label={`Kelas ${item.class_name}`}
-                        variant="neutral"
-                        style={styles.classBadge}
+                        label={item.category}
+                        variant={getCategoryBadgeVariant(item.category)}
                       />
-                    )}
+                      {Boolean(item.class_name) && (
+                        <Badge
+                          label={`Kelas ${item.class_name}`}
+                          variant="outline"
+                          style={styles.classBadge}
+                        />
+                      )}
+                    </View>
+                    <Text style={styles.dateText}>
+                      {formatTanggalId(item.created_at, { shortMonth: true })}
+                    </Text>
                   </View>
-                  <Text style={styles.dateText}>
-                    {formatTanggalId(item.created_at, { shortMonth: true })}
-                  </Text>
-                </View>
 
-                {/* Judul & Isi */}
-                <Text style={styles.announcementTitle}>{item.title}</Text>
-                <Text style={styles.announcementContent}>{item.content}</Text>
+                  {/* Judul & Isi */}
+                  <Text style={styles.announcementTitle}>{item.title}</Text>
+                  <Text style={styles.announcementContent}>{item.content}</Text>
 
-                {/* Footer Pembuat */}
-                <View style={styles.cardFooter}>
-                  <Ionicons name="person-circle-outline" size={16} color={colors.textMuted} />
-                  <Text style={styles.authorText}>
-                    Oleh: {item.created_by_name || "Staf Sekolah"}
-                  </Text>
-                </View>
-              </Card>
-            ))}
+                  {/* Footer Pembuat */}
+                  <Separator style={styles.footerSeparator} />
+                  <View style={styles.cardFooter}>
+                    <Ionicons name="person-circle-outline" size={16} color={shadcn.mutedForeground} />
+                    <Text style={styles.authorText}>
+                      Oleh: {item.created_by_name || "Staf Sekolah"}
+                    </Text>
+                  </View>
+                </Card>
+              );
+            })}
           </View>
         )}
 
-        {/* Modal Form Buat Pengumuman */}
-        <ModalSheet
+        {/* Sheet Form Buat Pengumuman */}
+        <Sheet
           visible={modalVisible}
           onClose={handleCloseCreateModal}
           title="Terbitkan Pengumuman Baru"
         >
-          <View style={styles.modalBody}>
+          <View style={styles.sheetBody}>
             {Boolean(formError) && (
-              <View style={styles.errorAlert}>
-                <Ionicons name="alert-circle" size={18} color={colors.badge.danger.text} />
-                <Text style={styles.errorAlertText}>{formError}</Text>
-              </View>
+              <Alert
+                variant="destructive"
+                title="Kendala Formulir"
+                description={formError!}
+                style={styles.sheetErrorAlert}
+              />
             )}
 
+            <Label required>Judul Pengumuman</Label>
             <Input
-              label="Judul Pengumuman"
               placeholder="Contoh: Pemberitahuan Libur Hari Nasional"
               value={title}
               onChangeText={setTitle}
               accessibilityLabel="Input judul pengumuman"
             />
 
+            <Label required>Isi Pengumuman</Label>
             <Input
-              label="Isi Pengumuman"
               placeholder="Tuliskan isi pengumuman lengkap secara jelas..."
               value={content}
               onChangeText={setContent}
@@ -350,7 +395,7 @@ export function StaffAnnouncementsScreen() {
             />
 
             {/* Pilihan Kategori */}
-            <Text style={styles.fieldLabel}>Kategori Pengumuman:</Text>
+            <Label>Kategori Pengumuman</Label>
             <View style={styles.optionsWrap}>
               {availableCategories.map((cat) => {
                 const isSelected = category === cat;
@@ -382,7 +427,7 @@ export function StaffAnnouncementsScreen() {
             </View>
 
             {/* Pilihan Sasaran Kelas */}
-            <Text style={styles.fieldLabel}>Sasaran Penerima:</Text>
+            <Label>Sasaran Penerima</Label>
             <View style={styles.optionsWrap}>
               <TouchableOpacity
                 style={[
@@ -448,8 +493,8 @@ export function StaffAnnouncementsScreen() {
               <Switch
                 value={isPinned}
                 onValueChange={setIsPinned}
-                trackColor={{ false: "#CBD5E1", true: colors.primarySoft }}
-                thumbColor={isPinned ? colors.primary : "#F1F5F9"}
+                trackColor={{ false: shadcn.secondary, true: shadcn.primary }}
+                thumbColor={isPinned ? shadcn.primaryForeground : shadcn.background}
                 accessibilityLabel="Toggle sematkan pengumuman di atas"
               />
             </View>
@@ -458,13 +503,13 @@ export function StaffAnnouncementsScreen() {
             <Button
               title={submitting ? "Menerbitkan..." : "Terbitkan Pengumuman"}
               onPress={handleCreateAnnouncement}
-              variant="primary"
+              variant="default"
               loading={submitting}
               accessibilityLabel="Konfirmasi terbitkan pengumuman"
-              style={styles.modalSubmitButton}
+              style={styles.sheetSubmitButton}
             />
           </View>
-        </ModalSheet>
+        </Sheet>
       </ScrollView>
     </Screen>
   );
@@ -476,6 +521,10 @@ const styles = StyleSheet.create({
     height: touchTarget.minHeight,
     alignItems: "center",
     justifyContent: "center",
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: shadcn.border,
+    backgroundColor: shadcn.background,
   },
   scrollContent: {
     padding: spacing.lg,
@@ -492,7 +541,9 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   announcementCard: {
-    padding: spacing.lg,
+    padding: spacing.md,
+    backgroundColor: shadcn.card,
+    borderColor: shadcn.border,
     marginBottom: spacing.md,
   },
   cardHeader: {
@@ -509,9 +560,9 @@ const styles = StyleSheet.create({
   pinnedBadge: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: colors.badge.warning.bg,
+    backgroundColor: shadcn.status.warning.bg,
     borderWidth: 1,
-    borderColor: colors.badge.warning.border,
+    borderColor: shadcn.status.warning.border,
     paddingHorizontal: spacing.sm,
     paddingVertical: 2,
     borderRadius: radius.full,
@@ -519,8 +570,8 @@ const styles = StyleSheet.create({
   },
   pinnedText: {
     fontSize: 10,
-    fontWeight: typography.weight.bold,
-    color: colors.badge.warning.text,
+    fontWeight: typography.weight.semibold,
+    color: shadcn.status.warning.text,
     marginLeft: 2,
   },
   classBadge: {
@@ -528,56 +579,42 @@ const styles = StyleSheet.create({
   },
   dateText: {
     fontSize: 11,
-    color: colors.textSecondary,
+    color: shadcn.mutedForeground,
     fontVariant: ["tabular-nums"],
   },
   announcementTitle: {
-    fontSize: typography.size.base,
-    fontWeight: typography.weight.bold,
-    color: colors.textPrimary,
+    fontSize: typography.size.sm,
+    fontWeight: typography.weight.semibold,
+    color: shadcn.foreground,
     marginBottom: spacing.xs,
   },
   announcementContent: {
     fontSize: typography.size.sm,
-    color: colors.textSecondary,
+    color: shadcn.mutedForeground,
     lineHeight: typography.lineHeight.base,
-    marginBottom: spacing.md,
+    marginBottom: spacing.sm,
+  },
+  alertEmergency: {
+    marginBottom: spacing.sm,
+  },
+  footerSeparator: {
+    marginBottom: spacing.xs,
   },
   cardFooter: {
     flexDirection: "row",
     alignItems: "center",
     paddingTop: spacing.xs,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
   },
   authorText: {
     fontSize: 11,
-    color: colors.textMuted,
+    color: shadcn.mutedForeground,
     marginLeft: spacing.xs,
   },
-  modalBody: {
+  sheetBody: {
     paddingVertical: spacing.xs,
   },
-  errorAlert: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: colors.badge.danger.bg,
-    padding: spacing.sm,
-    borderRadius: radius.md,
+  sheetErrorAlert: {
     marginBottom: spacing.md,
-  },
-  errorAlertText: {
-    fontSize: typography.size.xs,
-    color: colors.badge.danger.text,
-    marginLeft: spacing.xs,
-    flex: 1,
-  },
-  fieldLabel: {
-    fontSize: typography.size.sm,
-    fontWeight: typography.weight.semibold,
-    color: colors.textPrimary,
-    marginBottom: spacing.xs,
-    marginTop: spacing.xs,
   },
   optionsWrap: {
     flexDirection: "row",
@@ -595,22 +632,23 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xs,
   },
   choiceChipSelected: {
-    backgroundColor: colors.primarySoft,
-    borderColor: colors.primary,
+    backgroundColor: shadcn.primary,
+    borderColor: shadcn.primary,
   },
   choiceChipUnselected: {
-    backgroundColor: colors.card,
-    borderColor: colors.border,
+    backgroundColor: shadcn.background,
+    borderColor: shadcn.border,
   },
   choiceChipText: {
     fontSize: typography.size.xs,
-    fontWeight: typography.weight.semibold,
+    fontWeight: typography.weight.medium,
   },
   choiceChipTextSelected: {
-    color: colors.primary,
+    color: shadcn.primaryForeground,
+    fontWeight: typography.weight.semibold,
   },
   choiceChipTextUnselected: {
-    color: colors.textSecondary,
+    color: shadcn.foreground,
   },
   switchRow: {
     flexDirection: "row",
@@ -620,7 +658,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
     borderTopWidth: 1,
     borderBottomWidth: 1,
-    borderColor: colors.border,
+    borderColor: shadcn.border,
   },
   switchTextCol: {
     flex: 1,
@@ -628,16 +666,17 @@ const styles = StyleSheet.create({
   },
   switchTitle: {
     fontSize: typography.size.sm,
-    fontWeight: typography.weight.semibold,
-    color: colors.textPrimary,
+    fontWeight: typography.weight.medium,
+    color: shadcn.foreground,
   },
   switchSubtitle: {
     fontSize: typography.size.xs,
-    color: colors.textSecondary,
+    color: shadcn.mutedForeground,
     marginTop: 2,
   },
-  modalSubmitButton: {
+  sheetSubmitButton: {
     marginTop: spacing.sm,
     width: "100%",
+    minHeight: touchTarget.minHeight,
   },
 });

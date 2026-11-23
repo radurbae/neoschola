@@ -4,7 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Platform } from "react-native";
 import { Role } from "@neoschola/shared";
 import { useAuth } from "../../src/store/auth";
-import { colors, typography } from "../../src/theme/tokens";
+import { shadcn, typography } from "../../src/theme/tokens";
 
 export default function StaffTabsLayout() {
   const { user } = useAuth();
@@ -15,28 +15,30 @@ export default function StaffTabsLayout() {
     <Tabs
       screenOptions={{
         headerStyle: {
-          backgroundColor: colors.card,
+          backgroundColor: shadcn.background,
         },
-        headerTintColor: colors.primary,
+        headerTintColor: shadcn.foreground,
         headerTitleStyle: {
-          fontSize: typography.size.lg,
-          fontWeight: typography.weight.bold,
-          color: colors.textPrimary,
+          fontSize: typography.size.base,
+          fontWeight: typography.weight.semibold,
+          color: shadcn.foreground,
         },
         headerShadowVisible: false,
-        tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: colors.textSecondary,
+        tabBarActiveTintColor: shadcn.foreground,
+        tabBarInactiveTintColor: shadcn.mutedForeground,
         tabBarStyle: {
-          backgroundColor: colors.card,
-          borderTopColor: colors.border,
+          backgroundColor: shadcn.background,
+          borderTopColor: shadcn.border,
           borderTopWidth: 1,
-          height: Platform.OS === "ios" ? 88 : 64,
-          paddingBottom: Platform.OS === "ios" ? 28 : 8,
+          height: Platform.OS === "ios" ? 84 : 60,
+          paddingBottom: Platform.OS === "ios" ? 24 : 8,
           paddingTop: 8,
+          elevation: 0,
+          shadowOpacity: 0,
         },
         tabBarLabelStyle: {
           fontSize: 11,
-          fontWeight: typography.weight.semibold,
+          fontWeight: typography.weight.medium,
         },
       }}
     >
