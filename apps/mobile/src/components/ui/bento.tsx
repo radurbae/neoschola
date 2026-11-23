@@ -337,7 +337,7 @@ export function PastelStatCard({
             { backgroundColor: getToneBackground() },
           ]}
         >
-          <View>
+          <View style={styles.statCardTextBlock}>
             <Text style={styles.statCardValue} numberOfLines={1}>
               {value}
             </Text>
@@ -375,7 +375,7 @@ export function PastelStatCard({
         style,
       ]}
     >
-      <View>
+      <View style={styles.statCardTextBlock}>
         <Text style={styles.statCardValue} numberOfLines={1}>
           {value}
         </Text>
@@ -1027,19 +1027,25 @@ const styles = StyleSheet.create({
   // PastelStatCard
   statCardTouchWrapper: {
     minHeight: touchTarget.minHeight,
-    flexShrink: 0,
+    minWidth: 0,
   },
   statCardFillInner: {
     flex: 1,
     width: "100%",
+    height: "100%",
+    minWidth: 0,
   },
   statCardContainer: {
     minHeight: 164,
+    minWidth: 0,
     padding: 20,
     justifyContent: "space-between",
     borderRadius: radius.xl,
     borderWidth: 0,
-    flexShrink: 0,
+    overflow: "hidden",
+  },
+  statCardTextBlock: {
+    minWidth: 0,
   },
   statCardValue: {
     fontSize: typography.size.lg,
@@ -1059,6 +1065,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     marginTop: 14,
+    minWidth: 0,
   },
   statCardIconBox: {
     width: 36,
@@ -1067,6 +1074,7 @@ const styles = StyleSheet.create({
     backgroundColor: bento.surface,
     alignItems: "center",
     justifyContent: "center",
+    flexShrink: 0,
   },
   statCardTrendText: {
     fontSize: typography.size.xs,

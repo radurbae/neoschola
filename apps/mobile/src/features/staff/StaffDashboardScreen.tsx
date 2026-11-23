@@ -268,15 +268,16 @@ export function StaffDashboardScreen() {
                   />
                 </View>
               ) : (
-                <ScrollView
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  snapToInterval={188}
-                  decelerationRate="fast"
-                  snapToAlignment="start"
-                  contentContainerStyle={styles.mobileStripContent}
-                  style={styles.mobileStrip}
-                >
+                <View style={styles.mobileStripSection}>
+                  <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    snapToInterval={180}
+                    decelerationRate="fast"
+                    snapToAlignment="start"
+                    contentContainerStyle={styles.mobileStripContent}
+                    style={styles.mobileStrip}
+                  >
                   <PastelStatCard
                     tone="lavender"
                     value={String(metrics.studentCount)}
@@ -317,7 +318,8 @@ export function StaffDashboardScreen() {
                     }
                     style={styles.statCardItemMobile}
                   />
-                </ScrollView>
+                  </ScrollView>
+                </View>
               )}
             </View>
 
@@ -445,33 +447,46 @@ const styles = StyleSheet.create({
     gap: layout.bentoGap,
   },
   colChartTablet: {
-    flex: 1.05,
+    flex: 1,
+    minWidth: 0,
+    alignSelf: "stretch",
   },
   chartFullHeight: {
-    height: "100%",
+    flex: 1,
+    alignSelf: "stretch",
   },
   colStatsTablet: {
-    flex: 1.35,
+    flex: 1.45,
+    minWidth: 0,
+    alignSelf: "stretch",
     flexDirection: "row",
     alignItems: "stretch",
     gap: 14,
   },
   statCardItemTablet: {
     flex: 1,
-    height: 168,
+    flexShrink: 1,
+    minWidth: 0,
     minHeight: 164,
+    alignSelf: "stretch",
+  },
+  mobileStripSection: {
+    width: "100%",
   },
   mobileStrip: {
     marginHorizontal: -layout.mobilePaddingX,
     flexGrow: 0,
   },
   mobileStripContent: {
-    alignItems: "center",
+    flexDirection: "row",
+    flexGrow: 1,
+    alignItems: "stretch",
     paddingHorizontal: layout.mobilePaddingX,
     gap: 12,
   },
   statCardItemMobile: {
-    width: 176,
+    flex: 1,
+    minWidth: 168,
     height: 164,
   },
   colActionsTablet: {
@@ -482,7 +497,8 @@ const styles = StyleSheet.create({
     alignItems: "stretch",
   },
   actionCardFullHeight: {
-    height: "100%",
+    flex: 1,
+    alignSelf: "stretch",
     justifyContent: "space-between",
   },
   colMobile: {
