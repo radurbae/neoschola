@@ -42,6 +42,7 @@ export default function TabsLayout() {
         options={{
           title: "Beranda",
           tabBarLabel: "Beranda",
+          tabBarAccessibilityLabel: "Tab Beranda",
           tabBarIcon: ({ color, size, focused }) => (
             <Ionicons
               name={focused ? "home" : "home-outline"}
@@ -56,6 +57,7 @@ export default function TabsLayout() {
         options={{
           title: "Presensi",
           tabBarLabel: "Presensi",
+          tabBarAccessibilityLabel: "Tab Presensi",
           tabBarIcon: ({ color, size, focused }) => (
             <Ionicons
               name={focused ? "calendar" : "calendar-outline"}
@@ -70,6 +72,7 @@ export default function TabsLayout() {
         options={{
           title: "Akademik",
           tabBarLabel: "Akademik",
+          tabBarAccessibilityLabel: "Tab Akademik",
           tabBarIcon: ({ color, size, focused }) => (
             <Ionicons
               name={focused ? "book" : "book-outline"}
@@ -84,6 +87,7 @@ export default function TabsLayout() {
         options={{
           title: "Pesan",
           tabBarLabel: "Pesan",
+          tabBarAccessibilityLabel: "Tab Pesan",
           tabBarIcon: ({ color, size, focused }) => (
             <Ionicons
               name={focused ? "chatbubbles" : "chatbubbles-outline"}
@@ -98,6 +102,7 @@ export default function TabsLayout() {
         options={{
           title: "Keuangan",
           tabBarLabel: "Keuangan",
+          tabBarAccessibilityLabel: "Tab Keuangan",
           tabBarIcon: ({ color, size, focused }) => (
             <Ionicons
               name={focused ? "wallet" : "wallet-outline"}

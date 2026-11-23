@@ -99,7 +99,6 @@ export default function AttendanceScreen() {
     fetchData();
   }, [fetchData]);
 
-  // Handle open modal
   const handleOpenModal = () => {
     const today = new Date().toISOString().split("T")[0];
     setLeaveType(LeaveType.SAKIT);

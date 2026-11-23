@@ -19,7 +19,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import type { Student } from "@neoschola/shared";
-import { colors, spacing, radius, typography, touchTarget, shadcn } from "../theme/tokens";
+import { colors, shadows, spacing, radius, typography, touchTarget, shadcn } from "../theme/tokens";
 import { Avatar } from "./ui/shadcn";
 
 // Re-export seluruh primitif shadcn/ui
@@ -797,9 +797,7 @@ export function ModalSheet({
 export const Sheet = ModalSheet;
 export type SheetProps = ModalSheetProps;
 
-// ============================================================================
 // Styles
-// ============================================================================
 
 const styles = StyleSheet.create({
   // Screen
@@ -858,7 +856,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
     ...Platform.select({
       ios: {
-        shadowColor: "#09090B",
+        shadowColor: shadows.xs.shadowColor,
         shadowOffset: { width: 0, height: 1 },
         shadowOpacity: 0.03,
         shadowRadius: 2,
@@ -1163,7 +1161,7 @@ const styles = StyleSheet.create({
     fontSize: 11,
   },
   childTabClassActive: {
-    color: "#A1A1AA",
+    color: colors.textInverseMuted,
   },
   childTabClassInactive: {
     color: colors.textSecondary,
@@ -1235,7 +1233,7 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.xxl,
     ...Platform.select({
       ios: {
-        shadowColor: "#09090B",
+        shadowColor: shadows.xs.shadowColor,
         shadowOffset: { width: 0, height: -2 },
         shadowOpacity: 0.08,
         shadowRadius: 6,
@@ -1254,7 +1252,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 4,
     borderRadius: radius.full,
-    backgroundColor: "#D4D4D8",
+    backgroundColor: colors.modalHandle,
   },
   modalTitleRow: {
     flexDirection: "row",

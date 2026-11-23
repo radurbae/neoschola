@@ -769,6 +769,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     marginTop: 2,
+    flexWrap: "wrap",
   },
   scheduleTeacherText: {
     fontSize: 11,

@@ -88,6 +88,7 @@ export const colors = {
   cardSecondary: shadcn.secondary,
   border: shadcn.border,
   borderFocus: shadcn.primary,
+  modalHandle: "#D4D4D8",
 
   // Identitas Monokrom Zinc
   primary: shadcn.primary,
@@ -99,6 +100,7 @@ export const colors = {
   textSecondary: shadcn.mutedForeground,
   textMuted: "#71717A",
   textInverse: shadcn.primaryForeground,
+  textInverseMuted: "#A1A1AA",
 
   // Status Badges dan Semantic Chips (Teks ke background >= 4.5:1)
   badge: {

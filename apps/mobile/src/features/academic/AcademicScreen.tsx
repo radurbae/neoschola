@@ -423,6 +423,7 @@ const styles = StyleSheet.create({
   scheduleMetaRow: {
     flexDirection: "row",
     alignItems: "center",
+    flexWrap: "wrap",
   },
   scheduleMetaText: {
     fontSize: typography.size.xs,

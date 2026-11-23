@@ -18,6 +18,7 @@ Dokumentasi utama:
 - [docs/API_CONTRACT.md](docs/API_CONTRACT.md)
 - [docs/DESIGN.md](docs/DESIGN.md)
 - [anti-slop/audit-001.md](anti-slop/audit-001.md)
+- [anti-slop/audit-002.md](anti-slop/audit-002.md)
 
 ## Menjalankan Secara Lokal
 
