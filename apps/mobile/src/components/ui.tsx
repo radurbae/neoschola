@@ -19,11 +19,12 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import type { Student } from "@neoschola/shared";
-import { colors, shadows, spacing, radius, typography, touchTarget, shadcn } from "../theme/tokens";
+import { colors, shadows, spacing, radius, typography, touchTarget, shadcn, bento } from "../theme/tokens";
 import { Avatar } from "./ui/shadcn";
 
-// Re-export seluruh primitif shadcn/ui
+// Re-export seluruh primitif shadcn/ui dan komponen bento
 export * from "./ui/shadcn";
+export * from "./ui/bento";
 
 // Screen
 
@@ -803,7 +804,7 @@ const styles = StyleSheet.create({
   // Screen
   screenSafeArea: {
     flex: 1,
-    backgroundColor: colors.canvas,
+    backgroundColor: bento.surface,
   },
   screenScrollView: {
     flex: 1,
@@ -811,10 +812,16 @@ const styles = StyleSheet.create({
   screenContentContainer: {
     padding: spacing.lg,
     paddingBottom: spacing.max,
+    maxWidth: 1120,
+    alignSelf: "center",
+    width: "100%",
   },
   screenStaticContainer: {
     flex: 1,
     padding: spacing.lg,
+    maxWidth: 1120,
+    alignSelf: "center",
+    width: "100%",
   },
   screenHeader: {
     flexDirection: "row",
@@ -822,7 +829,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
-    backgroundColor: colors.card,
+    backgroundColor: bento.surface,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
   },

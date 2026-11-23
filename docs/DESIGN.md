@@ -1,81 +1,97 @@
 # NeoSchola: Panduan Desain & Sistem Token UI/UX
 
-Panduan desain visual, interaksi, dan sistem token untuk aplikasi mobile dan web NeoSchola berbasis **ui.shadcn.com (Zinc Base / New York Style)**.
+Panduan desain visual, interaksi, dan sistem token untuk aplikasi mobile dan web NeoSchola berbasis **NeoSchola Pastel Bento + Obsidian Frame** dengan mempertahankan disiplin komponen **ui.shadcn.com (Zinc Base / New York Style)**.
 
 ## 1. Prinsip Desain
 
-1. **Monokrom Tenang (Zinc Base)**
-   Antarmuka menggunakan palet monokrom Zinc netral yang jernih dan profesional. Latar belakang putih bersih dan abu-abu sangat muda dipadukan dengan teks hitam pekat untuk menciptakan ketenangan visual bagi orang tua murid dan staf sekolah.
-2. **Presisi Hairline Border**
-   Menghindari bayangan berat yang kotor. Struktur visual dibangun menggunakan garis batas tipis 1px (`#E4E4E7`) yang presisi dengan bayangan mikro (whisper shadow) yang sangat halus.
-3. **Ruang Napas Lega (Whitespace)**
-   Setiap elemen diberi jarak yang proporsional sehingga informasi tersaji rapi, mudah dipindai dengan cepat di layar ponsel, dan tidak menimbulkan kesan sesak.
-4. **Aksen Semantik Terkendali**
-   Warna fungsional hanya digunakan untuk status yang bermakna (sukses, peringatan, info, bahaya). Tidak ada warna mencolok yang digunakan tanpa tujuan hierarki informasi.
-5. **Aksesibilitas Utama**
-   - Semua target sentuh (tap target) memiliki ukuran minimal **44pt x 44pt** (`minHeight: 44`).
-   - Rasio kontras teks terhadap latar belakang wajib memenuhi standar WCAG 2.1 AA (minimal **4.5:1**).
-6. **Bahasa Indonesia Hangat dan Sopan**
-   Seluruh copy dan komunikasi menggunakan Bahasa Indonesia yang ramah, santun, jelas, dan tanpa istilah teknis asing yang membingungkan.
+1. **NeoSchola Pastel Bento + Obsidian Frame**
+   Antarmuka memadukan bingkai Obsidian gelap yang kokoh dan berwibawa dengan kartu pastel lembut tanpa garis batas (borderless) di atas kanvas putih murni. Pendekatan ini menghadirkan pengalaman visual yang hangat, modern, elegan, dan menyenangkan bagi orang tua murid serta staf sekolah.
+2. **Shell Responsif Adaptif (Breakpoint 768px)**
+   - Layar Lebar / Tablet (lebar >= 768px): Dark Obsidian Left Rail (#141416) dengan lebar 64 sampai 72px yang memuat logo badge krem (#FAF3DF), daftar ikon navigasi vertikal di tengah, dan tombol keluar di bagian bawah, dipadukan dengan area kanvas putih (#FFFFFF) ber-radius 24pt.
+   - Layar Ponsel (lebar < 768px): Kanvas putih (#FFFFFF) penuh dengan Floating Dark Bottom Dock (#141416) melayang setinggi 60pt ber-radius 24pt yang memuat hingga 5 ikon navigasi utama dan indikator aktif Ice Blue.
+3. **Kartu Bento Pastel Tanpa Garis Batas (Borderless Bento)**
+   Menghindari garis batas yang kaku dan bayangan berat yang kotor. Kartu informasi menggunakan warna pastel lembut dengan radius 20 sampai 24pt (radius.xl dan radius.xxl) yang tersusun rapi dalam grid bento modular.
+4. **Ruang Napas Lega dan Tata Letak Terstruktur**
+   Setiap modul informasi memiliki jarak yang terukur sehingga informasi utama (seperti kehadiran, jadwal, pengumuman, dan tagihan) dapat dipindai secara intuitif tanpa menimbulkan kelelahan mata.
+5. **Aksesibilitas dan Keterbacaan Utama**
+   - Semua target sentuh (tap target) memiliki ukuran minimal 44pt x 44pt (minHeight: 44).
+   - Seluruh pasangan warna teks dan latar belakang lulus uji rasio kontras WCAG 2.1 AA (minimal 4.5:1).
+   - Angka keuangan, jam, dan persentase selalu menggunakan font angka bertabuler (tabular-nums).
+6. **Bahasa Indonesia Alami dan Ramah**
+   Seluruh salinan antarmuka menggunakan Bahasa Indonesia baku yang santun, hangat, komunikatif, dan bebas dari istilah teknis yang membingungkan.
 
 ---
 
-## 2. Token Semantik shadcn/ui
+## 2. Token Warna & Palet Pastel Bento
 
-Berikut adalah tabel lengkap token semantik Zinc New York Style yang digunakan pada NeoSchola:
+### A. Palet Obsidian Frame & Surface
+
+| Token | Nilai Hex | Fungsi / Penggunaan | Rasio Kontras |
+|---|---|---|---|
+| `obsidian` | `#141416` | Bingkai rail navigasi samping dan floating bottom dock | Dasar Gelap |
+| `obsidianHover` | `#27272A` | Highlight status aktif atau ditekan pada bilah navigasi gelap | Nyaman |
+| `obsidianBorder` | `#2E2E32` | Garis aksen geometris pada kartu aksi gelap | Aksen Halus |
+| `obsidianMuted` | `#A1A1AA` | Ikon tidak aktif dan teks keterangan di atas bingkai obsidian | 7.2:1 terhadap `#141416` |
+| `obsidianForeground` | `#FAFAFA` | Teks utama, judul, dan ikon aktif di atas bingkai obsidian | 17.6:1 terhadap `#141416` |
+| `creamBadge` | `#FAF3DF` | Latar badge logo inisial sekolah pada rail samping | Kontras Tinggi |
+| `surface` | `#FFFFFF` | Kanvas utama layar dan wadah konten aplikasi | Dasar Putih |
+| `pillSurface` | `#F4F4F5` | Latar tombol bundar utilitas, switcher, dan badge netral | Netral Lembut |
+
+### B. Palet Kartu Pastel Bento (Borderless, Radius 20-24pt)
+
+| Token | Nilai Hex | Fungsi / Penggunaan | Rasio Kontras |
+|---|---|---|---|
+| `iceBlue` | `#EAF3FE` | Latar kartu ringkasan kehadiran dan kartu grafik tren | Pastel Sejuk |
+| `iceBlueText` | `#1D4ED8` | Teks aksen dan persentase tren pada kartu Ice Blue | 6.3:1 terhadap `#EAF3FE` |
+| `iceBlueCta` | `#D6E8FF` | Latar tombol aksi pill pada kartu obsidian | 15.8:1 dengan teks `#09090B` |
+| `iceBlueBar` | `#BFDBFE` | Batang grafik data pada sparkline MiniTrendChart | Terlihat Jernih |
+| `iceBlueActive` | `#2563EB` | Batang data aktif dan titik fokus tren terakhir | Kontras Tegas |
+| `lavender` | `#EDE7FA` | Latar kartu modul akademik, tugas, dan nilai | Pastel Lembut |
+| `lavenderText` | `#5B21B6` | Teks keterangan dan sorotan tren pada kartu Lavender | 8.5:1 terhadap `#EDE7FA` |
+| `mint` | `#E2F5E9` | Latar kartu status kehadiran prima dan pembayaran lunas | Pastel Segar |
+| `mintText` | `#15803D` | Teks status sukses dan persentase kehadiran tepat waktu | 4.6:1 terhadap `#E2F5E9` |
+| `butter` | `#FCF4DC` | Latar kartu pengingat tagihan dan perizinan pending | Pastel Hangat |
+| `butterText` | `#92400E` | Teks peringatan dan catatan penting pada kartu Butter | 6.6:1 terhadap `#FCF4DC` |
+| `pastelMutedText` | `#3F3F46` | Teks label keterangan umum di atas semua kartu pastel | >= 8.5:1 di seluruh pastel |
+
+### C. Token Semantik shadcn/ui (Zinc Base)
 
 | Token | Nilai Hex | Fungsi / Penggunaan | Rasio Kontras |
 |---|---|---|---|
 | `background` | `#FFFFFF` | Latar belakang dasar permukaan kartu dan modal | Dasar |
-| `canvas` | `#FAFAFA` | Latar belakang kanvas layar aplikasi (Zinc-50) | Dasar |
-| `foreground` | `#09090B` | Teks utama, judul, dan elemen kontras tertinggi (Zinc-950) | 19.8:1 terhadap `#FFFFFF` |
-| `card` | `#FFFFFF` | Permukaan kartu komponen | Kontras tinggi |
-| `cardForeground` | `#09090B` | Teks di atas kartu | 19.8:1 terhadap `#FFFFFF` |
-| `popover` | `#FFFFFF` | Permukaan menu mengambang, dropdown, tooltip | Kontras tinggi |
-| `popoverForeground` | `#09090B` | Teks di atas popover | 19.8:1 terhadap `#FFFFFF` |
+| `canvas` | `#FFFFFF` | Latar kanvas layar aplikasi (diselaraskan ke putih murni) | Dasar |
+| `foreground` | `#09090B` | Teks utama, judul, dan angka hero (Zinc-950) | 19.8:1 terhadap `#FFFFFF` |
+| `card` | `#FFFFFF` | Permukaan kartu standar | Kontras Tinggi |
+| `cardForeground` | `#09090B` | Teks utama kartu | 19.8:1 terhadap `#FFFFFF` |
 | `primary` | `#18181B` | Tombol utama, tab aktif, seleksi penting (Zinc-900) | 17.7:1 terhadap `#FFFFFF` |
-| `primaryPressed` | `#27272A` | Status tombol utama saat ditekan (Zinc-800) | 15.3:1 terhadap `#FFFFFF` |
+| `primaryPressed` | `#27272A` | Tombol utama saat ditekan (Zinc-800) | 15.3:1 terhadap `#FFFFFF` |
 | `primaryForeground` | `#FAFAFA` | Teks di atas tombol utama (Zinc-50) | 17.1:1 terhadap `#18181B` |
-| `secondary` | `#F4F4F5` | Tombol alternatif, latar belakang chip/pill (Zinc-100) | Netral |
-| `secondaryPressed` | `#E4E4E7` | Status tombol sekunder saat ditekan (Zinc-200) | Terlihat jelas |
+| `secondary` | `#F4F4F5` | Tombol alternatif dan latar chip (Zinc-100) | Netral |
+| `secondaryPressed` | `#E4E4E7` | Tombol sekunder saat ditekan (Zinc-200) | Terlihat Nyata |
 | `secondaryForeground` | `#18181B` | Teks di atas tombol sekunder | 15.8:1 terhadap `#F4F4F5` |
-| `muted` | `#F4F4F5` | Latar belakang elemen nonaktif atau selingan | Netral |
-| `mutedForeground` | `#52525B` | Teks keterangan, timestamp, placeholder (Zinc-600) | 7.1:1 terhadap `#FFFFFF`, 6.4:1 terhadap `#F4F4F5` |
-| `accent` | `#F4F4F5` | Sorotan hover atau seleksi lembut | Netral |
-| `accentForeground` | `#18181B` | Teks pada elemen aksen | 15.8:1 terhadap `#F4F4F5` |
-| `destructive` | `#DC2626` | Tombol bahaya, aksi hapus, status fatal (Red-600) | 4.6:1 terhadap `#FFFFFF` |
-| `destructivePressed` | `#B91C1C` | Tombol bahaya saat ditekan (Red-700) | 5.9:1 terhadap `#FFFFFF` |
+| `muted` | `#F4F4F5` | Latar elemen nonaktif atau selingan | Netral |
+| `mutedForeground` | `#52525B` | Teks pendukung, timestamp, placeholder (Zinc-600) | 7.1:1 terhadap `#FFFFFF` |
+| `destructive` | `#DC2626` | Tombol hapus dan penanda bahaya fatal (Red-600) | 4.6:1 terhadap `#FFFFFF` |
 | `destructiveForeground` | `#FAFAFA` | Teks di atas tombol bahaya | 4.5:1 terhadap `#DC2626` |
-| `border` | `#E4E4E7` | Garis batas hairline komponen dan pemisah (Zinc-200) | Garis presisi 1px |
+| `border` | `#E4E4E7` | Garis batas komponen hairline dan pemisah | Presisi 1px |
 | `input` | `#E4E4E7` | Garis batas input formulir | Presisi 1px |
-| `ring` | `#18181B` | Indikator fokus aktif pada input dan tombol | Jelas dan tegas |
-
-### Status Semantik Terkendali (Semantic Badges)
-
-Seluruh lencana status wajib memenuhi kontras teks terhadap latar belakang minimal 4.5:1 (WCAG AA):
-
-| Status / Varian | Background | Text | Border | Contoh Penggunaan |
-|---|---|---|---|---|
-| **Success** | `#F0FDF4` | `#15803D` | `#BBF7D0` | Hadir tepat waktu, pembayaran lunas, verifikasi disetujui |
-| **Warning** | `#FFFBEB` | `#92400E` | `#FDE68A` | Izin disetujui, menunggu verifikasi, batas waktu dekat |
-| **Info** | `#EFF6FF` | `#1D4ED8` | `#BFDBFE` | Sakit dalam pemulihan, pengumuman sekolah, informasi kelas |
-| **Danger** | `#FEF2F2` | `#B91C1C` | `#FECACA` | Alpa, pembayaran jatuh tempo, pengajuan ditolak |
-| **Neutral** | `#F4F4F5` | `#3F3F46` | `#E4E4E7` | Draf simpanan, arsip lama, status belum dimulai |
+| `ring` | `#18181B` | Indikator fokus interaksi formulir | Jelas |
 
 ---
 
 ## 3. Geometri, Elevasi, dan Tipografi
 
 ### Radius Sudut (Border Radius)
-Mengikuti standar `--radius: 8px` dari shadcn/ui:
+Sistem radius diperluas untuk mendukung estetika Bento modern:
 - `sm: 6pt`: Lencana status (Badge), tag kecil, trigger tabs.
-- `md: 8pt`: Tombol standar, kolom input, container tabs, kotak peringatan (Alert).
-- `lg: 12pt`: Kartu konten (Card), wadah navigasi, daftar grup.
-- `full: 9999pt`: Avatar inisial, tombol ikon bulat, pill status.
+- `md: 8pt`: Kolom input formulir, container tabs, kotak peringatan (Alert).
+- `lg: 12pt`: Kartu konten hairline standar, wadah grup item, logo badge samping.
+- `xl: 20pt`: Kartu statistik pastel (PastelStatCard) borderless.
+- `xxl: 24pt`: Modul bento besar (MiniTrendChart, DarkActionCard), kanvas tablet, dan dock bawah.
+- `full: 9999pt`: Tombol pill CTA, avatar, tombol lingkaran utilitas, titik status.
 
 ### Elevasi Halus (Whisper Shadow)
-Aplikasi menghindari bayangan tebal. Semua elevasi dipadukan dengan border 1px `#E4E4E7`:
-- **None**: Tanpa bayangan untuk elemen datar.
+- **None**: Tanpa bayangan untuk kartu pastel borderless dan bingkai obsidian datar.
 - **XS (Whisper Shadow)**:
   - iOS: `shadowColor: "#09090B"`, `shadowOffset: { width: 0, height: 1 }`, `shadowOpacity: 0.04`, `shadowRadius: 2`
   - Android: `elevation: 1`
@@ -86,70 +102,74 @@ Aplikasi menghindari bayangan tebal. Semua elevasi dipadukan dengan border 1px `
   - Web: `boxShadow: "0 1px 3px rgba(9, 9, 11, 0.06)"`
 
 ### Tipografi Sistem Native
-Menggunakan font sistem native (San Francisco pada iOS, Roboto pada Android) untuk rendering instan tanpa jeda unduh:
-- **Heading**: Bobot `semibold` (600) dengan letter spacing negatif:
-  - Judul layar utama: `fontSize: 20pt` atau `24pt`, `letterSpacing: -0.4`.
-  - Judul kartu dan seksi: `fontSize: 16pt` atau `18pt`, `letterSpacing: -0.2`.
-- **Angka Finansial dan Jam**: Seluruh tampilan mata uang (Rupiah), jam presensi, dan skor akademik wajib menggunakan `fontVariant: ["tabular-nums"]` agar angka sejajar secara vertikal.
+- **Heading**: Bobot `bold` (700) atau `semibold` (600) dengan letter spacing negatif:
+  - Nilai hero statistik bento: `fontSize: 28pt`, `fontWeight: "700"`, `fontVariant: ["tabular-nums"]`.
+  - Judul layar utilitas atas: `fontSize: 24pt`, `fontWeight: "700"`, `letterSpacing: -0.5`.
+  - Judul kartu aksi: `fontSize: 20pt`, `fontWeight: "700"`, `letterSpacing: -0.3`.
+  - Nilai kartu statistik: `fontSize: 18pt`, `fontWeight: "700"`, `fontVariant: ["tabular-nums"]`.
+  - Judul seksi dan kartu standar: `fontSize: 16pt` atau `18pt`, `letterSpacing: -0.2`.
+- **Angka Finansial, Skor, dan Jam**: Wajib menyertakan `fontVariant: ["tabular-nums"]` agar seluruh digit angka sejajar vertikal saat dibandingkan.
 
 ---
 
-## 4. Katalog Komponen ui.shadcn.com Native
+## 4. Katalog Komponen Bento Baru
 
-1. **Button**
-   - Varian:
-     - `default`: Latar `#18181B`, teks `#FAFAFA`. Digunakan untuk aksi primer layar.
-     - `secondary`: Latar `#F4F4F5`, teks `#18181B`. Digunakan untuk aksi pendukung.
-     - `outline`: Latar `#FFFFFF`, border `#E4E4E7`, teks `#09090B`.
-     - `ghost`: Transparan, teks `#09090B`, latar berubah ke `#F4F4F5` saat ditekan.
-     - `destructive`: Latar `#DC2626`, teks `#FAFAFA`.
-     - `link`: Transparan tanpa padding samping, teks bergaris bawah.
-   - Ukuran:
-     - `sm`: Padding horizontal 12pt, tinggi minimal 44pt, teks 13pt.
-     - `default` (atau `md`): Padding horizontal 16pt, tinggi minimal 44pt, teks 14pt.
-     - `lg`: Padding horizontal 20pt, tinggi minimal 48pt, teks 16pt.
-     - `icon`: Ukuran 44pt x 44pt untuk tombol aksi berbentuk ikon.
-2. **Card**
-   - Komponen terstruktur: `CardHeader`, `CardTitle`, `CardDescription`, `CardContent`, `CardFooter`.
-   - Latar `#FFFFFF`, border 1px `#E4E4E7`, radius 12pt (`radius.lg`), whisper shadow.
-3. **Badge**
-   - Varian: `default`, `secondary`, `outline`, `destructive`, `success`, `warning`, `info`, `neutral`.
-   - Radius 6pt (`radius.sm`), border 1px, padding horizontal 8pt, padding vertikal 3pt.
-4. **Input dan Label**
-   - `Label`: Teks 14pt, bobot sedang (`500`), warna `#09090B`, margin bawah 6pt.
-   - `Input`: Latar `#FFFFFF`, border 1px `#E4E4E7`, radius 8pt, tinggi minimal 44pt, border fokus `#18181B`.
-5. **Tabs (Segmented Control)**
-   - Terdiri dari container rail `#F4F4F5` dengan padding 4pt dan radius 8pt.
-   - Trigger aktif berupa kartu putih `#FFFFFF` dengan border halus `#E4E4E7`, whisper shadow, teks hitam pekat `600`, serta tap target minimal 44pt.
-6. **Alert**
-   - Kotak notifikasi kontekstual dengan varian `default`, `destructive`, `info`, `warning`.
-   - Radius 8pt, border 1px semantik, memuat judul ringkas dan deskripsi jelas.
-7. **Avatar**
-   - Wadah inisial nama peserta didik atau pengguna (1 sampai 2 karakter kapital).
-   - Ukuran `sm` (32pt), `md` (40pt), `lg` (48pt). Latar `#F4F4F5`, border `#E4E4E7`, teks `#18181B`.
-8. **Separator**
-   - Garis pembatas tipis 1px `#E4E4E7` untuk memisahkan item daftar dalam kartu tanpa membuat kartu baru bertumpuk.
-9. **Sheet (ModalSheet)**
-   - Bottom sheet interaktif dengan backdrop gelap lembut `rgba(9, 9, 11, 0.45)`.
-   - Wadah putih `#FFFFFF` dengan radius atas 16pt, handle pill abu-abu `#D4D4D8`, pemisah header, dan tombol tutup 44pt x 44pt.
-10. **Skeleton**
-    - Penampung animasi pemuatan data ringan dengan warna latar `#E4E4E7` dan radius yang dapat disesuaikan.
-11. **ChildSwitcher**
-    - Komponen pemilihan anak asuh yang ringkas. Jika hanya 1 anak, menampilkan identitas anak dalam satu kartu hairline rapi. Jika lebih dari 1 anak, menampilkan daftar avatar dan nama yang mudah disentuh.
-12. **StateView**
-    - Tampilan status kosong (empty state), pemuatan (loading state), atau kegagalan koneksi (error state) dengan ikon monokrom yang tenang dan tombol tindak lanjut.
+1. **ResponsiveShell**
+   - Rangka aplikasi adaptif yang berpindah mulus berdasarkan lebar layar (`useWindowDimensions()`).
+   - Mode Tablet (lebar >= 768px): Dark Obsidian Left Rail (#141416) selebar 64px dengan logo badge krem "NS" di atas, deretan ikon navigasi vertikal di tengah dengan pill sorotan saat aktif, serta tombol keluar akun di bagian bawah. Di sampingnya terdapat kanvas konten putih (#FFFFFF) dengan sudut melengkung 24pt.
+   - Mode Ponsel (lebar < 768px): Kanvas konten putih penuh (#FFFFFF) dengan Floating Dark Bottom Dock (#141416) setinggi 60pt ber-radius 24pt di bagian bawah layar yang menampilkan hingga 5 ikon navigasi dan indikator titik aktif Ice Blue.
+2. **TopUtilityBar**
+   - Bilah utilitas atas layar yang bersih dan ringkas.
+   - Sisi kiri: Judul tebal 24pt dengan letter-spacing -0.5, subjudul opsional, serta slot aksi kiri (misalnya tombol kembali).
+   - Sisi kanan: Tombol bundar 44x44pt warna Pill Surface untuk notifikasi (dilengkapi dot merah penanda pesan baru) dan pengumuman, serta Profile Pill dengan avatar ringkas dan nama depan pengguna.
+3. **PastelStatCard**
+   - Kartu metrik bento borderless dengan radius 20pt dan padding 16pt.
+   - Pilihan nuansa pastel: `iceBlue`, `lavender`, `mint`, dan `butter`.
+   - Menampilkan angka nilai besar 18pt tebal tabular, label keterangan abu-abu gelap (#3F3F46), kotak ikon putih 36x36pt di sudut kiri bawah, serta persentase atau teks tren dengan warna kontras AA di sisi kanan.
+4. **MiniTrendChart**
+   - Kartu tren interaktif bernuansa Soft Ice Blue (#EAF3FE) ber-radius 24pt dengan padding 20pt.
+   - Menampilkan angka metrik utama 28pt tebal tabular, keterangan subjudul, serta lencana callout obsidian di sudut kanan atas.
+   - Grafik batang sparkline murni dibangun menggunakan React Native View tanpa dependensi pustaka grafik luar, dengan batang warna Ice Blue Bar dan aksen khusus pada batang data terakhir.
+   - Baris pengalih periode waktu (Period Switcher) di bagian bawah dengan target sentuh aman minimal 44pt (menggunakan hitSlop).
+5. **DarkActionCard**
+   - Kartu aksi utama bernuansa Obsidian gelap (#141416) dengan radius 24pt dan padding 20pt.
+   - Dihiasi dua garis aksen geometris halus di sudut kanan bawah tanpa menghalangi interaksi sentuh.
+   - Memuat tag label opsi di atas judul, judul tebal putih 20pt, paragraf deskripsi yang jelas, serta tombol pill Ice Blue CTA yang mudah ditekan.
+6. **DarkIconRow**
+   - Baris daftar informasi dan transaksi dengan tinggi minimal 56pt.
+   - Bagian kiri memuat kotak ikon gelap 40x40pt ber-radius 12pt dengan ikon putih.
+   - Bagian tengah memuat judul dan subjudul yang fleksibel terpotong rapi.
+   - Bagian kanan memuat teks angka utama tabular serta label status semantik dengan rasio kontras warna yang aman.
 
 ---
 
-## 5. Aturan Anti-Clutter Mobile (Layar 360px)
+## 5. Primitif Komponen shadcn/ui yang Dipertahankan
 
-1. **Larangan Kartu di Dalam Kartu (No Card Nesting)**
-   Tidak boleh meletakkan komponen `Card` di dalam `Card` lainnya. Jika menyajikan daftar item (misalnya riwayat transaksi atau daftar absensi), gunakan satu `Card` pembungkus dan pisahkan item menggunakan komponen `Separator`.
-2. **Batas Navigasi Bawah (Bottom Bar)**
-   Bilah navigasi bawah maksimal memuat 5 tab utama dengan latar putih bersih, hairline border atas 1px `#E4E4E7`, dan label teks yang ringkas.
-3. **Konvensi Bahasa Indonesia Alami**
-   - Salam personal yang sopan: *"Selamat pagi, Ibu Siti"* bukan *"Halo Pengguna"*.
-   - Aksi yang spesifik: *"Ajukan Izin"*, *"Unduh Rapor"*, *"Kirim Bukti Bayar"*.
-   - Pesan galat yang solutif: *"Koneksi terputus. Silakan ketuk Coba Lagi untuk memuat data."*
-   - Format mata uang baku: `Rp 250.000` dengan font angka tabular.
-   - Format tanggal baku Indonesia: `Senin, 24 November 2026`.
+1. **Button**: Varian `default`, `secondary`, `outline`, `ghost`, `destructive`, `link`. Tap target minimal 44pt.
+2. **Card**: Pembungkus kartu berstruktur (`CardHeader`, `CardTitle`, `CardDescription`, `CardContent`, `CardFooter`).
+3. **Badge**: Lencana status semantik (`default`, `secondary`, `outline`, `destructive`, `success`, `warning`, `info`, `neutral`).
+4. **Input dan Label**: Formulir dengan border 1px, tap target 44pt, serta indikator fokus yang tegas.
+5. **Tabs**: Pengalih segmen dengan rail netral dan trigger kartu aktif berbayang halus.
+6. **Alert**: Kotak informasi peringatan dan pengumuman kontekstual.
+7. **Avatar**: Inisial pengguna berlatar netral dengan ukuran `sm`, `md`, `lg`.
+8. **Separator**: Garis pemisah hairline 1px untuk membatasi item tanpa menambah tumpukan kartu.
+9. **Sheet (ModalSheet)**: Lembar dialog interaktif dari bawah dengan latar belakang redup.
+10. **Skeleton**: Wadah animasi pemuatan data yang ringan dan halus.
+11. **ChildSwitcher**: Pengalih anak asuh yang ramah sentuhan.
+12. **StateView**: Tampilan status kosong (empty), sedang memuat (loading), atau gagal koneksi (error).
+
+---
+
+## 6. Aturan Aksesibilitas dan Anti-Clutter
+
+1. **Larangan Penumpukan Kartu (No Card Nesting)**
+   Tidak menempatkan kartu di dalam kartu pastel lainnya. Gunakan pembagian grid bento horizontal atau vertikal yang sejajar, atau manfaatkan `Separator` dan `DarkIconRow` untuk daftar item.
+2. **Jaminan Target Sentuh Aman (Minimum 44pt)**
+   Setiap elemen interaktif (tombol, tab, pemilih periode, deretan navigasi) wajib memiliki dimensi fisik atau area sentuh efektif minimal 44pt x 44pt (menggunakan `minHeight: 44`, `minWidth: 44`, atau `hitSlop`).
+3. **Kepatuhan Kontras Warna WCAG 2.1 AA**
+   Seluruh teks di atas kanvas putih, kartu pastel, maupun bingkai obsidian gelap wajib memiliki rasio kontras minimal 4.5:1. Tidak ada warna abu-abu pudar yang sulit dibaca.
+4. **Bahasa Indonesia Baku dan Natural**
+   - Salam personal: "Selamat pagi, Ibu Siti"
+   - Tindakan spesifik: "Lihat Rincian", "Ajukan Izin", "Unduh Tagihan", "Konfirmasi Kehadiran"
+   - Format mata uang: `Rp 250.000` dengan font angka tabular
+   - Format tanggal Indonesia: `Senin, 24 November 2026`

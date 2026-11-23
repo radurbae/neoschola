@@ -1,12 +1,39 @@
 /**
  * NeoSchola Design System Tokens
- * Berbasis ui.shadcn.com (Zinc Base / New York Style)
+ * Berbasis ui.shadcn.com (Zinc Base / New York Style) dan NeoSchola Pastel Bento + Obsidian Frame.
  * Memenuhi rasio kontras WCAG 2.1 AA (minimal 4.5:1) dan tap target minimal 44pt.
  */
 
+export const breakpoints = {
+  tablet: 768,
+} as const;
+
+export const bento = {
+  obsidian: "#141416",
+  obsidianHover: "#27272A",
+  obsidianBorder: "#2E2E32",
+  obsidianMuted: "#A1A1AA",
+  obsidianForeground: "#FAFAFA",
+  creamBadge: "#FAF3DF",
+  surface: "#FFFFFF",
+  pillSurface: "#F4F4F5",
+  iceBlue: "#EAF3FE",
+  iceBlueText: "#1D4ED8",
+  iceBlueCta: "#D6E8FF",
+  iceBlueBar: "#BFDBFE",
+  iceBlueActive: "#2563EB",
+  lavender: "#EDE7FA",
+  lavenderText: "#5B21B6",
+  mint: "#E2F5E9",
+  mintText: "#15803D",
+  butter: "#FCF4DC",
+  butterText: "#92400E",
+  pastelMutedText: "#3F3F46",
+} as const;
+
 export const shadcn = {
   background: "#FFFFFF",
-  canvas: "#FAFAFA",
+  canvas: "#FFFFFF",
   foreground: "#09090B",
   card: "#FFFFFF",
   cardForeground: "#09090B",
@@ -127,6 +154,8 @@ export const radius = {
   sm: 6,
   md: 8,
   lg: 12,
+  xl: 20,
+  xxl: 24,
   full: 9999,
 } as const;
 
