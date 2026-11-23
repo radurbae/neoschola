@@ -13,15 +13,21 @@ import { formatTanggalId } from "@neoschola/shared";
 import type { Notification, NotificationType } from "@neoschola/shared";
 import {
   Screen,
-  Card,
-  Badge,
-  Button,
-  StateView,
+  TopUtilityBar,
+  DarkIconRow,
   Separator,
+  StateView,
+  Button,
 } from "../src/components/ui";
-import type { BadgeVariant } from "../src/components/ui";
 import * as api from "../src/lib/api";
-import { shadcn, spacing, radius, typography, touchTarget } from "../src/theme/tokens";
+import {
+  bento,
+  shadcn,
+  spacing,
+  radius,
+  typography,
+  touchTarget,
+} from "../src/theme/tokens";
 
 export default function NotificationsScreen() {
   const router = useRouter();
@@ -61,7 +67,6 @@ export default function NotificationsScreen() {
   const handleMarkAsRead = async (notification: Notification) => {
     if (notification.is_read) return;
 
-    // Optimistic update
     setNotifications((prev) =>
       prev.map((item) =>
         item.id === notification.id ? { ...item, is_read: true } : item
@@ -72,7 +77,6 @@ export default function NotificationsScreen() {
     try {
       await api.markNotificationRead(notification.id);
     } catch {
-      // Revert if API fails
       fetchNotifications();
     }
   };
@@ -81,8 +85,9 @@ export default function NotificationsScreen() {
     if (unreadCount === 0 || markingAll) return;
     setMarkingAll(true);
 
-    // Optimistic update
-    setNotifications((prev) => prev.map((item) => ({ ...item, is_read: true })));
+    setNotifications((prev) =>
+      prev.map((item) => ({ ...item, is_read: true }))
+    );
     setUnreadCount(0);
 
     try {
@@ -94,64 +99,63 @@ export default function NotificationsScreen() {
     }
   };
 
-  const getCategoryBadge = (
+  const getNotificationIcon = (
     type: NotificationType
-  ): { label: string; variant: BadgeVariant } => {
+  ): keyof typeof Ionicons.glyphMap => {
     switch (type) {
       case "PRESENSI":
-        return { label: "Presensi", variant: "success" };
+        return "calendar-outline";
       case "IZIN":
-        return { label: "Izin", variant: "warning" };
+        return "medkit-outline";
       case "PENGUMUMAN":
-        return { label: "Pengumuman", variant: "info" };
+        return "megaphone-outline";
       case "PESAN":
-        return { label: "Pesan", variant: "info" };
+        return "chatbubbles-outline";
       case "TAGIHAN":
-        return { label: "Tagihan", variant: "destructive" };
+        return "wallet-outline";
       case "AKADEMIK":
-        return { label: "Akademik", variant: "neutral" };
+        return "book-outline";
       default:
-        return { label: type, variant: "neutral" };
+        return "notifications-outline";
     }
   };
 
   return (
     <Screen scroll={false} headerShown={false} style={styles.screen}>
-      {/* Hairline Header Bar */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => router.back()}
-          activeOpacity={0.7}
-          accessibilityRole="button"
-          accessibilityLabel="Kembali ke layar sebelumnya"
-        >
-          <Ionicons name="arrow-back" size={22} color={shadcn.foreground} />
-        </TouchableOpacity>
+      {/* Top Utility Bar dengan Tombol Kembali 44x44 */}
+      <TopUtilityBar
+        title="Notifikasi"
+        subtitle={
+          unreadCount > 0
+            ? `${unreadCount} kabar belum dibaca`
+            : "Semua kabar sudah dibaca"
+        }
+        leftAction={
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => router.back()}
+            activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel="Kembali ke layar sebelumnya"
+          >
+            <Ionicons name="arrow-back" size={22} color={shadcn.foreground} />
+          </TouchableOpacity>
+        }
+      />
 
-        <View style={styles.headerTitleCol}>
-          <Text style={styles.headerTitle}>Pusat Notifikasi</Text>
-          <Text style={styles.headerSubtitle}>
-            {unreadCount > 0
-              ? `${unreadCount} notifikasi belum dibaca`
-              : "Semua notifikasi sudah dibaca"}
-          </Text>
-        </View>
-
-        {unreadCount > 0 ? (
+      {/* Baris Tombol Tandai Semua jika ada notifikasi belum dibaca */}
+      {unreadCount > 0 && (
+        <View style={styles.actionToolbar}>
           <Button
-            title="Tandai Semua"
+            title="Tandai Semua Sudah Dibaca"
             onPress={handleMarkAllRead}
             variant="ghost"
             size="sm"
             loading={markingAll}
-            style={styles.markAllButton}
             accessibilityLabel="Tandai semua notifikasi sudah dibaca"
           />
-        ) : (
-          <View style={styles.headerSpacer} />
-        )}
-      </View>
+        </View>
+      )}
 
       {/* Main Content Body */}
       {loading ? (
@@ -188,10 +192,8 @@ export default function NotificationsScreen() {
             />
           }
         >
-          <Card style={styles.notificationsCard}>
+          <View style={styles.notificationsCard}>
             {notifications.map((item, index) => {
-              const badgeInfo = getCategoryBadge(item.type);
-              const isUnread = !item.is_read;
               const formattedTime = formatTanggalId(item.created_at, {
                 includeDay: true,
                 shortMonth: true,
@@ -200,43 +202,22 @@ export default function NotificationsScreen() {
               return (
                 <React.Fragment key={item.id}>
                   {index > 0 && <Separator />}
-                  <TouchableOpacity
+                  <DarkIconRow
+                    icon={getNotificationIcon(item.type)}
+                    title={item.title}
+                    subtitle={`${item.body} • ${formattedTime}`}
+                    rightPrimary={item.type}
+                    rightSecondary={item.is_read ? "Dibaca" : "Baru"}
+                    rightSecondaryTone={item.is_read ? "neutral" : "info"}
                     onPress={() => handleMarkAsRead(item)}
-                    style={[
-                      styles.notificationItem,
-                      isUnread && styles.notificationItemUnread,
-                    ]}
-                    activeOpacity={0.7}
-                    accessibilityRole="button"
                     accessibilityLabel={`${item.title}. ${item.body}. ${
-                      isUnread ? "Belum dibaca." : "Sudah dibaca."
+                      item.is_read ? "Sudah dibaca." : "Belum dibaca."
                     }`}
-                  >
-                    <View style={styles.itemHeaderRow}>
-                      <View style={styles.badgeRow}>
-                        {isUnread && <View style={styles.unreadDot} />}
-                        <Badge
-                          label={badgeInfo.label}
-                          variant={badgeInfo.variant}
-                        />
-                      </View>
-                      <Text style={styles.timestampText}>{formattedTime}</Text>
-                    </View>
-
-                    <Text
-                      style={[
-                        styles.notificationTitle,
-                        isUnread && styles.notificationTitleUnread,
-                      ]}
-                    >
-                      {item.title}
-                    </Text>
-                    <Text style={styles.notificationBody}>{item.body}</Text>
-                  </TouchableOpacity>
+                  />
                 </React.Fragment>
               );
             })}
-          </Card>
+          </View>
         </ScrollView>
       )}
     </Screen>
@@ -245,47 +226,21 @@ export default function NotificationsScreen() {
 
 const styles = StyleSheet.create({
   screen: {
-    backgroundColor: shadcn.canvas,
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
-    backgroundColor: shadcn.background,
-    borderBottomWidth: 1,
-    borderBottomColor: shadcn.border,
-    minHeight: 56,
+    backgroundColor: bento.surface,
   },
   backButton: {
     width: touchTarget.minWidth,
     height: touchTarget.minHeight,
+    borderRadius: radius.full,
+    backgroundColor: bento.pillSurface,
     alignItems: "center",
     justifyContent: "center",
   },
-  headerTitleCol: {
-    flex: 1,
-    marginLeft: spacing.xs,
-    marginRight: spacing.sm,
-  },
-  headerTitle: {
-    fontSize: typography.size.base,
-    fontWeight: typography.weight.semibold,
-    color: shadcn.foreground,
-    letterSpacing: typography.tracking.snug,
-  },
-  headerSubtitle: {
-    fontSize: typography.size.xs,
-    color: shadcn.mutedForeground,
-    marginTop: 1,
-  },
-  markAllButton: {
-    paddingHorizontal: spacing.sm,
-    minHeight: touchTarget.minHeight,
-  },
-  headerSpacer: {
-    width: touchTarget.minWidth,
+  actionToolbar: {
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.xs,
+    alignItems: "flex-end",
+    backgroundColor: bento.surface,
   },
   listContainer: {
     flex: 1,
@@ -295,52 +250,12 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.max,
   },
   notificationsCard: {
-    padding: 0,
+    backgroundColor: bento.surface,
+    borderRadius: radius.xxl,
+    borderWidth: 1,
+    borderColor: shadcn.border,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
     overflow: "hidden",
-  },
-  notificationItem: {
-    padding: spacing.md,
-    minHeight: touchTarget.minHeight,
-  },
-  notificationItemUnread: {
-    backgroundColor: shadcn.accent,
-  },
-  itemHeaderRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: spacing.xs,
-  },
-  badgeRow: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  unreadDot: {
-    width: 8,
-    height: 8,
-    borderRadius: radius.full,
-    backgroundColor: shadcn.primary,
-    marginRight: spacing.xs,
-  },
-  timestampText: {
-    fontSize: typography.size.xs,
-    color: shadcn.mutedForeground,
-    fontVariant: ["tabular-nums"],
-  },
-  notificationTitle: {
-    fontSize: typography.size.sm,
-    fontWeight: typography.weight.semibold,
-    color: shadcn.foreground,
-    marginTop: 2,
-    marginBottom: 4,
-  },
-  notificationTitleUnread: {
-    fontWeight: typography.weight.bold,
-    color: shadcn.foreground,
-  },
-  notificationBody: {
-    fontSize: typography.size.sm,
-    color: shadcn.mutedForeground,
-    lineHeight: typography.lineHeight.sm,
   },
 });

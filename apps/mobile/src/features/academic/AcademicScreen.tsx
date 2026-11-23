@@ -5,7 +5,9 @@ import {
   StyleSheet,
   RefreshControl,
   ScrollView,
+  useWindowDimensions,
 } from "react-native";
+import { useRouter } from "expo-router";
 import {
   formatTanggalId,
   DayOfWeek,
@@ -15,31 +17,43 @@ import {
 } from "@neoschola/shared";
 import {
   Screen,
-  Card,
-  Badge,
-  Chip,
+  TopUtilityBar,
+  PastelStatCard,
+  DarkIconRow,
   Tabs,
-  SectionHeader,
+  Chip,
+  Separator,
   ChildSwitcher,
   StateView,
-  Separator,
 } from "../../components/ui";
 import { useAuth } from "../../store/auth";
 import * as api from "../../lib/api";
-import { shadcn, spacing, radius, typography } from "../../theme/tokens";
+import {
+  bento,
+  shadcn,
+  breakpoints,
+  spacing,
+  radius,
+  typography,
+  touchTarget,
+} from "../../theme/tokens";
 
 type AcademicTab = "JADWAL" | "TUGAS" | "NILAI";
 
 export default function AcademicScreen() {
-  const { students, activeStudent, activeStudentId, setActiveStudentId } = useAuth();
+  const router = useRouter();
+  const { width } = useWindowDimensions();
+  const isTablet = width >= breakpoints.tablet;
+
+  const { user, students, activeStudent, activeStudentId, setActiveStudentId } =
+    useAuth();
 
   const [activeTab, setActiveTab] = useState<AcademicTab>("JADWAL");
   const [schedules, setSchedules] = useState<Schedule[]>([]);
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [grades, setGrades] = useState<GradeNote[]>([]);
 
-  // Filter hari untuk Jadwal
-  const todayDayIndex = new Date().getDay(); // 0 is Sunday, 1 is Monday ... 5 is Friday
+  const todayDayIndex = new Date().getDay();
   const defaultDay: DayOfWeek =
     todayDayIndex === 2
       ? DayOfWeek.SELASA
@@ -52,7 +66,6 @@ export default function AcademicScreen() {
       : DayOfWeek.SENIN;
 
   const [selectedDay, setSelectedDay] = useState<DayOfWeek>(defaultDay);
-
   const [loading, setLoading] = useState<boolean>(true);
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -92,7 +105,8 @@ export default function AcademicScreen() {
         setGrades(gradeRes.grades || []);
       } catch (err: any) {
         setErrorMessage(
-          err?.message || "Gagal memuat informasi akademik. Periksa koneksi internet Anda."
+          err?.message ||
+            "Gagal memuat informasi akademik. Periksa koneksi internet Anda."
         );
       } finally {
         setLoading(false);
@@ -114,11 +128,22 @@ export default function AcademicScreen() {
     DayOfWeek.JUMAT,
   ];
 
-  const filteredSchedules = schedules.filter((s) => s.day_of_week === selectedDay);
+  const filteredSchedules = schedules.filter(
+    (s) => s.day_of_week === selectedDay
+  );
 
   return (
     <Screen scroll={false} headerShown={false} style={styles.screen}>
-      {/* Top Child Switcher */}
+      {/* Top Utility Bar */}
+      <TopUtilityBar
+        title="Akademik"
+        subtitle={activeStudent ? activeStudent.full_name : undefined}
+        profileName={user?.name || "Wali Murid"}
+        onPressNotifications={() => router.push("/notifications")}
+        onPressProfile={() => router.push("/(tabs)/profil")}
+      />
+
+      {/* Child Switcher Component */}
       {students.length > 0 && (
         <View style={styles.childSwitcherWrapper}>
           <ChildSwitcher
@@ -128,24 +153,6 @@ export default function AcademicScreen() {
           />
         </View>
       )}
-
-      {/* Segmented Tab Navigation dengan Komponen Tabs shadcn/ui */}
-      <View style={styles.tabBarWrapper}>
-        <Tabs
-          value={activeTab}
-          onValueChange={(val) => setActiveTab(val as AcademicTab)}
-          items={[
-            { value: "JADWAL", label: "Jadwal" },
-            {
-              value: "TUGAS",
-              label: "Tugas & PR",
-              count: assignments.length > 0 ? assignments.length : undefined,
-            },
-            { value: "NILAI", label: "Nilai" },
-          ]}
-          style={styles.tabsRail}
-        />
-      </View>
 
       {/* Body Content */}
       {loading ? (
@@ -182,9 +189,91 @@ export default function AcademicScreen() {
             />
           }
         >
+          {/* Strip 3 PastelStatCard (Jadwal, Tugas, Nilai) */}
+          <View style={styles.sectionHeaderRow}>
+            <Text style={styles.sectionHeading}>Ringkasan Akademik</Text>
+          </View>
+
+          {isTablet ? (
+            <View style={styles.statCardsRowTablet}>
+              <PastelStatCard
+                tone="iceBlue"
+                value={`${schedules.length} Mapel`}
+                label="Jadwal Belajar"
+                trendText={selectedDay}
+                icon="time-outline"
+                style={styles.statCardItemTablet}
+              />
+              <PastelStatCard
+                tone="lavender"
+                value={`${assignments.length} Tugas`}
+                label="Tugas Aktif"
+                trendText="PR dan Tugas"
+                icon="document-text-outline"
+                style={styles.statCardItemTablet}
+              />
+              <PastelStatCard
+                tone="mint"
+                value={`${grades.length} Rilis`}
+                label="Catatan Nilai"
+                trendText="Evaluasi"
+                icon="ribbon-outline"
+                style={styles.statCardItemTablet}
+              />
+            </View>
+          ) : (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.statCardsScrollMobile}
+            >
+              <PastelStatCard
+                tone="iceBlue"
+                value={`${schedules.length} Mapel`}
+                label="Jadwal Belajar"
+                trendText={selectedDay}
+                icon="time-outline"
+                style={styles.statCardItemMobile}
+              />
+              <PastelStatCard
+                tone="lavender"
+                value={`${assignments.length} Tugas`}
+                label="Tugas Aktif"
+                trendText="PR dan Tugas"
+                icon="document-text-outline"
+                style={styles.statCardItemMobile}
+              />
+              <PastelStatCard
+                tone="mint"
+                value={`${grades.length} Rilis`}
+                label="Catatan Nilai"
+                trendText="Evaluasi"
+                icon="ribbon-outline"
+                style={styles.statCardItemMobile}
+              />
+            </ScrollView>
+          )}
+
+          {/* Segmented Tab Navigation dengan Komponen Tabs shadcn/ui */}
+          <View style={styles.tabBarWrapper}>
+            <Tabs
+              value={activeTab}
+              onValueChange={(val) => setActiveTab(val as AcademicTab)}
+              items={[
+                { value: "JADWAL", label: "Jadwal" },
+                {
+                  value: "TUGAS",
+                  label: "Tugas dan PR",
+                  count: assignments.length > 0 ? assignments.length : undefined,
+                },
+                { value: "NILAI", label: "Nilai" },
+              ]}
+            />
+          </View>
+
           {/* TAB 1: JADWAL PELAJARAN */}
           {activeTab === "JADWAL" && (
-            <View>
+            <View style={styles.tabContentContainer}>
               {/* Day filter selector menggunakan Chip horizontal */}
               <ScrollView
                 horizontal
@@ -202,147 +291,111 @@ export default function AcademicScreen() {
                 ))}
               </ScrollView>
 
-              <SectionHeader
-                title={`Jadwal Hari ${selectedDay}`}
-                subtitle={`${filteredSchedules.length} mata pelajaran`}
-              />
-
-              <Card style={styles.listCard}>
+              <View style={styles.listCard}>
                 {filteredSchedules.length === 0 ? (
                   <View style={styles.emptyInlineRow}>
                     <Text style={styles.emptyInlineText}>
-                      Tidak ada jadwal kegiatan belajar mengajar yang tercatat di hari {selectedDay}.
+                      Tidak ada jadwal kegiatan belajar mengajar tercatat di hari{" "}
+                      {selectedDay}.
                     </Text>
                   </View>
                 ) : (
                   filteredSchedules.map((schedule, idx) => (
                     <React.Fragment key={schedule.id}>
                       {idx > 0 && <Separator />}
-                      <View style={styles.scheduleRow}>
-                        <View style={styles.scheduleTimeBadge}>
-                          <Text style={styles.scheduleTimeRange}>
-                            {schedule.start_time} - {schedule.end_time} WIB
-                          </Text>
-                        </View>
-
-                        <Text style={styles.scheduleSubject}>{schedule.subject}</Text>
-
-                        <View style={styles.scheduleMetaRow}>
-                          <Text style={styles.scheduleMetaText}>
-                            Guru: {schedule.teacher_name}
-                          </Text>
-                          <Text style={styles.scheduleMetaDot}>•</Text>
-                          <Text style={styles.scheduleMetaText}>Ruang: {schedule.room}</Text>
-                        </View>
-                      </View>
+                      <DarkIconRow
+                        icon="book-outline"
+                        title={schedule.subject}
+                        subtitle={`Guru: ${schedule.teacher_name} • Ruang: ${schedule.room}`}
+                        rightPrimary={`${schedule.start_time} - ${schedule.end_time}`}
+                        rightSecondary="WIB"
+                        accessibilityLabel={`Jadwal: ${schedule.subject}, waktu ${schedule.start_time} sampai ${schedule.end_time}`}
+                      />
                     </React.Fragment>
                   ))
                 )}
-              </Card>
+              </View>
             </View>
           )}
 
           {/* TAB 2: TUGAS & PR */}
           {activeTab === "TUGAS" && (
-            <View>
-              <SectionHeader
-                title="Daftar Tugas & PR"
-                subtitle="Tugas rumah dan penugasan kelas yang perlu dikerjakan"
-              />
-
-              <Card style={styles.listCard}>
+            <View style={styles.tabContentContainer}>
+              <View style={styles.listCard}>
                 {assignments.length === 0 ? (
                   <View style={styles.emptyInlineRow}>
                     <Text style={styles.emptyInlineText}>
-                      Saat ini belum ada tugas atau pekerjaan rumah baru untuk kelas anak Anda.
+                      Saat ini belum ada tugas atau pekerjaan rumah baru untuk
+                      kelas anak Anda.
                     </Text>
                   </View>
                 ) : (
                   assignments.map((assignment, idx) => (
                     <React.Fragment key={assignment.id}>
                       {idx > 0 && <Separator />}
-                      <View style={styles.assignmentRow}>
-                        <View style={styles.assignmentHeaderRow}>
-                          <Badge label={assignment.subject} variant="secondary" />
-                          <Text style={styles.assignmentDueText}>
-                            Tenggat: {formatTanggalId(assignment.due_date, { includeDay: true })}
-                          </Text>
-                        </View>
-
-                        <Text style={styles.assignmentTitle}>{assignment.title}</Text>
-
-                        {Boolean(assignment.description) && (
-                          <Text style={styles.assignmentDescription}>
-                            {assignment.description}
-                          </Text>
-                        )}
-
-                        <View style={styles.assignmentFooter}>
-                          <Text style={styles.assignmentTeacherText}>
-                            Pemberi Tugas: {assignment.assigned_by_name || assignment.assigned_by}
-                          </Text>
-                        </View>
-                      </View>
+                      <DarkIconRow
+                        icon="document-text-outline"
+                        title={assignment.title}
+                        subtitle={`${assignment.subject} • Oleh: ${
+                          assignment.assigned_by_name || assignment.assigned_by
+                        }${
+                          assignment.description
+                            ? ` • ${assignment.description}`
+                            : ""
+                        }`}
+                        rightPrimary={formatTanggalId(assignment.due_date, {
+                          shortMonth: true,
+                        })}
+                        rightSecondary="Tenggat"
+                        rightSecondaryTone="warning"
+                        accessibilityLabel={`Tugas: ${assignment.title}, tenggat ${formatTanggalId(
+                          assignment.due_date,
+                          { shortMonth: true }
+                        )}`}
+                      />
                     </React.Fragment>
                   ))
                 )}
-              </Card>
+              </View>
             </View>
           )}
 
           {/* TAB 3: NILAI & CATATAN */}
           {activeTab === "NILAI" && (
-            <View>
-              <SectionHeader
-                title="Catatan Nilai & Evaluasi"
-                subtitle="Perkembangan capaian belajar dan catatan perkembangan siswa"
-              />
-
-              <Card style={styles.listCard}>
+            <View style={styles.tabContentContainer}>
+              <View style={styles.listCard}>
                 {grades.length === 0 ? (
                   <View style={styles.emptyInlineRow}>
                     <Text style={styles.emptyInlineText}>
-                      Catatan capaian nilai dan perkembangan dari guru mata pelajaran belum dirilis.
+                      Catatan capaian nilai dan perkembangan dari guru mata
+                      pelajaran belum dirilis.
                     </Text>
                   </View>
                 ) : (
                   grades.map((grade, idx) => (
                     <React.Fragment key={grade.id}>
                       {idx > 0 && <Separator />}
-                      <View style={styles.gradeRow}>
-                        <View style={styles.gradeHeaderRow}>
-                          <View style={styles.gradeSubjectCol}>
-                            <Text style={styles.gradeSubjectText}>{grade.subject}</Text>
-                            <Text style={styles.gradeTeacherText}>
-                              {grade.teacher_name || "Guru Pengampu"}
-                            </Text>
-                          </View>
-                          <Badge
-                            label={`Semester ${grade.semester} (${grade.academic_year})`}
-                            variant="outline"
-                          />
-                        </View>
-
-                        <View style={styles.gradeScoreRow}>
-                          <View style={styles.gradeScoreBox}>
-                            <Text style={styles.gradeScoreNumber}>{grade.score}</Text>
-                            <Text style={styles.gradeScoreMax}>/ 100</Text>
-                          </View>
-                        </View>
-
-                        {Boolean(grade.notes) && (
-                          <View style={styles.gradeNotesBox}>
-                            <Text style={styles.gradeNotesTitle}>
-                              Catatan Guru Pengampu:
-                            </Text>
-                            <Text style={styles.gradeNotesContent}>{grade.notes}</Text>
-                          </View>
-                        )}
-                      </View>
+                      <DarkIconRow
+                        icon="ribbon-outline"
+                        title={grade.subject}
+                        subtitle={`Sem ${grade.semester} (${
+                          grade.academic_year
+                        }) • ${grade.teacher_name || "Guru Pengampu"}${
+                          grade.notes ? ` • ${grade.notes}` : ""
+                        }`}
+                        rightPrimary={`${grade.score} / 100`}
+                        rightSecondary={
+                          grade.score >= 80 ? "Sangat Baik" : "Cukup"
+                        }
+                        rightSecondaryTone={
+                          grade.score >= 80 ? "success" : "info"
+                        }
+                        accessibilityLabel={`Nilai ${grade.subject}: ${grade.score} dari 100`}
+                      />
                     </React.Fragment>
                   ))
                 )}
-              </Card>
+              </View>
             </View>
           )}
         </ScrollView>
@@ -353,24 +406,12 @@ export default function AcademicScreen() {
 
 const styles = StyleSheet.create({
   screen: {
-    backgroundColor: shadcn.canvas,
+    backgroundColor: bento.surface,
   },
   childSwitcherWrapper: {
-    backgroundColor: shadcn.background,
-    borderBottomWidth: 1,
-    borderBottomColor: shadcn.border,
+    backgroundColor: bento.surface,
     paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
-  },
-  tabBarWrapper: {
-    backgroundColor: shadcn.background,
-    borderBottomWidth: 1,
-    borderBottomColor: shadcn.border,
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.sm,
-  },
-  tabsRail: {
-    marginBottom: spacing.sm,
+    paddingVertical: spacing.xs,
   },
   scrollBody: {
     flex: 1,
@@ -378,167 +419,61 @@ const styles = StyleSheet.create({
   scrollContent: {
     padding: spacing.lg,
     paddingBottom: spacing.max,
+    gap: spacing.lg,
   },
-  // Day Selector
-  daySelectorRow: {
+  sectionHeaderRow: {
+    marginBottom: spacing.xs,
+  },
+  sectionHeading: {
+    fontSize: typography.size.base,
+    fontWeight: typography.weight.bold,
+    color: shadcn.foreground,
+    letterSpacing: typography.tracking.snug,
+  },
+  statCardsRowTablet: {
+    flexDirection: "row",
+    gap: spacing.md,
+  },
+  statCardItemTablet: {
+    flex: 1,
+  },
+  statCardsScrollMobile: {
+    flexDirection: "row",
+    gap: spacing.md,
     paddingVertical: spacing.xs,
-    marginBottom: spacing.sm,
+  },
+  statCardItemMobile: {
+    width: 220,
+  },
+  tabBarWrapper: {
+    marginTop: spacing.xs,
+  },
+  tabContentContainer: {
+    gap: spacing.sm,
+  },
+  daySelectorRow: {
+    flexDirection: "row",
     gap: spacing.xs,
+    paddingVertical: spacing.xs,
   },
   listCard: {
-    padding: 0,
+    backgroundColor: bento.surface,
+    borderRadius: radius.xxl,
+    borderWidth: 1,
+    borderColor: shadcn.border,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
     overflow: "hidden",
-    marginBottom: spacing.md,
   },
   emptyInlineRow: {
     padding: spacing.lg,
     alignItems: "center",
     justifyContent: "center",
+    minHeight: touchTarget.minHeight,
   },
   emptyInlineText: {
     fontSize: typography.size.xs,
-    color: shadcn.mutedForeground,
+    color: bento.pastelMutedText,
     textAlign: "center",
-  },
-  // Schedule Rows
-  scheduleRow: {
-    padding: spacing.md,
-  },
-  scheduleTimeBadge: {
-    alignSelf: "flex-start",
-    marginBottom: spacing.xs,
-  },
-  scheduleTimeRange: {
-    fontSize: typography.size.xs,
-    fontWeight: typography.weight.medium,
-    color: shadcn.mutedForeground,
-    fontVariant: ["tabular-nums"],
-  },
-  scheduleSubject: {
-    fontSize: typography.size.base,
-    fontWeight: typography.weight.semibold,
-    color: shadcn.foreground,
-    marginBottom: spacing.xs,
-  },
-  scheduleMetaRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    flexWrap: "wrap",
-  },
-  scheduleMetaText: {
-    fontSize: typography.size.xs,
-    color: shadcn.mutedForeground,
-  },
-  scheduleMetaDot: {
-    fontSize: typography.size.xs,
-    color: shadcn.mutedForeground,
-    marginHorizontal: spacing.xs,
-  },
-  // Assignment Rows
-  assignmentRow: {
-    padding: spacing.md,
-  },
-  assignmentHeaderRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: spacing.xs,
-  },
-  assignmentDueText: {
-    fontSize: 11,
-    fontWeight: typography.weight.medium,
-    color: shadcn.mutedForeground,
-    fontVariant: ["tabular-nums"],
-  },
-  assignmentTitle: {
-    fontSize: typography.size.base,
-    fontWeight: typography.weight.semibold,
-    color: shadcn.foreground,
-    marginBottom: spacing.xs,
-  },
-  assignmentDescription: {
-    fontSize: typography.size.xs,
-    color: shadcn.mutedForeground,
-    lineHeight: 16,
-    marginBottom: spacing.sm,
-  },
-  assignmentFooter: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingTop: spacing.xs,
-    borderTopWidth: 1,
-    borderTopColor: shadcn.border,
-  },
-  assignmentTeacherText: {
-    fontSize: 11,
-    color: shadcn.mutedForeground,
-  },
-  // Grade Rows
-  gradeRow: {
-    padding: spacing.md,
-  },
-  gradeHeaderRow: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    justifyContent: "space-between",
-    marginBottom: spacing.sm,
-  },
-  gradeSubjectCol: {
-    flex: 1,
-    marginRight: spacing.sm,
-  },
-  gradeSubjectText: {
-    fontSize: typography.size.base,
-    fontWeight: typography.weight.semibold,
-    color: shadcn.foreground,
-  },
-  gradeTeacherText: {
-    fontSize: typography.size.xs,
-    color: shadcn.mutedForeground,
-    marginTop: 2,
-  },
-  gradeScoreRow: {
-    backgroundColor: shadcn.secondary,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: shadcn.border,
-    paddingVertical: spacing.md,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: spacing.sm,
-  },
-  gradeScoreBox: {
-    flexDirection: "row",
-    alignItems: "baseline",
-  },
-  gradeScoreNumber: {
-    fontSize: typography.size.xxl,
-    fontWeight: typography.weight.bold,
-    color: shadcn.foreground,
-    fontVariant: ["tabular-nums"],
-  },
-  gradeScoreMax: {
-    fontSize: typography.size.sm,
-    fontWeight: typography.weight.medium,
-    color: shadcn.mutedForeground,
-    marginLeft: 4,
-  },
-  gradeNotesBox: {
-    backgroundColor: shadcn.secondary,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: shadcn.border,
-    padding: spacing.sm,
-  },
-  gradeNotesTitle: {
-    fontSize: 11,
-    fontWeight: typography.weight.semibold,
-    color: shadcn.foreground,
-    marginBottom: 2,
-  },
-  gradeNotesContent: {
-    fontSize: typography.size.xs,
-    color: shadcn.mutedForeground,
-    lineHeight: 16,
   },
 });

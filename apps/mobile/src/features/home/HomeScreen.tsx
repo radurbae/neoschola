@@ -3,12 +3,11 @@ import {
   View,
   Text,
   StyleSheet,
-  TouchableOpacity,
   RefreshControl,
   ScrollView,
+  useWindowDimensions,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
 import {
   formatTanggalId,
   AttendanceStatus,
@@ -17,32 +16,55 @@ import {
 } from "@neoschola/shared";
 import {
   Screen,
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-  Badge,
-  Button,
-  SectionHeader,
+  TopUtilityBar,
   ChildSwitcher,
-  StateView,
+  PastelStatCard,
+  MiniTrendChart,
+  DarkActionCard,
+  DarkIconRow,
   Separator,
+  Chip,
+  StateView,
+  type TrendPoint,
+  type PeriodOption,
 } from "../../components/ui";
-import type { BadgeVariant } from "../../components/ui";
 import { useAuth } from "../../store/auth";
 import * as api from "../../lib/api";
-import { shadcn, spacing, radius, typography, touchTarget } from "../../theme/tokens";
+import {
+  bento,
+  shadcn,
+  breakpoints,
+  spacing,
+  radius,
+  typography,
+  touchTarget,
+} from "../../theme/tokens";
+
+const PERIODS: PeriodOption[] = [
+  { key: "7H", label: "7H" },
+  { key: "30H", label: "30H" },
+  { key: "Sem", label: "Sem" },
+];
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { user, students, activeStudent, activeStudentId, setActiveStudentId } = useAuth();
+  const { width } = useWindowDimensions();
+  const isTablet = width >= breakpoints.tablet;
 
-  const [dashboardData, setDashboardData] = useState<StudentDashboardResponse | null>(null);
+  const { user, students, activeStudent, activeStudentId, setActiveStudentId } =
+    useAuth();
+
+  const [dashboardData, setDashboardData] =
+    useState<StudentDashboardResponse | null>(null);
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const [activePeriod, setActivePeriod] = useState<string>("30H");
+  const [activityFilter, setActivityFilter] = useState<"Jadwal" | "Tugas" | "Info">(
+    "Jadwal"
+  );
 
   const fetchDashboard = useCallback(
     async (isRefresh = false) => {
@@ -69,7 +91,8 @@ export default function HomeScreen() {
         setAnnouncements(annRes.announcements || []);
       } catch (err: any) {
         setErrorMessage(
-          err?.message || "Gagal memuat ringkasan beranda. Periksa koneksi internet Anda."
+          err?.message ||
+            "Gagal memuat ringkasan beranda. Periksa koneksi internet Anda."
         );
       } finally {
         setLoading(false);
@@ -83,78 +106,56 @@ export default function HomeScreen() {
     fetchDashboard();
   }, [fetchDashboard]);
 
-  const getGreeting = () => {
-    const hour = new Date().getHours();
-    let timeGreeting = "Selamat Datang";
-    if (hour >= 4 && hour < 11) timeGreeting = "Selamat Pagi";
-    else if (hour >= 11 && hour < 15) timeGreeting = "Selamat Siang";
-    else if (hour >= 15 && hour < 18) timeGreeting = "Selamat Sore";
-    else timeGreeting = "Selamat Malam";
+  const hariIni = formatTanggalId(new Date().toISOString(), {
+    includeDay: true,
+  });
 
-    const name = user?.name ? user.name.split(" ")[0] : "Wali Murid";
-    return `${timeGreeting}, ${name}`;
-  };
-
-  const getAttendanceBadge = (
-    status?: AttendanceStatus | null
-  ): { label: string; variant: BadgeVariant } => {
-    switch (status) {
+  const getAttendanceCallout = () => {
+    if (!dashboardData?.attendance_today) {
+      return "Belum Tercatat";
+    }
+    const att = dashboardData.attendance_today;
+    switch (att.status) {
       case AttendanceStatus.HADIR:
-        return { label: "Hadir", variant: "success" };
+        return att.check_in_time ? `Hadir ${att.check_in_time}` : "Hadir";
       case AttendanceStatus.SAKIT:
-        return { label: "Sakit", variant: "warning" };
+        return "Sakit";
       case AttendanceStatus.IZIN:
-        return { label: "Izin", variant: "info" };
+        return "Izin";
       case AttendanceStatus.ALPA:
-        return { label: "Alpa", variant: "destructive" };
+        return "Alpa";
       default:
-        return { label: "Belum Ada Catatan", variant: "neutral" };
+        return "Belum Tercatat";
     }
   };
 
-  const hariIni = formatTanggalId(new Date().toISOString(), { includeDay: true });
+  const attendancePercentage =
+    dashboardData?.attendance_summary?.percentage ?? 100;
+
+  const attendancePoints: TrendPoint[] = [
+    { label: "Sen", value: 92 },
+    { label: "Sel", value: 95 },
+    { label: "Rab", value: 98 },
+    { label: "Kam", value: 94 },
+    { label: "Jum", value: 100 },
+    { label: "Sab", value: 90 },
+    { label: "Hari", value: attendancePercentage },
+  ];
+
+  const daruratAnnouncement = announcements.find((a) => a.category === "DARURAT");
 
   return (
     <Screen scroll={false} headerShown={false} style={styles.screen}>
-      {/* Top Header Bar */}
-      <View style={styles.topHeader}>
-        <View style={styles.headerInfoCol}>
-          <Text style={styles.schoolBadgeText}>SDN Nusantara Harapan</Text>
-          <Text style={styles.greetingTitle} numberOfLines={1}>
-            {getGreeting()}
-          </Text>
-          <Text style={styles.dateSubtitle}>{hariIni}</Text>
-        </View>
-
-        <View style={styles.headerActionsRow}>
-          <TouchableOpacity
-            style={styles.headerIconButton}
-            onPress={() => router.push("/notifications")}
-            activeOpacity={0.7}
-            accessibilityRole="button"
-            accessibilityLabel="Buka pusat notifikasi"
-          >
-            <Ionicons name="notifications-outline" size={22} color={shadcn.foreground} />
-            {Boolean(
-              dashboardData?.unread_announcements_count &&
-                dashboardData.unread_announcements_count > 0
-            )}
-            {dashboardData?.unread_announcements_count ? (
-              <View style={styles.notificationBadgeDot} />
-            ) : null}
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.headerIconButton}
-            onPress={() => router.push("/(tabs)/profil")}
-            activeOpacity={0.7}
-            accessibilityRole="button"
-            accessibilityLabel="Buka profil dan pengaturan akun"
-          >
-            <Ionicons name="person-outline" size={22} color={shadcn.foreground} />
-          </TouchableOpacity>
-        </View>
-      </View>
+      {/* Top Utility Bar */}
+      <TopUtilityBar
+        title="Beranda"
+        subtitle={hariIni}
+        onPressAnnouncements={() => router.push("/pengumuman")}
+        onPressNotifications={() => router.push("/notifications")}
+        unreadCount={dashboardData?.unread_announcements_count || 0}
+        profileName={user?.name || "Wali Murid"}
+        onPressProfile={() => router.push("/(tabs)/profil")}
+      />
 
       {/* Child Switcher Component */}
       {students.length > 0 && (
@@ -171,7 +172,7 @@ export default function HomeScreen() {
       {loading ? (
         <StateView
           type="loading"
-          message="Memuat data beranda sekolah..."
+          message="Memuat ringkasan beranda sekolah..."
         />
       ) : errorMessage ? (
         <StateView
@@ -202,289 +203,297 @@ export default function HomeScreen() {
             />
           }
         >
-          {/* 1. Status Presensi Hari Ini (Monokrom Tenang, tanpa blok hijau tebal) */}
-          <Card style={styles.attendanceCard}>
-            <View style={styles.attendanceHeaderRow}>
-              <View style={styles.attendanceIconBox}>
-                <Ionicons name="calendar-outline" size={20} color={shadcn.foreground} />
-              </View>
-              <View style={styles.attendanceTitleCol}>
-                <Text style={styles.attendanceTitle}>Presensi Hari Ini</Text>
-                <Text style={styles.attendanceSubtitle}>
-                  {activeStudent.full_name} ({activeStudent.class_name || "Kelas"})
-                </Text>
-              </View>
-              <Badge
-                label={getAttendanceBadge(dashboardData?.attendance_today?.status).label}
-                variant={getAttendanceBadge(dashboardData?.attendance_today?.status).variant}
+          {/* BENTO ROW 1: MiniTrendChart Kiri & 3 PastelStatCard Kanan */}
+          <View
+            style={[
+              styles.bentoRow,
+              isTablet ? styles.bentoRowHorizontal : styles.bentoRowVertical,
+            ]}
+          >
+            {/* Kiri: MiniTrendChart */}
+            <View
+              style={
+                isTablet ? styles.bentoHalfColumn : styles.bentoFullColumn
+              }
+            >
+              <MiniTrendChart
+                heroValue={`${attendancePercentage}%`}
+                heroLabel="Kehadiran Bulan Ini"
+                calloutText={getAttendanceCallout()}
+                points={attendancePoints}
+                periods={PERIODS}
+                activePeriod={activePeriod}
+                onPeriodChange={(key) => setActivePeriod(key)}
               />
             </View>
 
-            <Separator style={styles.attendanceSeparator} />
-
-            <View style={styles.attendanceTimeRow}>
-              <View style={styles.attendanceTimeItem}>
-                <Text style={styles.attendanceTimeLabel}>Jam Masuk</Text>
-                <Text style={styles.attendanceTimeValue}>
-                  {dashboardData?.attendance_today?.check_in_time
-                    ? `${dashboardData.attendance_today.check_in_time} WIB`
-                    : "-"}
-                </Text>
+            {/* Kanan: Ringkasan Anak (3 PastelStatCard) */}
+            <View
+              style={
+                isTablet ? styles.bentoHalfColumn : styles.bentoFullColumn
+              }
+            >
+              <View style={styles.sectionHeaderRow}>
+                <Text style={styles.sectionHeading}>Ringkasan Anak</Text>
               </View>
 
-              <View style={styles.attendanceTimeItem}>
-                <Text style={styles.attendanceTimeLabel}>Jam Pulang</Text>
-                <Text style={styles.attendanceTimeValue}>
-                  {dashboardData?.attendance_today?.check_out_time
-                    ? `${dashboardData.attendance_today.check_out_time} WIB`
-                    : "-"}
-                </Text>
-              </View>
-
-              <TouchableOpacity
-                style={styles.attendanceDetailButton}
-                onPress={() => router.push("/(tabs)/presensi")}
-                activeOpacity={0.7}
-                accessibilityRole="button"
-                accessibilityLabel="Lihat rincian riwayat presensi"
-              >
-                <Text style={styles.attendanceDetailButtonText}>Rincian</Text>
-                <Ionicons name="chevron-forward" size={14} color={shadcn.foreground} />
-              </TouchableOpacity>
+              {isTablet ? (
+                <View style={styles.statCardsGridTablet}>
+                  <PastelStatCard
+                    tone="lavender"
+                    value={`${dashboardData?.assignments_active?.length ?? 0} Tugas`}
+                    label="Tugas Aktif"
+                    trendText="Akademik"
+                    icon="book-outline"
+                    onPress={() => router.push("/(tabs)/akademik")}
+                    accessibilityLabel="Buka modul akademik dan tugas"
+                    style={styles.statCardItemTablet}
+                  />
+                  <PastelStatCard
+                    tone="mint"
+                    value={`${dashboardData?.attendance_summary?.hadir ?? 0} Hari`}
+                    label="Kehadiran Hadir"
+                    trendText="Tepat Waktu"
+                    icon="checkmark-circle-outline"
+                    onPress={() => router.push("/(tabs)/presensi")}
+                    accessibilityLabel="Buka catatan presensi dan riwayat"
+                    style={styles.statCardItemTablet}
+                  />
+                  <PastelStatCard
+                    tone="butter"
+                    value={`${dashboardData?.unpaid_invoices_count ?? 0} Tagihan`}
+                    label="Tagihan SPP"
+                    trendText={
+                      dashboardData?.unpaid_invoices_count
+                        ? "Perlu Pelunasan"
+                        : "Lunas Semua"
+                    }
+                    icon="wallet-outline"
+                    onPress={() => router.push("/(tabs)/keuangan")}
+                    accessibilityLabel="Buka menu keuangan dan pembayaran SPP"
+                    style={styles.statCardItemTablet}
+                  />
+                </View>
+              ) : (
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.statCardsScrollMobile}
+                >
+                  <PastelStatCard
+                    tone="lavender"
+                    value={`${dashboardData?.assignments_active?.length ?? 0} Tugas`}
+                    label="Tugas Aktif"
+                    trendText="Akademik"
+                    icon="book-outline"
+                    onPress={() => router.push("/(tabs)/akademik")}
+                    accessibilityLabel="Buka modul akademik dan tugas"
+                    style={styles.statCardItemMobile}
+                  />
+                  <PastelStatCard
+                    tone="mint"
+                    value={`${dashboardData?.attendance_summary?.hadir ?? 0} Hari`}
+                    label="Kehadiran Hadir"
+                    trendText="Tepat Waktu"
+                    icon="checkmark-circle-outline"
+                    onPress={() => router.push("/(tabs)/presensi")}
+                    accessibilityLabel="Buka catatan presensi dan riwayat"
+                    style={styles.statCardItemMobile}
+                  />
+                  <PastelStatCard
+                    tone="butter"
+                    value={`${dashboardData?.unpaid_invoices_count ?? 0} Tagihan`}
+                    label="Tagihan SPP"
+                    trendText={
+                      dashboardData?.unpaid_invoices_count
+                        ? "Perlu Pelunasan"
+                        : "Lunas Semua"
+                    }
+                    icon="wallet-outline"
+                    onPress={() => router.push("/(tabs)/keuangan")}
+                    accessibilityLabel="Buka menu keuangan dan pembayaran SPP"
+                    style={styles.statCardItemMobile}
+                  />
+                </ScrollView>
+              )}
             </View>
-          </Card>
+          </View>
 
-          {/* 2. Grid Ringkasan Cepat 2 Metrik Bersih */}
-          <View style={styles.quickStatsRow}>
-            {/* Tagihan Aktif */}
-            <TouchableOpacity
-              style={styles.quickStatCard}
-              onPress={() => router.push("/(tabs)/keuangan")}
-              activeOpacity={0.7}
-              accessibilityRole="button"
-              accessibilityLabel={`${dashboardData?.unpaid_invoices_count || 0} tagihan belum dibayar. Tekan untuk melihat rincian.`}
+          {/* BENTO ROW 2: Aktivitas Hari Ini (Kiri) & DarkActionCard (Kanan) */}
+          <View
+            style={[
+              styles.bentoRow,
+              isTablet ? styles.bentoRowHorizontal : styles.bentoRowVertical,
+            ]}
+          >
+            {/* Kiri: Aktivitas Hari Ini dengan Filter Chip */}
+            <View
+              style={
+                isTablet ? styles.bentoHalfColumn : styles.bentoFullColumn
+              }
             >
-              <View style={styles.statIconBox}>
-                <Ionicons name="wallet-outline" size={18} color={shadcn.foreground} />
+              <View style={styles.sectionHeaderRow}>
+                <Text style={styles.sectionHeading}>Aktivitas Hari Ini</Text>
               </View>
-              <Text style={styles.quickStatValue}>
-                {dashboardData?.unpaid_invoices_count || 0}
-              </Text>
-              <Text style={styles.quickStatLabel}>Tagihan Aktif</Text>
-              <View style={styles.statActionRow}>
-                <Text style={styles.quickStatActionHint}>Buka Keuangan</Text>
-                <Ionicons name="arrow-forward" size={12} color={shadcn.foreground} />
+
+              {/* Filter Chips */}
+              <View style={styles.filterChipRow}>
+                <Chip
+                  label="Jadwal"
+                  selected={activityFilter === "Jadwal"}
+                  count={dashboardData?.schedules_today?.length}
+                  onPress={() => setActivityFilter("Jadwal")}
+                  accessibilityLabel="Tampilkan jadwal hari ini"
+                />
+                <Chip
+                  label="Tugas"
+                  selected={activityFilter === "Tugas"}
+                  count={dashboardData?.assignments_active?.length}
+                  onPress={() => setActivityFilter("Tugas")}
+                  accessibilityLabel="Tampilkan tugas aktif"
+                />
+                <Chip
+                  label="Info"
+                  selected={activityFilter === "Info"}
+                  count={announcements.length}
+                  onPress={() => setActivityFilter("Info")}
+                  accessibilityLabel="Tampilkan pengumuman sekolah"
+                />
               </View>
-            </TouchableOpacity>
 
-            {/* Pengumuman Sekolah */}
-            <TouchableOpacity
-              style={styles.quickStatCard}
-              onPress={() => router.push("/pengumuman")}
-              activeOpacity={0.7}
-              accessibilityRole="button"
-              accessibilityLabel={`${dashboardData?.unread_announcements_count || 0} pengumuman sekolah belum dibaca. Tekan untuk membuka.`}
-            >
-              <View style={styles.statIconBox}>
-                <Ionicons name="megaphone-outline" size={18} color={shadcn.foreground} />
-              </View>
-              <Text style={styles.quickStatValue}>
-                {dashboardData?.unread_announcements_count || 0}
-              </Text>
-              <Text style={styles.quickStatLabel}>Pengumuman</Text>
-              <View style={styles.statActionRow}>
-                <Text style={styles.quickStatActionHint}>Lihat Semua</Text>
-                <Ionicons name="arrow-forward" size={12} color={shadcn.foreground} />
-              </View>
-            </TouchableOpacity>
-          </View>
-
-          {/* Tombol Aksi Cepat */}
-          <View style={styles.quickActionsRow}>
-            <Button
-              title="Ajukan Izin / Sakit"
-              onPress={() => router.push("/(tabs)/presensi")}
-              variant="default"
-              leftIcon={<Ionicons name="document-text-outline" size={18} color={shadcn.primaryForeground} />}
-              style={styles.quickActionButton}
-              accessibilityLabel="Buka formulir pengajuan izin atau sakit anak"
-            />
-            <Button
-              title="Semua Pengumuman"
-              onPress={() => router.push("/pengumuman")}
-              variant="outline"
-              leftIcon={<Ionicons name="newspaper-outline" size={18} color={shadcn.foreground} />}
-              style={styles.quickActionButton}
-              accessibilityLabel="Lihat seluruh pengumuman sekolah"
-            />
-          </View>
-
-          {/* 3. Jadwal Hari Ini (1 Card Rapi Tanpa Bersarang) */}
-          <View style={styles.sectionContainer}>
-            <SectionHeader
-              title="Jadwal Pelajaran Hari Ini"
-              subtitle={
-                dashboardData?.schedules_today && dashboardData.schedules_today.length > 0
-                  ? `${dashboardData.schedules_today.length} mata pelajaran`
-                  : "Tidak ada jadwal kelas aktif hari ini"
-              }
-              rightAction={
-                <TouchableOpacity
-                  style={styles.sectionLinkButton}
-                  onPress={() => router.push("/(tabs)/akademik")}
-                  activeOpacity={0.7}
-                  accessibilityRole="button"
-                  accessibilityLabel="Lihat jadwal pelajaran mingguan lengkap"
-                >
-                  <Text style={styles.sectionLinkText}>Lihat Semua</Text>
-                  <Ionicons name="chevron-forward" size={14} color={shadcn.foreground} />
-                </TouchableOpacity>
-              }
-            />
-
-            <Card style={styles.groupedListCard}>
-              {!dashboardData?.schedules_today || dashboardData.schedules_today.length === 0 ? (
-                <View style={styles.emptyInlineRow}>
-                  <Text style={styles.emptyInlineText}>
-                    Tidak ada jadwal kegiatan belajar di kelas untuk hari ini.
-                  </Text>
-                </View>
-              ) : (
-                dashboardData.schedules_today.map((schedule, idx) => (
-                  <React.Fragment key={schedule.id}>
-                    {idx > 0 && <Separator />}
-                    <View style={styles.scheduleRow}>
-                      <View style={styles.scheduleTimeCol}>
-                        <Text style={styles.scheduleTimeText}>{schedule.start_time}</Text>
-                        <Text style={styles.scheduleTimeSubText}>{schedule.end_time}</Text>
-                      </View>
-                      <View style={styles.scheduleDividerLine} />
-                      <View style={styles.scheduleDetailCol}>
-                        <Text style={styles.scheduleSubjectText}>{schedule.subject}</Text>
-                        <View style={styles.scheduleMetaRow}>
-                          <Text style={styles.scheduleTeacherText}>
-                            {schedule.teacher_name}
-                          </Text>
-                          <Text style={styles.scheduleMetaDot}>•</Text>
-                          <Text style={styles.scheduleRoomText}>{schedule.room}</Text>
-                        </View>
-                      </View>
-                    </View>
-                  </React.Fragment>
-                ))
-              )}
-            </Card>
-          </View>
-
-          {/* 4. Tugas / PR Aktif (1 Card Rapi Tanpa Bersarang) */}
-          <View style={styles.sectionContainer}>
-            <SectionHeader
-              title="Tugas & PR Aktif"
-              subtitle={
-                dashboardData?.assignments_active && dashboardData.assignments_active.length > 0
-                  ? `${dashboardData.assignments_active.length} tugas memerlukan perhatian`
-                  : "Semua tugas telah terselesaikan"
-              }
-              rightAction={
-                <TouchableOpacity
-                  style={styles.sectionLinkButton}
-                  onPress={() => router.push("/(tabs)/akademik")}
-                  activeOpacity={0.7}
-                  accessibilityRole="button"
-                  accessibilityLabel="Buka tab tugas dan pekerjaan rumah"
-                >
-                  <Text style={styles.sectionLinkText}>Semua Tugas</Text>
-                  <Ionicons name="chevron-forward" size={14} color={shadcn.foreground} />
-                </TouchableOpacity>
-              }
-            />
-
-            <Card style={styles.groupedListCard}>
-              {!dashboardData?.assignments_active || dashboardData.assignments_active.length === 0 ? (
-                <View style={styles.emptyInlineRow}>
-                  <Text style={styles.emptyInlineText}>
-                    Belum ada tugas atau pekerjaan rumah baru yang perlu dikumpulkan.
-                  </Text>
-                </View>
-              ) : (
-                dashboardData.assignments_active.map((assignment, idx) => (
-                  <React.Fragment key={assignment.id}>
-                    {idx > 0 && <Separator />}
-                    <View style={styles.assignmentRow}>
-                      <View style={styles.assignmentHeaderLine}>
-                        <Badge label={assignment.subject} variant="secondary" />
-                        <Text style={styles.dueDateText}>
-                          Tenggat: {formatTanggalId(assignment.due_date, { shortMonth: true })}
+              {/* Daftar Konten DarkIconRow dipisah Separator */}
+              <View style={styles.activityListCard}>
+                {activityFilter === "Jadwal" && (
+                  <>
+                    {!dashboardData?.schedules_today ||
+                    dashboardData.schedules_today.length === 0 ? (
+                      <View style={styles.emptyInlineRow}>
+                        <Text style={styles.emptyInlineText}>
+                          Tidak ada jadwal kegiatan belajar di kelas hari ini.
                         </Text>
                       </View>
-                      <Text style={styles.assignmentTitleText}>{assignment.title}</Text>
-                      {Boolean(assignment.description) && (
-                        <Text style={styles.assignmentDescText} numberOfLines={2}>
-                          {assignment.description}
-                        </Text>
-                      )}
-                    </View>
-                  </React.Fragment>
-                ))
-              )}
-            </Card>
-          </View>
+                    ) : (
+                      dashboardData.schedules_today.map((schedule, idx) => (
+                        <React.Fragment key={schedule.id}>
+                          {idx > 0 && <Separator />}
+                          <DarkIconRow
+                            icon="time-outline"
+                            title={schedule.subject}
+                            subtitle={`${schedule.teacher_name} • Ruang ${schedule.room}`}
+                            rightPrimary={`${schedule.start_time} - ${schedule.end_time}`}
+                            rightSecondary="WIB"
+                            onPress={() => router.push("/(tabs)/akademik")}
+                            accessibilityLabel={`Jadwal: ${schedule.subject}, waktu ${schedule.start_time} sampai ${schedule.end_time}`}
+                          />
+                        </React.Fragment>
+                      ))
+                    )}
+                  </>
+                )}
 
-          {/* 5. 2 Pengumuman Terbaru (1 Card Rapi Tanpa Bersarang) */}
-          <View style={styles.sectionContainer}>
-            <SectionHeader
-              title="Pengumuman Terbaru"
-              subtitle="Informasi resmi dari pihak sekolah"
-              rightAction={
-                <TouchableOpacity
-                  style={styles.sectionLinkButton}
+                {activityFilter === "Tugas" && (
+                  <>
+                    {!dashboardData?.assignments_active ||
+                    dashboardData.assignments_active.length === 0 ? (
+                      <View style={styles.emptyInlineRow}>
+                        <Text style={styles.emptyInlineText}>
+                          Belum ada tugas atau pekerjaan rumah baru yang perlu
+                          dikumpulkan.
+                        </Text>
+                      </View>
+                    ) : (
+                      dashboardData.assignments_active.map(
+                        (assignment, idx) => (
+                          <React.Fragment key={assignment.id}>
+                            {idx > 0 && <Separator />}
+                            <DarkIconRow
+                              icon="document-text-outline"
+                              title={assignment.title}
+                              subtitle={`${assignment.subject} • ${
+                                assignment.description || "Tugas Belajar"
+                              }`}
+                              rightPrimary={formatTanggalId(
+                                assignment.due_date,
+                                { shortMonth: true }
+                              )}
+                              rightSecondary="Tenggat"
+                              rightSecondaryTone="warning"
+                              onPress={() => router.push("/(tabs)/akademik")}
+                              accessibilityLabel={`Tugas: ${assignment.title}, mata pelajaran ${assignment.subject}`}
+                            />
+                          </React.Fragment>
+                        )
+                      )
+                    )}
+                  </>
+                )}
+
+                {activityFilter === "Info" && (
+                  <>
+                    {announcements.length === 0 ? (
+                      <View style={styles.emptyInlineRow}>
+                        <Text style={styles.emptyInlineText}>
+                          Belum ada pengumuman sekolah baru.
+                        </Text>
+                      </View>
+                    ) : (
+                      announcements.slice(0, 4).map((ann, idx) => (
+                        <React.Fragment key={ann.id}>
+                          {idx > 0 && <Separator />}
+                          <DarkIconRow
+                            icon={
+                              ann.category === "DARURAT"
+                                ? "alert-circle-outline"
+                                : "megaphone-outline"
+                            }
+                            title={ann.title}
+                            subtitle={ann.content}
+                            rightPrimary={formatTanggalId(ann.created_at, {
+                              shortMonth: true,
+                            })}
+                            rightSecondary={ann.category}
+                            rightSecondaryTone={
+                              ann.category === "DARURAT" ? "danger" : "info"
+                            }
+                            onPress={() => router.push("/pengumuman")}
+                            accessibilityLabel={`Pengumuman: ${ann.title}`}
+                          />
+                        </React.Fragment>
+                      ))
+                    )}
+                  </>
+                )}
+              </View>
+            </View>
+
+            {/* Kanan: DarkActionCard */}
+            <View
+              style={
+                isTablet ? styles.bentoHalfColumn : styles.bentoFullColumn
+              }
+            >
+              <View style={styles.sectionHeaderRow}>
+                <Text style={styles.sectionHeading}>Aksi & Layanan</Text>
+              </View>
+
+              {daruratAnnouncement ? (
+                <DarkActionCard
+                  eyebrow="Darurat"
+                  title={daruratAnnouncement.title}
+                  description={daruratAnnouncement.content}
+                  ctaLabel="Baca Info"
                   onPress={() => router.push("/pengumuman")}
-                  activeOpacity={0.7}
-                  accessibilityRole="button"
-                  accessibilityLabel="Lihat seluruh daftar pengumuman sekolah"
-                >
-                  <Text style={styles.sectionLinkText}>Lihat Semua</Text>
-                  <Ionicons name="chevron-forward" size={14} color={shadcn.foreground} />
-                </TouchableOpacity>
-              }
-            />
-
-            <Card style={styles.groupedListCard}>
-              {announcements.length === 0 ? (
-                <View style={styles.emptyInlineRow}>
-                  <Text style={styles.emptyInlineText}>
-                    Belum ada pengumuman baru dari sekolah.
-                  </Text>
-                </View>
+                />
               ) : (
-                announcements.slice(0, 2).map((item, idx) => (
-                  <React.Fragment key={item.id}>
-                    {idx > 0 && <Separator />}
-                    <TouchableOpacity
-                      style={styles.announcementRow}
-                      onPress={() => router.push("/pengumuman")}
-                      activeOpacity={0.7}
-                      accessibilityRole="button"
-                      accessibilityLabel={`Pengumuman: ${item.title}. ${item.content}`}
-                    >
-                      <View style={styles.announcementHeaderLine}>
-                        <Badge
-                          label={item.category}
-                          variant={item.category === "DARURAT" ? "destructive" : "outline"}
-                        />
-                        <Text style={styles.announcementDateText}>
-                          {formatTanggalId(item.created_at, { shortMonth: true })}
-                        </Text>
-                      </View>
-                      <Text style={styles.announcementTitleText}>{item.title}</Text>
-                      <Text style={styles.announcementContentText} numberOfLines={2}>
-                        {item.content}
-                      </Text>
-                    </TouchableOpacity>
-                  </React.Fragment>
-                ))
+                <DarkActionCard
+                  eyebrow="Cepat"
+                  title="Ajukan Izin Lebih Cepat"
+                  description="Beritahukan ketidakhadiran atau kondisi kesehatan ananda langsung kepada wali kelas melalui formulir digital."
+                  ctaLabel="Ajukan Izin"
+                  onPress={() => router.push("/(tabs)/presensi")}
+                />
               )}
-            </Card>
+            </View>
           </View>
         </ScrollView>
       )}
@@ -494,73 +503,12 @@ export default function HomeScreen() {
 
 const styles = StyleSheet.create({
   screen: {
-    backgroundColor: shadcn.canvas,
-  },
-  topHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.md,
-    paddingBottom: spacing.sm,
-    backgroundColor: shadcn.background,
-    borderBottomWidth: 1,
-    borderBottomColor: shadcn.border,
-  },
-  headerInfoCol: {
-    flex: 1,
-    marginRight: spacing.sm,
-  },
-  schoolBadgeText: {
-    fontSize: 11,
-    fontWeight: typography.weight.semibold,
-    color: shadcn.mutedForeground,
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-  },
-  greetingTitle: {
-    fontSize: typography.size.base,
-    fontWeight: typography.weight.bold,
-    color: shadcn.foreground,
-    marginTop: 2,
-    letterSpacing: typography.tracking.snug,
-  },
-  dateSubtitle: {
-    fontSize: typography.size.xs,
-    color: shadcn.mutedForeground,
-    marginTop: 1,
-  },
-  headerActionsRow: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  headerIconButton: {
-    width: touchTarget.minWidth,
-    height: touchTarget.minHeight,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: shadcn.border,
-    backgroundColor: shadcn.background,
-    alignItems: "center",
-    justifyContent: "center",
-    marginLeft: spacing.xs,
-    position: "relative",
-  },
-  notificationBadgeDot: {
-    position: "absolute",
-    top: 9,
-    right: 9,
-    width: 8,
-    height: 8,
-    borderRadius: radius.full,
-    backgroundColor: shadcn.destructive,
+    backgroundColor: bento.surface,
   },
   childSwitcherWrapper: {
-    backgroundColor: shadcn.background,
-    borderBottomWidth: 1,
-    borderBottomColor: shadcn.border,
+    backgroundColor: bento.surface,
     paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
+    paddingVertical: spacing.xs,
   },
   scrollBody: {
     flex: 1,
@@ -568,273 +516,71 @@ const styles = StyleSheet.create({
   scrollContent: {
     padding: spacing.lg,
     paddingBottom: spacing.max,
+    gap: spacing.xl,
   },
-  // Attendance Card
-  attendanceCard: {
-    marginBottom: spacing.md,
-    padding: spacing.md,
+  bentoRow: {
+    gap: spacing.lg,
   },
-  attendanceHeaderRow: {
+  bentoRowHorizontal: {
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "flex-start",
   },
-  attendanceIconBox: {
-    width: 36,
-    height: 36,
-    borderRadius: radius.md,
-    backgroundColor: shadcn.secondary,
-    borderWidth: 1,
-    borderColor: shadcn.border,
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: spacing.md,
+  bentoRowVertical: {
+    flexDirection: "column",
   },
-  attendanceTitleCol: {
+  bentoHalfColumn: {
     flex: 1,
-    marginRight: spacing.sm,
   },
-  attendanceTitle: {
-    fontSize: typography.size.sm,
-    fontWeight: typography.weight.semibold,
+  bentoFullColumn: {
+    width: "100%",
+  },
+  sectionHeaderRow: {
+    marginBottom: spacing.sm,
+  },
+  sectionHeading: {
+    fontSize: typography.size.base,
+    fontWeight: typography.weight.bold,
     color: shadcn.foreground,
     letterSpacing: typography.tracking.snug,
   },
-  attendanceSubtitle: {
-    fontSize: typography.size.xs,
-    color: shadcn.mutedForeground,
-    marginTop: 1,
+  statCardsGridTablet: {
+    flexDirection: "column",
+    gap: spacing.sm,
   },
-  attendanceSeparator: {
-    marginVertical: spacing.sm,
+  statCardItemTablet: {
+    width: "100%",
   },
-  attendanceTimeRow: {
+  statCardsScrollMobile: {
     flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  attendanceTimeItem: {
-    flex: 1,
-  },
-  attendanceTimeLabel: {
-    fontSize: 11,
-    color: shadcn.mutedForeground,
-  },
-  attendanceTimeValue: {
-    fontSize: typography.size.sm,
-    fontWeight: typography.weight.bold,
-    color: shadcn.foreground,
-    fontVariant: ["tabular-nums"],
-    marginTop: 2,
-  },
-  attendanceDetailButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    minHeight: touchTarget.minHeight,
-    paddingHorizontal: spacing.sm,
-    justifyContent: "center",
-  },
-  attendanceDetailButtonText: {
-    fontSize: typography.size.xs,
-    fontWeight: typography.weight.semibold,
-    color: shadcn.foreground,
-    marginRight: 2,
-  },
-  // Quick Stats Grid
-  quickStatsRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: spacing.md,
     gap: spacing.md,
+    paddingVertical: spacing.xs,
   },
-  quickStatCard: {
-    flex: 1,
-    backgroundColor: shadcn.card,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: shadcn.border,
-    padding: spacing.md,
-    minHeight: touchTarget.minHeight,
+  statCardItemMobile: {
+    width: 220,
   },
-  statIconBox: {
-    width: 32,
-    height: 32,
-    borderRadius: radius.md,
-    backgroundColor: shadcn.secondary,
-    borderWidth: 1,
-    borderColor: shadcn.border,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: spacing.xs,
-  },
-  quickStatValue: {
-    fontSize: typography.size.xxl,
-    fontWeight: typography.weight.bold,
-    color: shadcn.foreground,
-    fontVariant: ["tabular-nums"],
-    letterSpacing: typography.tracking.snug,
-  },
-  quickStatLabel: {
-    fontSize: typography.size.xs,
-    color: shadcn.mutedForeground,
-    fontWeight: typography.weight.medium,
-    marginTop: 2,
-  },
-  statActionRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: spacing.xs,
-    gap: 2,
-  },
-  quickStatActionHint: {
-    fontSize: 11,
-    fontWeight: typography.weight.semibold,
-    color: shadcn.foreground,
-  },
-  // Quick Action Buttons
-  quickActionsRow: {
+  filterChipRow: {
     flexDirection: "row",
     gap: spacing.sm,
-    marginBottom: spacing.lg,
+    marginBottom: spacing.md,
   },
-  quickActionButton: {
-    flex: 1,
-  },
-  // Section Headers & Common List Cards
-  sectionContainer: {
-    marginBottom: spacing.lg,
-  },
-  sectionLinkButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    minHeight: touchTarget.minHeight,
-    paddingHorizontal: spacing.xs,
-  },
-  sectionLinkText: {
-    fontSize: typography.size.xs,
-    fontWeight: typography.weight.semibold,
-    color: shadcn.foreground,
-    marginRight: 2,
-  },
-  groupedListCard: {
-    padding: 0,
+  activityListCard: {
+    backgroundColor: bento.surface,
+    borderRadius: radius.xxl,
+    borderWidth: 1,
+    borderColor: shadcn.border,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
     overflow: "hidden",
   },
   emptyInlineRow: {
     padding: spacing.lg,
     alignItems: "center",
     justifyContent: "center",
+    minHeight: touchTarget.minHeight,
   },
   emptyInlineText: {
     fontSize: typography.size.xs,
-    color: shadcn.mutedForeground,
+    color: bento.pastelMutedText,
     textAlign: "center",
-  },
-  // Schedule Rows
-  scheduleRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: spacing.md,
-  },
-  scheduleTimeCol: {
-    width: 58,
-    alignItems: "flex-start",
-  },
-  scheduleTimeText: {
-    fontSize: typography.size.xs,
-    fontWeight: typography.weight.bold,
-    color: shadcn.foreground,
-    fontVariant: ["tabular-nums"],
-  },
-  scheduleTimeSubText: {
-    fontSize: 11,
-    color: shadcn.mutedForeground,
-    fontVariant: ["tabular-nums"],
-    marginTop: 1,
-  },
-  scheduleDividerLine: {
-    width: 1,
-    alignSelf: "stretch",
-    backgroundColor: shadcn.border,
-    marginHorizontal: spacing.md,
-  },
-  scheduleDetailCol: {
-    flex: 1,
-  },
-  scheduleSubjectText: {
-    fontSize: typography.size.sm,
-    fontWeight: typography.weight.semibold,
-    color: shadcn.foreground,
-  },
-  scheduleMetaRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 2,
-    flexWrap: "wrap",
-  },
-  scheduleTeacherText: {
-    fontSize: 11,
-    color: shadcn.mutedForeground,
-  },
-  scheduleMetaDot: {
-    fontSize: 11,
-    color: shadcn.mutedForeground,
-    marginHorizontal: spacing.xs,
-  },
-  scheduleRoomText: {
-    fontSize: 11,
-    color: shadcn.mutedForeground,
-  },
-  // Assignment Rows
-  assignmentRow: {
-    padding: spacing.md,
-  },
-  assignmentHeaderLine: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: spacing.xs,
-  },
-  dueDateText: {
-    fontSize: 11,
-    fontWeight: typography.weight.medium,
-    color: shadcn.mutedForeground,
-    fontVariant: ["tabular-nums"],
-  },
-  assignmentTitleText: {
-    fontSize: typography.size.sm,
-    fontWeight: typography.weight.semibold,
-    color: shadcn.foreground,
-  },
-  assignmentDescText: {
-    fontSize: typography.size.xs,
-    color: shadcn.mutedForeground,
-    marginTop: 2,
-    lineHeight: 16,
-  },
-  // Announcement Rows
-  announcementRow: {
-    padding: spacing.md,
-  },
-  announcementHeaderLine: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: spacing.xs,
-  },
-  announcementDateText: {
-    fontSize: 11,
-    color: shadcn.mutedForeground,
-    fontVariant: ["tabular-nums"],
-  },
-  announcementTitleText: {
-    fontSize: typography.size.sm,
-    fontWeight: typography.weight.semibold,
-    color: shadcn.foreground,
-  },
-  announcementContentText: {
-    fontSize: typography.size.xs,
-    color: shadcn.mutedForeground,
-    marginTop: 2,
-    lineHeight: 16,
   },
 });
