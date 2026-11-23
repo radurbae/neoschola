@@ -8,6 +8,10 @@ import React, {
 } from "react";
 import type { User, Student, Class } from "@neoschola/shared";
 import * as api from "../lib/api";
+import {
+  getActiveVariantConfig,
+  isRoleAllowedInCurrentVariant,
+} from "../config/appVariant";
 
 const TOKEN_STORAGE_KEY = "neoschola_auth_token";
 const ACTIVE_STUDENT_STORAGE_KEY = "neoschola_active_student_id";
@@ -49,11 +53,13 @@ export interface AuthContextType {
   classes: Class[];
   activeStudentId: string | null;
   activeStudent: Student | null;
+  unreadNotificationCount: number;
   isLoading: boolean;
   isReady: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshSession: () => Promise<void>;
+  refreshUnreadNotifications: () => Promise<void>;
   setActiveStudentId: (id: string) => void;
 }
 
@@ -65,8 +71,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [students, setStudents] = useState<Student[]>([]);
   const [classes, setClasses] = useState<Class[]>([]);
   const [activeStudentId, setActiveStudentIdState] = useState<string | null>(null);
+  const [unreadNotificationCount, setUnreadNotificationCount] = useState<number>(0);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isReady, setIsReady] = useState<boolean>(false);
+
+  const refreshUnreadNotifications = useCallback(async () => {
+    try {
+      const res = await api.getNotifications();
+      setUnreadNotificationCount(res.unread_count || 0);
+    } catch {
+      // Abaikan kesalahan jaringan sementara saat memperbarui badge notifikasi
+    }
+  }, []);
 
   // Helper untuk memuat data siswa & menyetel active student
   const loadStudentsForUser = async (currentUser: User, meClasses?: Class[]) => {
@@ -109,13 +125,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         try {
           api.setAuthToken(savedToken);
           const meRes = await api.getMe();
+          if (!isRoleAllowedInCurrentVariant(meRes.user.role)) {
+            throw new Error(getActiveVariantConfig().wrongRoleMessage);
+          }
           if (isMounted) {
             setToken(savedToken);
             setUser(meRes.user);
-            await loadStudentsForUser(meRes.user, meRes.classes);
+            await Promise.all([
+              loadStudentsForUser(meRes.user, meRes.classes),
+              refreshUnreadNotifications(),
+            ]);
           }
         } catch (error) {
-          // Token kedaluwarsa atau server menolak
+          // Token kedaluwarsa, ditolak server, atau tidak cocok dengan varian aplikasi
           if (isMounted) {
             api.setAuthToken(null);
             storageRemove(TOKEN_STORAGE_KEY);
@@ -125,6 +147,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setStudents([]);
             setClasses([]);
             setActiveStudentIdState(null);
+            setUnreadNotificationCount(0);
           }
         }
       }
@@ -140,28 +163,44 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [refreshUnreadNotifications]);
 
-  const login = useCallback(async (email: string, password: string) => {
-    setIsLoading(true);
-    try {
-      const res = await api.login({ email, password });
-      api.setAuthToken(res.token);
-      storageSet(TOKEN_STORAGE_KEY, res.token);
+  const login = useCallback(
+    async (email: string, password: string) => {
+      setIsLoading(true);
+      try {
+        const res = await api.login({ email, password });
+        if (!isRoleAllowedInCurrentVariant(res.user.role)) {
+          api.setAuthToken(null);
+          storageRemove(TOKEN_STORAGE_KEY);
+          storageRemove(ACTIVE_STUDENT_STORAGE_KEY);
+          throw new Error(getActiveVariantConfig().wrongRoleMessage);
+        }
 
-      setToken(res.token);
-      setUser(res.user);
+        api.setAuthToken(res.token);
+        storageSet(TOKEN_STORAGE_KEY, res.token);
 
-      if (res.user.role === "GUARDIAN") {
-        await loadStudentsForUser(res.user);
-      } else {
-        const meRes = await api.getMe().catch(() => null);
-        await loadStudentsForUser(res.user, meRes?.classes);
+        setToken(res.token);
+        setUser(res.user);
+
+        if (res.user.role === "GUARDIAN") {
+          await Promise.all([
+            loadStudentsForUser(res.user),
+            refreshUnreadNotifications(),
+          ]);
+        } else {
+          const meRes = await api.getMe().catch(() => null);
+          await Promise.all([
+            loadStudentsForUser(res.user, meRes?.classes),
+            refreshUnreadNotifications(),
+          ]);
+        }
+      } finally {
+        setIsLoading(false);
       }
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+    },
+    [refreshUnreadNotifications]
+  );
 
   const logout = useCallback(async () => {
     setIsLoading(true);
@@ -175,6 +214,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setStudents([]);
       setClasses([]);
       setActiveStudentIdState(null);
+      setUnreadNotificationCount(0);
     } finally {
       setIsLoading(false);
     }
@@ -185,11 +225,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const meRes = await api.getMe();
       setUser(meRes.user);
-      await loadStudentsForUser(meRes.user, meRes.classes);
+      await Promise.all([
+        loadStudentsForUser(meRes.user, meRes.classes),
+        refreshUnreadNotifications(),
+      ]);
     } catch {
       // Biarkan state yang ada jika refresh sementara gagal
     }
-  }, [token]);
+  }, [token, refreshUnreadNotifications]);
 
   const setActiveStudentId = useCallback((id: string) => {
     setActiveStudentIdState(id);
@@ -211,11 +254,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       classes,
       activeStudentId,
       activeStudent,
+      unreadNotificationCount,
       isLoading,
       isReady,
       login,
       logout,
       refreshSession,
+      refreshUnreadNotifications,
       setActiveStudentId,
     }),
     [
@@ -225,11 +270,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       classes,
       activeStudentId,
       activeStudent,
+      unreadNotificationCount,
       isLoading,
       isReady,
       login,
       logout,
       refreshSession,
+      refreshUnreadNotifications,
       setActiveStudentId,
     ]
   );

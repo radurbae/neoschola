@@ -19,6 +19,7 @@ import {
   SpringPressable,
 } from "../../components/ui";
 import * as api from "../../lib/api";
+import { useAuth } from "../../store/auth";
 import {
   bento,
   breakpoints,
@@ -34,6 +35,7 @@ export function StaffMessagesScreen() {
   const router = useRouter();
   const { width } = useWindowDimensions();
   const isTablet = width >= breakpoints.tablet;
+  const { user, unreadNotificationCount } = useAuth();
   const [threads, setThreads] = useState<MessageThread[]>([]);
   const [serviceHours, setServiceHours] = useState<string>(
     "Jam Layanan: Senin - Jumat, 07:00 - 15:00 WIB"
@@ -118,6 +120,10 @@ export function StaffMessagesScreen() {
           noHorizontalPadding
           title="Pesan Wali"
           subtitle="Komunikasi dan konsultasi dengan wali siswa"
+          profileName={user?.name || "Staf"}
+          unreadCount={unreadNotificationCount}
+          onPressNotifications={() => router.push("/notifications")}
+          onPressProfile={() => router.push("/(staff)/profil" as any)}
           leftAction={
             <SpringPressable
               style={styles.backButton}

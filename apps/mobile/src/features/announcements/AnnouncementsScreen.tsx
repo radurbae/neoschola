@@ -27,6 +27,11 @@ import {
   SpringPressable,
 } from "../../components/ui";
 import type { BadgeVariant } from "../../components/ui";
+import { useAuth } from "../../store/auth";
+import {
+  getHomeRouteForRole,
+  getProfileRouteForRole,
+} from "../../config/appVariant";
 import * as api from "../../lib/api";
 import {
   bento,
@@ -52,10 +57,19 @@ const CATEGORIES: { key: CategoryFilter; label: string }[] = [
 export function AnnouncementsScreen() {
   const router = useRouter();
   const { width } = useWindowDimensions();
+  const { user, unreadNotificationCount } = useAuth();
   const isTablet = width >= breakpoints.tablet;
   const responsiveHorizontalPadding = isTablet
     ? layout.tabletPaddingX
     : layout.mobilePaddingX;
+
+  const handleBack = () => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace(getHomeRouteForRole(user?.role) as any);
+    }
+  };
 
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<CategoryFilter>("SEMUA");
@@ -212,10 +226,16 @@ export function AnnouncementsScreen() {
             noHorizontalPadding
             title="Pengumuman"
             subtitle="Agenda dan informasi resmi sekolah"
+            profileName={user?.name || "Akun"}
+            unreadCount={unreadNotificationCount}
+            onPressNotifications={() => router.push("/notifications")}
+            onPressProfile={() =>
+              router.push(getProfileRouteForRole(user?.role) as any)
+            }
             leftAction={
               <SpringPressable
                 style={styles.backButton}
-                onPress={() => router.back()}
+                onPress={handleBack}
                 accessibilityRole="button"
                 accessibilityLabel="Kembali ke layar sebelumnya"
               >
@@ -292,6 +312,7 @@ export function AnnouncementsScreen() {
                 title={item.title}
                 description={item.content}
                 ctaLabel="Baca Detail"
+                compact
                 onPress={() => setActiveAnnouncement(item)}
                 style={styles.emergencyCard}
               />

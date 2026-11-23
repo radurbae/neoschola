@@ -56,7 +56,7 @@ export function StaffFinanceOrAcademicScreen() {
   const { width } = useWindowDimensions();
   const isTablet = width >= breakpoints.tablet;
 
-  const { user, classes } = useAuth();
+  const { user, classes, unreadNotificationCount } = useAuth();
   const isAdmin = user?.role === Role.ADMIN;
 
   const [students, setStudents] = useState<Student[]>([]);
@@ -441,7 +441,9 @@ export function StaffFinanceOrAcademicScreen() {
             title="Keuangan Sekolah"
             subtitle="Verifikasi pembayaran dan kelola tagihan siswa"
             profileName={user?.name || "Staf"}
+            unreadCount={unreadNotificationCount}
             onPressNotifications={() => router.push("/notifications")}
+            onPressProfile={() => router.push("/(staff)/profil" as any)}
           />
           {/* 2 PastelStatCard mode Admin sejajar sama tinggi */}
           <View style={styles.statsRow}>
@@ -855,7 +857,9 @@ export function StaffFinanceOrAcademicScreen() {
           title="Akademik Siswa"
           subtitle="Kelola tugas PR kelas serta catatan nilai evaluasi"
           profileName={user?.name || "Staf"}
+          unreadCount={unreadNotificationCount}
           onPressNotifications={() => router.push("/notifications")}
+          onPressProfile={() => router.push("/(staff)/profil" as any)}
         />
         {/* Tabs Segmented Mode: Tugas / Nilai */}
         <Tabs

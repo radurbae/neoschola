@@ -1,8 +1,8 @@
 import React from "react";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import { Redirect } from "expo-router";
-import { Role } from "@neoschola/shared";
 import { useAuth } from "../src/store/auth";
+import { getHomeRouteForRole } from "../src/config/appVariant";
 import { colors, spacing, typography } from "../src/theme/tokens";
 
 export default function IndexScreen() {
@@ -21,11 +21,7 @@ export default function IndexScreen() {
     return <Redirect href="/login" />;
   }
 
-  if (user.role === Role.GUARDIAN) {
-    return <Redirect href="/(tabs)" />;
-  }
-
-  return <Redirect href="/(staff)" />;
+  return <Redirect href={getHomeRouteForRole(user.role)} />;
 }
 
 const styles = StyleSheet.create({

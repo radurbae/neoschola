@@ -7,6 +7,7 @@ import {
   ScrollView,
   useWindowDimensions,
 } from "react-native";
+import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { formatTanggalId, formatRupiah } from "@neoschola/shared";
 import type { Invoice, InvoiceStatus } from "@neoschola/shared";
@@ -50,14 +51,21 @@ const PAYMENT_METHODS = [
 ];
 
 export function FinanceScreen() {
+  const router = useRouter();
   const { width } = useWindowDimensions();
   const isTablet = width >= breakpoints.tablet;
   const responsiveHorizontalPadding = isTablet
     ? layout.tabletPaddingX
     : layout.mobilePaddingX;
 
-  const { students, activeStudentId, activeStudent, setActiveStudentId } =
-    useAuth();
+  const {
+    user,
+    students,
+    activeStudentId,
+    activeStudent,
+    setActiveStudentId,
+    unreadNotificationCount,
+  } = useAuth();
 
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [selectedFilter, setSelectedFilter] = useState<FinanceFilter>("SEMUA");
@@ -264,6 +272,11 @@ export function FinanceScreen() {
             noHorizontalPadding
             title="Keuangan"
             subtitle="Pengelolaan tagihan dan kuitansi siswa"
+            profileName={user?.name || "Wali Murid"}
+            unreadCount={unreadNotificationCount}
+            onPressAnnouncements={() => router.push("/pengumuman")}
+            onPressNotifications={() => router.push("/notifications")}
+            onPressProfile={() => router.push("/(tabs)/profil")}
           />
 
           {/* Pemilih Anak Asuh */}

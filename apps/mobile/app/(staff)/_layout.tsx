@@ -97,6 +97,14 @@ export default function StaffTabsLayout() {
             tabBarItemStyle: { display: "none" },
           }}
         />
+        <Tabs.Screen
+          name="profil"
+          options={{
+            href: null,
+            title: "Profil Akun",
+            tabBarItemStyle: { display: "none" },
+          }}
+        />
       </Tabs>
     </ResponsiveShell>
   );

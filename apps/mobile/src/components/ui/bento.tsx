@@ -489,6 +489,7 @@ export interface DarkActionCardProps {
   description: string;
   ctaLabel: string;
   onPress: () => void;
+  compact?: boolean;
   style?: StyleProp<ViewStyle>;
 }
 
@@ -498,31 +499,217 @@ export function DarkActionCard({
   description,
   ctaLabel,
   onPress,
+  compact = false,
   style,
 }: DarkActionCardProps) {
   return (
-    <View style={[styles.darkActionCard, style]}>
-      <View pointerEvents="none" style={styles.darkActionAccentOne} />
-      <View pointerEvents="none" style={styles.darkActionAccentTwo} />
+    <View
+      style={[
+        styles.darkActionCard,
+        compact && styles.darkActionCardCompact,
+        style,
+      ]}
+    >
+      <View
+        pointerEvents="none"
+        style={[
+          styles.darkActionAccentOne,
+          compact && styles.darkActionAccentOneCompact,
+        ]}
+      />
+      <View
+        pointerEvents="none"
+        style={[
+          styles.darkActionAccentTwo,
+          compact && styles.darkActionAccentTwoCompact,
+        ]}
+      />
 
       <View>
         {Boolean(eyebrow) && (
-          <View style={styles.darkActionEyebrowContainer}>
+          <View
+            style={[
+              styles.darkActionEyebrowContainer,
+              compact && styles.darkActionEyebrowCompact,
+            ]}
+          >
             <Text style={styles.darkActionEyebrowText}>{eyebrow}</Text>
           </View>
         )}
 
-        <Text style={styles.darkActionTitle}>{title}</Text>
-        <Text style={styles.darkActionDescription}>{description}</Text>
+        <Text
+          numberOfLines={compact ? 2 : undefined}
+          style={[
+            styles.darkActionTitle,
+            compact && styles.darkActionTitleCompact,
+          ]}
+        >
+          {title}
+        </Text>
+        <Text
+          numberOfLines={compact ? 2 : undefined}
+          style={[
+            styles.darkActionDescription,
+            compact && styles.darkActionDescriptionCompact,
+          ]}
+        >
+          {description}
+        </Text>
       </View>
 
       <SpringPressable
         onPress={onPress}
-        style={styles.darkActionCtaButton}
+        style={[
+          styles.darkActionCtaButton,
+          compact && styles.darkActionCtaButtonCompact,
+        ]}
         accessibilityRole="button"
         accessibilityLabel={ctaLabel}
       >
         <Text style={styles.darkActionCtaText}>{ctaLabel}</Text>
+      </SpringPressable>
+    </View>
+  );
+}
+
+export interface UrgentAnnouncementBannerProps {
+  title: string;
+  content: string;
+  category: string;
+  isUrgent?: boolean;
+  dateLabel?: string;
+  onPress: () => void;
+  onDismiss: () => void;
+  style?: StyleProp<ViewStyle>;
+}
+
+export function UrgentAnnouncementBanner({
+  title,
+  content,
+  category,
+  isUrgent = false,
+  dateLabel,
+  onPress,
+  onDismiss,
+  style,
+}: UrgentAnnouncementBannerProps) {
+  const pillLabel = isUrgent ? "DARURAT" : category || "Terbaru";
+
+  return (
+    <View
+      style={[
+        styles.urgentBannerContainer,
+        isUrgent
+          ? styles.urgentBannerDark
+          : styles.urgentBannerButter,
+        style,
+      ]}
+    >
+      <SpringPressable
+        onPress={onPress}
+        style={styles.urgentBannerMainPress}
+        accessibilityRole="button"
+        accessibilityLabel={`Buka pengumuman: ${title}`}
+      >
+        <View
+          style={[
+            styles.urgentBannerIconBox,
+            isUrgent
+              ? styles.urgentBannerIconBoxDark
+              : styles.urgentBannerIconBoxLight,
+          ]}
+        >
+          <Ionicons
+            name={isUrgent ? "alert-circle-outline" : "megaphone-outline"}
+            size={18}
+            color={isUrgent ? bento.iceBlueCta : bento.butterText}
+          />
+        </View>
+
+        <View style={styles.urgentBannerBody}>
+          <View style={styles.urgentBannerTopRow}>
+            <View
+              style={[
+                styles.urgentBannerPill,
+                isUrgent
+                  ? styles.urgentBannerPillUrgent
+                  : styles.urgentBannerPillRecent,
+              ]}
+            >
+              <Text
+                style={[
+                  styles.urgentBannerPillText,
+                  isUrgent
+                    ? styles.urgentBannerPillTextUrgent
+                    : styles.urgentBannerPillTextRecent,
+                ]}
+              >
+                {pillLabel}
+              </Text>
+            </View>
+            {Boolean(dateLabel) && (
+              <Text
+                style={[
+                  styles.urgentBannerDate,
+                  isUrgent
+                    ? styles.urgentBannerMutedDark
+                    : styles.urgentBannerMutedLight,
+                ]}
+                numberOfLines={1}
+              >
+                {dateLabel}
+              </Text>
+            )}
+          </View>
+
+          <Text
+            style={[
+              styles.urgentBannerTitle,
+              isUrgent
+                ? styles.urgentBannerTitleDark
+                : styles.urgentBannerTitleLight,
+            ]}
+            numberOfLines={1}
+          >
+            {title}
+          </Text>
+
+          <Text
+            style={[
+              styles.urgentBannerContent,
+              isUrgent
+                ? styles.urgentBannerMutedDark
+                : styles.urgentBannerMutedLight,
+            ]}
+            numberOfLines={2}
+          >
+            {content}
+          </Text>
+
+          <Text
+            style={[
+              styles.urgentBannerActionLink,
+              isUrgent
+                ? styles.urgentBannerActionDark
+                : styles.urgentBannerActionLight,
+            ]}
+          >
+            Baca selengkapnya
+          </Text>
+        </View>
+      </SpringPressable>
+
+      <SpringPressable
+        onPress={onDismiss}
+        style={styles.urgentBannerCloseBtn}
+        accessibilityRole="button"
+        accessibilityLabel="Tutup pengumuman"
+      >
+        <Ionicons
+          name="close"
+          size={18}
+          color={isUrgent ? bento.obsidianForeground : shadcn.foreground}
+        />
       </SpringPressable>
     </View>
   );
@@ -956,14 +1143,19 @@ const styles = StyleSheet.create({
 
   // DarkActionCard
   darkActionCard: {
-    flex: 1,
-    minHeight: 220,
-    padding: 24,
+    minHeight: 176,
+    padding: 20,
     justifyContent: "space-between",
     backgroundColor: bento.obsidian,
     borderRadius: radius.xxl,
     overflow: "hidden",
     position: "relative",
+  },
+  darkActionCardCompact: {
+    minHeight: undefined,
+    paddingHorizontal: 18,
+    paddingVertical: 14,
+    borderRadius: radius.xl,
   },
   darkActionAccentOne: {
     position: "absolute",
@@ -975,6 +1167,13 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: bento.obsidianBorder,
   },
+  darkActionAccentOneCompact: {
+    right: -24,
+    bottom: -24,
+    width: 84,
+    height: 84,
+    borderRadius: 42,
+  },
   darkActionAccentTwo: {
     position: "absolute",
     right: -50,
@@ -985,6 +1184,13 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: bento.obsidianBorder,
   },
+  darkActionAccentTwoCompact: {
+    right: -38,
+    bottom: -38,
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+  },
   darkActionEyebrowContainer: {
     alignSelf: "flex-start",
     borderWidth: 1,
@@ -993,6 +1199,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 3,
     marginBottom: 10,
+  },
+  darkActionEyebrowCompact: {
+    marginBottom: 6,
   },
   darkActionEyebrowText: {
     fontSize: 11,
@@ -1009,6 +1218,10 @@ const styles = StyleSheet.create({
     color: bento.obsidianForeground,
     letterSpacing: -0.3,
   },
+  darkActionTitleCompact: {
+    fontSize: typography.size.base,
+    lineHeight: 22,
+  },
   darkActionDescription: {
     fontSize: typography.size.sm,
     fontFamily: typography.family.regular,
@@ -1016,6 +1229,12 @@ const styles = StyleSheet.create({
     color: bento.obsidianMuted,
     marginTop: 6,
     marginBottom: spacing.lg,
+  },
+  darkActionDescriptionCompact: {
+    fontSize: 13,
+    lineHeight: 19,
+    marginTop: 4,
+    marginBottom: 12,
   },
   darkActionCtaButton: {
     backgroundColor: bento.iceBlueCta,
@@ -1026,11 +1245,138 @@ const styles = StyleSheet.create({
     alignItems: "center",
     alignSelf: "flex-start",
   },
+  darkActionCtaButtonCompact: {
+    paddingHorizontal: spacing.lg,
+  },
   darkActionCtaText: {
     fontSize: typography.size.sm,
     fontWeight: typography.weight.semibold,
     fontFamily: typography.family.semibold,
     color: shadcn.foreground,
+  },
+
+  // UrgentAnnouncementBanner
+  urgentBannerContainer: {
+    borderRadius: radius.xl,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 12,
+  },
+  urgentBannerDark: {
+    backgroundColor: bento.obsidian,
+    borderWidth: 1,
+    borderColor: bento.obsidianBorder,
+  },
+  urgentBannerButter: {
+    backgroundColor: bento.butter,
+    borderWidth: 0,
+  },
+  urgentBannerMainPress: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 12,
+  },
+  urgentBannerIconBox: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 2,
+  },
+  urgentBannerIconBoxDark: {
+    backgroundColor: bento.obsidianHover,
+  },
+  urgentBannerIconBoxLight: {
+    backgroundColor: bento.surface,
+  },
+  urgentBannerBody: {
+    flex: 1,
+    gap: 3,
+  },
+  urgentBannerTopRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 1,
+  },
+  urgentBannerPill: {
+    borderRadius: radius.full,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+  },
+  urgentBannerPillUrgent: {
+    backgroundColor: shadcn.destructive,
+  },
+  urgentBannerPillRecent: {
+    backgroundColor: bento.surface,
+  },
+  urgentBannerPillText: {
+    fontSize: 10,
+    fontWeight: typography.weight.bold,
+    fontFamily: typography.family.bold,
+    textTransform: "uppercase",
+    letterSpacing: 0.4,
+  },
+  urgentBannerPillTextUrgent: {
+    color: shadcn.destructiveForeground,
+  },
+  urgentBannerPillTextRecent: {
+    color: bento.butterText,
+  },
+  urgentBannerDate: {
+    fontSize: 11,
+    fontFamily: typography.family.regular,
+    fontVariant: ["tabular-nums"],
+    flexShrink: 1,
+  },
+  urgentBannerTitle: {
+    fontSize: typography.size.sm,
+    fontWeight: typography.weight.bold,
+    fontFamily: typography.family.bold,
+  },
+  urgentBannerTitleDark: {
+    color: bento.obsidianForeground,
+  },
+  urgentBannerTitleLight: {
+    color: shadcn.foreground,
+  },
+  urgentBannerContent: {
+    fontSize: 13,
+    fontFamily: typography.family.regular,
+    lineHeight: 18,
+  },
+  urgentBannerMutedDark: {
+    color: bento.obsidianMuted,
+  },
+  urgentBannerMutedLight: {
+    color: bento.pastelMutedText,
+  },
+  urgentBannerActionLink: {
+    fontSize: typography.size.xs,
+    fontWeight: typography.weight.semibold,
+    fontFamily: typography.family.semibold,
+    marginTop: 2,
+  },
+  urgentBannerActionDark: {
+    color: bento.iceBlueCta,
+  },
+  urgentBannerActionLight: {
+    color: bento.butterText,
+  },
+  urgentBannerCloseBtn: {
+    width: touchTarget.minWidth,
+    height: touchTarget.minHeight,
+    minWidth: touchTarget.minWidth,
+    minHeight: touchTarget.minHeight,
+    marginTop: -6,
+    marginRight: -6,
+    borderRadius: radius.full,
+    alignItems: "center",
+    justifyContent: "center",
   },
 
   // DarkIconRow

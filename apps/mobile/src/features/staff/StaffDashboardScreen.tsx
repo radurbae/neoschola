@@ -7,18 +7,30 @@ import {
   useWindowDimensions,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { Role, LeaveStatus, InvoiceStatus, formatTanggalId } from "@neoschola/shared";
+import {
+  Role,
+  LeaveStatus,
+  InvoiceStatus,
+  formatTanggalId,
+  type Announcement,
+} from "@neoschola/shared";
 import {
   TopUtilityBar,
   PastelStatCard,
   MiniTrendChart,
   DarkActionCard,
+  UrgentAnnouncementBanner,
   DarkIconRow,
   Separator,
   StateView,
 } from "../../components/ui";
 import { useAuth } from "../../store/auth";
 import * as api from "../../lib/api";
+import {
+  dismissAnnouncementId,
+  getDismissedAnnouncementIds,
+  pickHighlightAnnouncement,
+} from "../../lib/announcements";
 import {
   breakpoints,
   layout,
@@ -40,7 +52,7 @@ export function StaffDashboardScreen() {
   const { width } = useWindowDimensions();
   const isTablet = width >= breakpoints.tablet;
 
-  const { user } = useAuth();
+  const { user, unreadNotificationCount } = useAuth();
   const isAdmin = user?.role === Role.ADMIN;
 
   const [metrics, setMetrics] = useState<StaffMetrics>({
@@ -49,10 +61,16 @@ export function StaffDashboardScreen() {
     unreadMessageCount: 0,
     waitingInvoiceCount: 0,
   });
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [dismissedIds, setDismissedIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [trendPeriod, setTrendPeriod] = useState<string>("1M");
+
+  useEffect(() => {
+    setDismissedIds(getDismissedAnnouncementIds(user?.id));
+  }, [user?.id]);
 
   const fetchMetrics = useCallback(async (isRefresh = false) => {
     if (isRefresh) {
@@ -63,12 +81,16 @@ export function StaffDashboardScreen() {
     setErrorMessage(null);
 
     try {
-      const [studentsRes, leaveRes, threadsRes, invoicesRes] = await Promise.all([
-        api.getStudents().catch(() => ({ students: [] })),
-        api.getLeaveRequests().catch(() => ({ items: [] })),
-        api.getThreads().catch(() => ({ threads: [] })),
-        isAdmin ? api.getInvoices().catch(() => ({ invoices: [] })) : Promise.resolve({ invoices: [] }),
-      ]);
+      const [studentsRes, leaveRes, threadsRes, invoicesRes, announcementsRes] =
+        await Promise.all([
+          api.getStudents().catch(() => ({ students: [] })),
+          api.getLeaveRequests().catch(() => ({ items: [] })),
+          api.getThreads().catch(() => ({ threads: [] })),
+          isAdmin
+            ? api.getInvoices().catch(() => ({ invoices: [] }))
+            : Promise.resolve({ invoices: [] }),
+          api.getAnnouncements().catch(() => ({ announcements: [] })),
+        ]);
 
       const pendingLeaves = (leaveRes.items || []).filter(
         (item) => item.status === LeaveStatus.PENDING
@@ -89,6 +111,7 @@ export function StaffDashboardScreen() {
         unreadMessageCount: unreadMessages,
         waitingInvoiceCount: waitingInvoices,
       });
+      setAnnouncements(announcementsRes.announcements || []);
     } catch (err: any) {
       setErrorMessage(
         err?.message || "Gagal memuat ringkasan data staf. Silakan coba kembali."
@@ -104,6 +127,10 @@ export function StaffDashboardScreen() {
   }, [fetchMetrics]);
 
   const hariIni = formatTanggalId(new Date().toISOString(), { includeDay: true });
+  const highlightAnnouncement = pickHighlightAnnouncement(
+    announcements,
+    dismissedIds
+  );
 
   return (
     <View style={styles.container}>
@@ -139,9 +166,10 @@ export function StaffDashboardScreen() {
           title="Ringkasan"
           subtitle={hariIni}
           profileName={user?.name || "Staf"}
-          unreadCount={metrics.unreadMessageCount}
+          unreadCount={unreadNotificationCount}
           onPressNotifications={() => router.push("/notifications")}
-          onPressAnnouncements={() => router.push("/(staff)/pesan" as any)}
+          onPressAnnouncements={() => router.push("/(staff)/pengumuman" as any)}
+          onPressProfile={() => router.push("/(staff)/profil" as any)}
         />
         {loading && !refreshing ? (
           <StateView type="loading" message="Memuat ringkasan metrik sekolah..." />
@@ -155,6 +183,24 @@ export function StaffDashboardScreen() {
           />
         ) : (
           <View style={styles.bentoContent}>
+            {highlightAnnouncement && (
+              <UrgentAnnouncementBanner
+                title={highlightAnnouncement.title}
+                content={highlightAnnouncement.content}
+                category={highlightAnnouncement.category}
+                isUrgent={highlightAnnouncement.category === "DARURAT"}
+                dateLabel={formatTanggalId(highlightAnnouncement.created_at, {
+                  shortMonth: true,
+                })}
+                onPress={() => router.push("/(staff)/pengumuman" as any)}
+                onDismiss={() =>
+                  setDismissedIds(
+                    dismissAnnouncementId(highlightAnnouncement.id, user?.id)
+                  )
+                }
+              />
+            )}
+
             <View style={isTablet ? styles.rowTablet1 : styles.rowMobile}>
               <View style={isTablet ? styles.colChartTablet : styles.colMobile}>
                 <MiniTrendChart
@@ -360,6 +406,7 @@ export function StaffDashboardScreen() {
                   title="Input Presensi Kelas Hari Ini"
                   description="Presensi kehadiran siswa kelas Anda untuk hari ini belum tersimpan lengkap. Segera lakukan perekaman presensi."
                   ctaLabel="Mulai Presensi"
+                  compact={!isTablet}
                   onPress={() => router.push("/(staff)/presensi" as any)}
                   style={isTablet ? styles.actionCardFullHeight : undefined}
                 />

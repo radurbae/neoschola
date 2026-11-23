@@ -46,8 +46,14 @@ export default function AcademicScreen() {
   const { width } = useWindowDimensions();
   const isTablet = width >= breakpoints.tablet;
 
-  const { user, students, activeStudent, activeStudentId, setActiveStudentId } =
-    useAuth();
+  const {
+    user,
+    students,
+    activeStudent,
+    activeStudentId,
+    setActiveStudentId,
+    unreadNotificationCount,
+  } = useAuth();
 
   const [activeTab, setActiveTab] = useState<AcademicTab>("JADWAL");
   const [schedules, setSchedules] = useState<Schedule[]>([]);
@@ -167,6 +173,8 @@ export default function AcademicScreen() {
             title="Akademik"
             subtitle={activeStudent ? activeStudent.full_name : undefined}
             profileName={user?.name || "Wali Murid"}
+            unreadCount={unreadNotificationCount}
+            onPressAnnouncements={() => router.push("/pengumuman")}
             onPressNotifications={() => router.push("/notifications")}
             onPressProfile={() => router.push("/(tabs)/profil")}
           />

@@ -1,9 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import {
   View,
-  Text,
   StyleSheet,
-  TouchableOpacity,
   RefreshControl,
   ScrollView,
   useWindowDimensions,
@@ -19,7 +17,13 @@ import {
   Separator,
   StateView,
   Button,
+  SpringPressable,
 } from "../src/components/ui";
+import { useAuth } from "../src/store/auth";
+import {
+  getHomeRouteForRole,
+  getProfileRouteForRole,
+} from "../src/config/appVariant";
 import * as api from "../src/lib/api";
 import {
   bento,
@@ -28,7 +32,6 @@ import {
   layout,
   spacing,
   radius,
-  typography,
   touchTarget,
 } from "../src/theme/tokens";
 
@@ -36,6 +39,7 @@ export default function NotificationsScreen() {
   const router = useRouter();
   const { width } = useWindowDimensions();
   const isTablet = width >= breakpoints.tablet;
+  const { user, refreshUnreadNotifications } = useAuth();
 
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState<number>(0);
@@ -44,31 +48,43 @@ export default function NotificationsScreen() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [markingAll, setMarkingAll] = useState<boolean>(false);
 
-  const fetchNotifications = useCallback(async (isRefresh = false) => {
-    if (isRefresh) {
-      setRefreshing(true);
-    } else {
-      setLoading(true);
-    }
-    setErrorMessage(null);
+  const fetchNotifications = useCallback(
+    async (isRefresh = false) => {
+      if (isRefresh) {
+        setRefreshing(true);
+      } else {
+        setLoading(true);
+      }
+      setErrorMessage(null);
 
-    try {
-      const res = await api.getNotifications();
-      setNotifications(res.notifications || []);
-      setUnreadCount(res.unread_count || 0);
-    } catch (err: any) {
-      setErrorMessage(
-        err?.message || "Gagal memuat notifikasi. Periksa koneksi internet Anda."
-      );
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, []);
+      try {
+        const res = await api.getNotifications();
+        setNotifications(res.notifications || []);
+        setUnreadCount(res.unread_count || 0);
+        await refreshUnreadNotifications();
+      } catch (err: any) {
+        setErrorMessage(
+          err?.message || "Gagal memuat notifikasi. Periksa koneksi internet Anda."
+        );
+      } finally {
+        setLoading(false);
+        setRefreshing(false);
+      }
+    },
+    [refreshUnreadNotifications]
+  );
 
   useEffect(() => {
     fetchNotifications();
   }, [fetchNotifications]);
+
+  const handleBack = () => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace(getHomeRouteForRole(user?.role) as any);
+    }
+  };
 
   const handleMarkAsRead = async (notification: Notification) => {
     if (notification.is_read) return;
@@ -82,6 +98,7 @@ export default function NotificationsScreen() {
 
     try {
       await api.markNotificationRead(notification.id);
+      await refreshUnreadNotifications();
     } catch {
       fetchNotifications();
     }
@@ -98,6 +115,7 @@ export default function NotificationsScreen() {
 
     try {
       await api.markAllNotificationsRead();
+      await refreshUnreadNotifications();
     } catch {
       fetchNotifications();
     } finally {
@@ -161,16 +179,19 @@ export default function NotificationsScreen() {
               ? `${unreadCount} kabar belum dibaca`
               : "Semua kabar sudah dibaca"
           }
+          profileName={user?.name || "Akun"}
+          onPressProfile={() =>
+            router.push(getProfileRouteForRole(user?.role) as any)
+          }
           leftAction={
-            <TouchableOpacity
+            <SpringPressable
               style={styles.backButton}
-              onPress={() => router.back()}
-              activeOpacity={0.7}
+              onPress={handleBack}
               accessibilityRole="button"
               accessibilityLabel="Kembali ke layar sebelumnya"
             >
               <Ionicons name="arrow-back" size={22} color={shadcn.foreground} />
-            </TouchableOpacity>
+            </SpringPressable>
           }
         />
 

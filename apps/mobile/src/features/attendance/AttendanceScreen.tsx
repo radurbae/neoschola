@@ -50,8 +50,14 @@ export default function AttendanceScreen() {
   const { width } = useWindowDimensions();
   const isTablet = width >= breakpoints.tablet;
 
-  const { user, students, activeStudent, activeStudentId, setActiveStudentId } =
-    useAuth();
+  const {
+    user,
+    students,
+    activeStudent,
+    activeStudentId,
+    setActiveStudentId,
+    unreadNotificationCount,
+  } = useAuth();
 
   const [dashboardData, setDashboardData] =
     useState<StudentDashboardResponse | null>(null);
@@ -237,6 +243,8 @@ export default function AttendanceScreen() {
             title="Presensi"
             subtitle={activeStudent ? activeStudent.full_name : undefined}
             profileName={user?.name || "Wali Murid"}
+            unreadCount={unreadNotificationCount}
+            onPressAnnouncements={() => router.push("/pengumuman")}
             onPressNotifications={() => router.push("/notifications")}
             onPressProfile={() => router.push("/(tabs)/profil")}
           />
@@ -354,6 +362,7 @@ export default function AttendanceScreen() {
               title="Ajukan Izin atau Sakit"
               description="Kirimkan surat permohonan izin atau surat keterangan sakit anak ke wali kelas secara praktis dan terpantau."
               ctaLabel="Buka Formulir Izin"
+              compact
               onPress={handleOpenModal}
             />
 

@@ -21,6 +21,7 @@ import {
   PastelStatCard,
   MiniTrendChart,
   DarkActionCard,
+  UrgentAnnouncementBanner,
   DarkIconRow,
   Separator,
   Chip,
@@ -30,6 +31,12 @@ import {
 } from "../../components/ui";
 import { useAuth } from "../../store/auth";
 import * as api from "../../lib/api";
+import {
+  dismissAnnouncementId,
+  getDismissedAnnouncementIds,
+  pickHighlightAnnouncement,
+} from "../../lib/announcements";
+import { getProfileRouteForRole } from "../../config/appVariant";
 import {
   bento,
   shadcn,
@@ -52,15 +59,26 @@ export default function HomeScreen() {
   const { width } = useWindowDimensions();
   const isTablet = width >= breakpoints.tablet;
 
-  const { user, students, activeStudent, activeStudentId, setActiveStudentId } =
-    useAuth();
+  const {
+    user,
+    students,
+    activeStudent,
+    activeStudentId,
+    setActiveStudentId,
+    unreadNotificationCount,
+  } = useAuth();
 
   const [dashboardData, setDashboardData] =
     useState<StudentDashboardResponse | null>(null);
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [dismissedIds, setDismissedIds] = useState<string[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    setDismissedIds(getDismissedAnnouncementIds(user?.id));
+  }, [user?.id]);
 
   const [activePeriod, setActivePeriod] = useState<string>("30H");
   const [activityFilter, setActivityFilter] = useState<"Jadwal" | "Tugas" | "Info">(
@@ -143,7 +161,10 @@ export default function HomeScreen() {
     { label: "Hari", value: attendancePercentage },
   ];
 
-  const daruratAnnouncement = announcements.find((a) => a.category === "DARURAT");
+  const highlightAnnouncement = pickHighlightAnnouncement(
+    announcements,
+    dismissedIds
+  );
 
   return (
     <Screen scroll={false} headerShown={false} style={styles.screen}>
@@ -180,9 +201,11 @@ export default function HomeScreen() {
             subtitle={hariIni}
             onPressAnnouncements={() => router.push("/pengumuman")}
             onPressNotifications={() => router.push("/notifications")}
-            unreadCount={dashboardData?.unread_announcements_count || 0}
+            unreadCount={unreadNotificationCount}
             profileName={user?.name || "Wali Murid"}
-            onPressProfile={() => router.push("/(tabs)/profil")}
+            onPressProfile={() =>
+              router.push(getProfileRouteForRole(user?.role) as any)
+            }
           />
 
           {students.length > 0 && (
@@ -217,6 +240,24 @@ export default function HomeScreen() {
           />
         ) : (
           <>
+            {highlightAnnouncement && (
+              <UrgentAnnouncementBanner
+                title={highlightAnnouncement.title}
+                content={highlightAnnouncement.content}
+                category={highlightAnnouncement.category}
+                isUrgent={highlightAnnouncement.category === "DARURAT"}
+                dateLabel={formatTanggalId(highlightAnnouncement.created_at, {
+                  shortMonth: true,
+                })}
+                onPress={() => router.push("/pengumuman")}
+                onDismiss={() =>
+                  setDismissedIds(
+                    dismissAnnouncementId(highlightAnnouncement.id, user?.id)
+                  )
+                }
+              />
+            )}
+
             <View
               style={[
                 styles.bentoRow,
@@ -492,25 +533,15 @@ export default function HomeScreen() {
                   <Text style={styles.sectionHeading}>Aksi & Layanan</Text>
                 </View>
 
-                {daruratAnnouncement ? (
-                  <DarkActionCard
-                    eyebrow="Darurat"
-                    title={daruratAnnouncement.title}
-                    description={daruratAnnouncement.content}
-                    ctaLabel="Baca Info"
-                    onPress={() => router.push("/pengumuman")}
-                    style={isTablet ? styles.actionCardFill : undefined}
-                  />
-                ) : (
-                  <DarkActionCard
-                    eyebrow="Cepat"
-                    title="Ajukan Izin Lebih Cepat"
-                    description="Beritahukan ketidakhadiran atau kondisi kesehatan ananda langsung kepada wali kelas melalui formulir digital."
-                    ctaLabel="Ajukan Izin"
-                    onPress={() => router.push("/(tabs)/presensi")}
-                    style={isTablet ? styles.actionCardFill : undefined}
-                  />
-                )}
+                <DarkActionCard
+                  eyebrow="Cepat"
+                  title="Ajukan Izin Lebih Cepat"
+                  description="Beritahukan ketidakhadiran atau kondisi kesehatan ananda langsung kepada wali kelas melalui formulir digital."
+                  ctaLabel="Ajukan Izin"
+                  compact={!isTablet}
+                  onPress={() => router.push("/(tabs)/presensi")}
+                  style={isTablet ? styles.actionCardFill : undefined}
+                />
               </View>
             </View>
           </>
@@ -568,6 +599,7 @@ const styles = StyleSheet.create({
     alignSelf: "stretch",
   },
   actionCardFill: {
+    flex: 1,
     alignItems: "stretch",
   },
   sectionHeaderRow: {

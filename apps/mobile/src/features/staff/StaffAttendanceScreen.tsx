@@ -51,7 +51,7 @@ export function StaffAttendanceScreen() {
   const { width } = useWindowDimensions();
   const isTablet = width >= breakpoints.tablet;
 
-  const { user, classes } = useAuth();
+  const { user, classes, unreadNotificationCount } = useAuth();
   const isAdmin = user?.role === Role.ADMIN;
 
   const availableClasses: ClassOption[] =
@@ -240,7 +240,9 @@ export function StaffAttendanceScreen() {
           title="Presensi Kelas"
           subtitle="Input dan perbarui kehadiran peserta didik"
           profileName={user?.name || "Staf"}
+          unreadCount={unreadNotificationCount}
           onPressNotifications={() => router.push("/notifications")}
+          onPressProfile={() => router.push("/(staff)/profil" as any)}
         />
         {isTablet ? (
           <View style={styles.statsRowTablet}>

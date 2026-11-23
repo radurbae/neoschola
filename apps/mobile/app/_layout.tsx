@@ -12,6 +12,7 @@ import {
 } from "@expo-google-fonts/plus-jakarta-sans";
 import { Role } from "@neoschola/shared";
 import { AuthProvider, useAuth } from "../src/store/auth";
+import { getHomeRouteForRole } from "../src/config/appVariant";
 import { colors } from "../src/theme/tokens";
 
 function RootNavigator() {
@@ -29,7 +30,7 @@ function RootNavigator() {
     }
 
     if (user && firstSegment === "login") {
-      router.replace(user.role === Role.GUARDIAN ? "/(tabs)" : "/(staff)");
+      router.replace(getHomeRouteForRole(user.role));
       return;
     }
 

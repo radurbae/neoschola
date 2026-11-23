@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { Role } from "@neoschola/shared";
 import {
   Screen,
   Button,
@@ -21,6 +22,10 @@ import {
   DarkIconRow,
 } from "../src/components/ui";
 import { useAuth } from "../src/store/auth";
+import {
+  getActiveVariantConfig,
+  isRoleAllowedInCurrentVariant,
+} from "../src/config/appVariant";
 import {
   bento,
   shadcn,
@@ -33,6 +38,7 @@ import {
 } from "../src/theme/tokens";
 
 interface DemoAccount {
+  role: Role;
   name: string;
   roleTitle: string;
   roleBadge: string;
@@ -42,6 +48,7 @@ interface DemoAccount {
 
 const DEMO_ACCOUNTS: DemoAccount[] = [
   {
+    role: Role.GUARDIAN,
     name: "Budi Santoso",
     roleTitle: "Wali Murid (2 Anak: Raka 4A dan Nadia 2B)",
     roleBadge: "Wali Murid",
@@ -49,6 +56,7 @@ const DEMO_ACCOUNTS: DemoAccount[] = [
     description: "Memantau presensi, SPP, dan pengumuman untuk 2 siswa.",
   },
   {
+    role: Role.GUARDIAN,
     name: "Siti Rahmawati",
     roleTitle: "Wali Murid (1 Anak: Dimas 4A)",
     roleBadge: "Wali Murid",
@@ -56,6 +64,7 @@ const DEMO_ACCOUNTS: DemoAccount[] = [
     description: "Memantau presensi harian Dimas di kelas 4A.",
   },
   {
+    role: Role.TEACHER,
     name: "Ibu Ani Wijayanti, S.Pd.",
     roleTitle: "Wali Kelas 4A",
     roleBadge: "Wali Kelas",
@@ -63,6 +72,7 @@ const DEMO_ACCOUNTS: DemoAccount[] = [
     description: "Input presensi massal, review izin, dan buat pengumuman.",
   },
   {
+    role: Role.ADMIN,
     name: "Pak Hendra Setiawan",
     roleTitle: "Admin Tata Usaha",
     roleBadge: "Admin TU",
@@ -78,6 +88,10 @@ export default function LoginScreen() {
   const { width } = useWindowDimensions();
   const isTablet = width >= breakpoints.tablet;
   const { login, isLoading } = useAuth();
+  const variantConfig = getActiveVariantConfig();
+  const visibleDemoAccounts = DEMO_ACCOUNTS.filter((account) =>
+    isRoleAllowedInCurrentVariant(account.role)
+  );
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -143,8 +157,8 @@ export default function LoginScreen() {
               <View style={styles.monogramBox}>
                 <Text style={styles.monogramText}>NS</Text>
               </View>
-              <Text style={styles.brandTitle}>NeoSchola</Text>
-              <Text style={styles.brandSubtitle}>SDN Nusantara Harapan</Text>
+              <Text style={styles.brandTitle}>{variantConfig.appName}</Text>
+              <Text style={styles.brandSubtitle}>{variantConfig.subtitle}</Text>
             </View>
 
             {/* Form Masuk Utama */}
@@ -248,7 +262,7 @@ export default function LoginScreen() {
 
             {/* Daftar Akun Demo memakai DarkIconRow dipisah Separator */}
             <View style={styles.demoListCard}>
-              {DEMO_ACCOUNTS.map((account, index) => (
+              {visibleDemoAccounts.map((account, index) => (
                 <React.Fragment key={account.email}>
                   {index > 0 && <Separator />}
                   <DarkIconRow

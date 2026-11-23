@@ -109,3 +109,18 @@ Seluruh password akun demo: `neoschola123`
 | `wali.siti@neoschola.demo` | `GUARDIAN` | Siti Rahmawati | Wali murid dari 1 anak: **Dimas Mahendra** (Kelas 4A) |
 | `guru.ani@neoschola.demo` | `TEACHER` | Ani Wijayanti, S.Pd. | Wali Kelas 4A (mengajar Raka Pratama & Dimas Mahendra) |
 | `admin.tu@neoschola.demo` | `ADMIN` | Hendra Setiawan | Staf Tata Usaha SDN Nusantara Harapan |
+
+---
+
+## 5. Rencana Pemisahan Aplikasi per Jenis Akun
+
+Saat ini seluruh peran (`GUARDIAN`, `TEACHER`, `ADMIN`) masih berada di dalam satu bundel `apps/mobile` untuk memudahkan pengujian terpadu. Untuk pemisahan aplikasi per jenis akun di kemudian hari, arsitektur berkembang bertahap:
+
+1. **Tahap 1: Konfigurasi Varian Build (Aktif Sekarang via `EXPO_PUBLIC_APP_VARIANT`)**
+   - `apps/mobile/src/config/appVariant.ts` mengatur mode varian: `"all"` (terpadu saat ini), `"guardian"` (`NeoSchola Wali`), `"teacher"` (`NeoSchola Guru`), `"admin"` (`NeoSchola Admin`), dan `"staff"` (`NeoSchola Staf`).
+   - `AuthProvider` dan `app/login.tsx` sudah membatasi daftar akun uji coba serta akses login berdasarkan varian aktif dan mengarahkan rute rumah/profil menggunakan helper peran.
+2. **Tahap 2: Multi-Flavor Native Build (EAS & `app.config.ts`)**
+   - Ganti `apps/mobile/app.json` menjadi `app.config.ts` yang membaca `EXPO_PUBLIC_APP_VARIANT` untuk membedakan `name`, `slug`, `scheme`, ikon, serta `bundleIdentifier` / Android `package` terpisah (`id.neoschola.wali`, `id.neoschola.guru`, `id.neoschola.admin`) dari satu kode sumber.
+3. **Tahap 3: Pemisahan Paket Workspace Mandiri**
+   - Ekstrak modul inti (`src/theme`, `src/components`, `src/lib`, `src/store`, `src/features/profile`) ke workspace `packages/mobile-core`.
+   - Pisahkan entry point Expo Router menjadi `apps/mobile-wali` (`app/(tabs)` + layar komunikasi wali), `apps/mobile-guru` (presensi kelas, izin, pengumuman, akademik, pesan), dan `apps/mobile-admin` (pengumuman, keuangan SPP, pesan), dengan semua aplikasi tetap berbagi `@neoschola/shared` dan `apps/api`.

@@ -48,7 +48,7 @@ export function StaffAnnouncementsScreen() {
   const router = useRouter();
   const { width } = useWindowDimensions();
   const isTablet = width >= breakpoints.tablet;
-  const { user, classes } = useAuth();
+  const { user, classes, unreadNotificationCount } = useAuth();
   const isAdmin = user?.role === Role.ADMIN;
 
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
@@ -237,7 +237,9 @@ export function StaffAnnouncementsScreen() {
           title="Pengumuman"
           subtitle="Publikasi maklumat penting bagi warga sekolah"
           profileName={user?.name || "Staf"}
+          unreadCount={unreadNotificationCount}
           onPressNotifications={() => router.push("/notifications")}
+          onPressProfile={() => router.push("/(staff)/profil" as any)}
         />
         {/* DarkActionCard CTA Buat Pengumuman */}
         <DarkActionCard
@@ -245,6 +247,7 @@ export function StaffAnnouncementsScreen() {
           title="Buat Pengumuman Baru"
           description="Siarkan informasi kegiatan, libur, atau maklumat darurat kepada seluruh wali murid dan siswa binaan."
           ctaLabel="Tulis Pengumuman"
+          compact
           onPress={handleOpenCreateModal}
           style={styles.actionCardMargin}
         />

@@ -52,7 +52,7 @@ export function ThreadsScreen() {
     ? layout.tabletPaddingX
     : layout.mobilePaddingX;
 
-  const { user, students } = useAuth();
+  const { user, students, unreadNotificationCount } = useAuth();
 
   const [threads, setThreads] = useState<MessageThread[]>([]);
   const [serviceHours, setServiceHours] = useState<string>(
@@ -183,9 +183,11 @@ export function ThreadsScreen() {
           noHorizontalPadding
           title="Pesan"
           subtitle="Komunikasi langsung wali murid dan sekolah"
-          unreadCount={totalUnreadCount}
+          unreadCount={unreadNotificationCount}
           profileName={user?.name || "Wali Murid"}
-          onPressNotifications={() => {}}
+          onPressAnnouncements={() => router.push("/pengumuman")}
+          onPressNotifications={() => router.push("/notifications")}
+          onPressProfile={() => router.push("/(tabs)/profil")}
         />
         {/* Alert jam layanan bersih (pakai - bukan en-dash) */}
         <Alert
@@ -208,6 +210,7 @@ export function ThreadsScreen() {
           title="Mulai Pesan Baru"
           description="Sampaikan pertanyaan atau konsultasi langsung kepada wali kelas mengenai perkembangan belajar anak."
           ctaLabel="Tulis Pesan Baru"
+          compact
           onPress={handleOpenNewThreadModal}
           style={styles.actionCard}
         />

@@ -47,7 +47,7 @@ export function StaffLeaveScreen() {
   const router = useRouter();
   const { width } = useWindowDimensions();
   const isTablet = width >= breakpoints.tablet;
-  const { user } = useAuth();
+  const { user, unreadNotificationCount } = useAuth();
 
   const [items, setItems] = useState<LeaveRequest[]>([]);
   const [filter, setFilter] = useState<LeaveFilter>("PENDING");
@@ -171,7 +171,9 @@ export function StaffLeaveScreen() {
           title="Pengajuan Izin"
           subtitle="Tinjau dan proses permohonan izin sakit dan dispensasi"
           profileName={user?.name || "Staf"}
+          unreadCount={unreadNotificationCount}
           onPressNotifications={() => router.push("/notifications")}
+          onPressProfile={() => router.push("/(staff)/profil" as any)}
         />
         <ScrollView
           horizontal
