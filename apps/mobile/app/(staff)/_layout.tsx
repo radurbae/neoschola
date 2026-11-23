@@ -78,6 +78,7 @@ export default function StaffTabsLayout() {
         screenOptions={{
           headerShown: false,
           tabBarStyle: { display: "none" },
+          animation: "fade",
         }}
       >
         <Tabs.Screen name="index" options={{ title: "Ringkasan" }} />

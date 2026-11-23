@@ -6,6 +6,7 @@ import {
   ScrollView,
   RefreshControl,
   Alert as NativeAlert,
+  useWindowDimensions,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import {
@@ -31,6 +32,8 @@ import {
 import { useAuth } from "../../store/auth";
 import * as api from "../../lib/api";
 import {
+  breakpoints,
+  layout,
   radius,
   shadcn,
   spacing,
@@ -42,6 +45,8 @@ type LeaveFilter = "PENDING" | "APPROVED" | "REJECTED" | "ALL";
 
 export function StaffLeaveScreen() {
   const router = useRouter();
+  const { width } = useWindowDimensions();
+  const isTablet = width >= breakpoints.tablet;
   const { user } = useAuth();
 
   const [items, setItems] = useState<LeaveRequest[]>([]);
@@ -142,8 +147,20 @@ export function StaffLeaveScreen() {
       />
 
       <ScrollView
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[
+          styles.scrollContent,
+          {
+            paddingHorizontal: isTablet
+              ? layout.tabletPaddingX
+              : layout.mobilePaddingX,
+            gap: layout.sectionGap,
+            paddingBottom: layout.scrollBottomPad,
+          },
+        ]}
         showsVerticalScrollIndicator={false}
+        scrollEventThrottle={16}
+        decelerationRate="normal"
+        bounces={true}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -429,8 +446,7 @@ const styles = StyleSheet.create({
     backgroundColor: shadcn.background,
   },
   scrollContent: {
-    padding: spacing.lg,
-    paddingBottom: spacing.max,
+    flexGrow: 1,
   },
   filterRow: {
     paddingVertical: spacing.xs,
@@ -441,7 +457,7 @@ const styles = StyleSheet.create({
   },
   requestCard: {
     borderRadius: radius.xl,
-    padding: spacing.md,
+    padding: layout.cardPadding,
     backgroundColor: shadcn.card,
     borderWidth: 1,
     borderColor: shadcn.border,
@@ -456,6 +472,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xs,
   },
   infoText: {
+    fontFamily: typography.family.regular,
     fontSize: typography.size.xs,
     color: shadcn.mutedForeground,
     flexShrink: 1,
@@ -467,12 +484,14 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xs,
   },
   reasonLabel: {
+    fontFamily: typography.family.semibold,
     fontSize: 11,
     fontWeight: typography.weight.semibold,
     color: shadcn.mutedForeground,
     marginBottom: 2,
   },
   reasonText: {
+    fontFamily: typography.family.regular,
     fontSize: typography.size.xs,
     color: shadcn.foreground,
     lineHeight: 18,
@@ -484,6 +503,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   guardianText: {
+    fontFamily: typography.family.regular,
     fontSize: 11,
     color: shadcn.mutedForeground,
     flexShrink: 1,
@@ -509,10 +529,12 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   reviewStatusTitle: {
+    fontFamily: typography.family.semibold,
     fontSize: typography.size.xs,
     fontWeight: typography.weight.semibold,
   },
   reviewNotesText: {
+    fontFamily: typography.family.regular,
     fontSize: typography.size.xs,
     color: shadcn.foreground,
     fontStyle: "italic",
@@ -551,11 +573,13 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   sheetStudentName: {
+    fontFamily: typography.family.semibold,
     fontSize: typography.size.sm,
     fontWeight: typography.weight.semibold,
     color: shadcn.foreground,
   },
   sheetClassText: {
+    fontFamily: typography.family.regular,
     fontSize: typography.size.xs,
     color: shadcn.mutedForeground,
   },
@@ -563,6 +587,7 @@ const styles = StyleSheet.create({
     marginVertical: spacing.sm,
   },
   sheetReasonText: {
+    fontFamily: typography.family.regular,
     fontSize: typography.size.xs,
     color: shadcn.foreground,
     fontStyle: "italic",

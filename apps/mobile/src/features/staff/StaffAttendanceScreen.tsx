@@ -25,6 +25,7 @@ import {
   StateView,
   Avatar,
   Alert,
+  SpringPressable,
 } from "../../components/ui";
 import { useAuth } from "../../store/auth";
 import * as api from "../../lib/api";
@@ -32,6 +33,7 @@ import type { ClassAttendanceItem } from "../../lib/api";
 import {
   bento,
   breakpoints,
+  layout,
   radius,
   shadcn,
   spacing,
@@ -213,8 +215,20 @@ export function StaffAttendanceScreen() {
       />
 
       <ScrollView
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[
+          styles.scrollContent,
+          {
+            paddingHorizontal: isTablet
+              ? layout.tabletPaddingX
+              : layout.mobilePaddingX,
+            gap: layout.sectionGap,
+            paddingBottom: layout.scrollBottomPad,
+          },
+        ]}
         showsVerticalScrollIndicator={false}
+        scrollEventThrottle={16}
+        decelerationRate="normal"
+        bounces={true}
         keyboardShouldPersistTaps="handled"
         refreshControl={
           <RefreshControl
@@ -225,35 +239,75 @@ export function StaffAttendanceScreen() {
           />
         }
       >
-        <View style={isTablet ? styles.statsRowTablet : styles.statsRowMobile}>
-          <PastelStatCard
-            tone="mint"
-            value={String(summaryCounts[AttendanceStatus.HADIR])}
-            label="Hadir"
-            icon="checkmark-circle-outline"
-            trendText="Tepat waktu"
-            style={styles.statCardItem}
-          />
-          <PastelStatCard
-            tone="butter"
-            value={String(summaryCounts[AttendanceStatus.SAKIT])}
-            label="Sakit"
-            icon="medkit-outline"
-            trendText="Perlu istirahat"
-            style={styles.statCardItem}
-          />
-          <PastelStatCard
-            tone="iceBlue"
-            value={String(
-              summaryCounts[AttendanceStatus.IZIN] +
-                summaryCounts[AttendanceStatus.ALPA]
-            )}
-            label="Izin & Alpa"
-            icon="alert-circle-outline"
-            trendText={`${summaryCounts[AttendanceStatus.IZIN]} Izin / ${summaryCounts[AttendanceStatus.ALPA]} Alpa`}
-            style={styles.statCardItem}
-          />
-        </View>
+        {isTablet ? (
+          <View style={styles.statsRowTablet}>
+            <PastelStatCard
+              tone="mint"
+              value={String(summaryCounts[AttendanceStatus.HADIR])}
+              label="Hadir"
+              icon="checkmark-circle-outline"
+              trendText="Tepat waktu"
+              style={styles.statCardItemTablet}
+            />
+            <PastelStatCard
+              tone="butter"
+              value={String(summaryCounts[AttendanceStatus.SAKIT])}
+              label="Sakit"
+              icon="medkit-outline"
+              trendText="Perlu istirahat"
+              style={styles.statCardItemTablet}
+            />
+            <PastelStatCard
+              tone="iceBlue"
+              value={String(
+                summaryCounts[AttendanceStatus.IZIN] +
+                  summaryCounts[AttendanceStatus.ALPA]
+              )}
+              label="Izin & Alpa"
+              icon="alert-circle-outline"
+              trendText={`${summaryCounts[AttendanceStatus.IZIN]} Izin / ${summaryCounts[AttendanceStatus.ALPA]} Alpa`}
+              style={styles.statCardItemTablet}
+            />
+          </View>
+        ) : (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            snapToInterval={188}
+            decelerationRate="fast"
+            snapToAlignment="start"
+            contentContainerStyle={styles.mobileStripContent}
+            style={styles.mobileStrip}
+          >
+            <PastelStatCard
+              tone="mint"
+              value={String(summaryCounts[AttendanceStatus.HADIR])}
+              label="Hadir"
+              icon="checkmark-circle-outline"
+              trendText="Tepat waktu"
+              style={styles.statCardItemMobile}
+            />
+            <PastelStatCard
+              tone="butter"
+              value={String(summaryCounts[AttendanceStatus.SAKIT])}
+              label="Sakit"
+              icon="medkit-outline"
+              trendText="Perlu istirahat"
+              style={styles.statCardItemMobile}
+            />
+            <PastelStatCard
+              tone="iceBlue"
+              value={String(
+                summaryCounts[AttendanceStatus.IZIN] +
+                  summaryCounts[AttendanceStatus.ALPA]
+              )}
+              label="Izin & Alpa"
+              icon="alert-circle-outline"
+              trendText={`${summaryCounts[AttendanceStatus.IZIN]} Izin / ${summaryCounts[AttendanceStatus.ALPA]} Alpa`}
+              style={styles.statCardItemMobile}
+            />
+          </ScrollView>
+        )}
 
         <Card style={styles.controlCard}>
           <Text style={styles.controlLabel}>Pilih Rombel / Kelas:</Text>
@@ -265,14 +319,13 @@ export function StaffAttendanceScreen() {
             {availableClasses.map((cls) => {
               const isSelected = cls.id === selectedClassId;
               return (
-                <TouchableOpacity
+                <SpringPressable
                   key={cls.id}
                   style={[
                     styles.classChip,
                     isSelected ? styles.classChipSelected : styles.classChipUnselected,
                   ]}
                   onPress={() => setSelectedClassId(cls.id)}
-                  activeOpacity={0.7}
                   accessibilityRole="button"
                   accessibilityLabel={`Pilih rombel ${cls.name}`}
                 >
@@ -284,7 +337,7 @@ export function StaffAttendanceScreen() {
                   >
                     {cls.name}
                   </Text>
-                </TouchableOpacity>
+                </SpringPressable>
               );
             })}
           </ScrollView>
@@ -376,7 +429,7 @@ export function StaffAttendanceScreen() {
                   {/* 4 Tombol Toggle Status Cepat (Min 44x44pt) */}
                   <View style={styles.toggleRow}>
                     {/* HADIR */}
-                    <TouchableOpacity
+                    <SpringPressable
                       style={[
                         styles.toggleButton,
                         currentStatus === AttendanceStatus.HADIR
@@ -386,7 +439,6 @@ export function StaffAttendanceScreen() {
                       onPress={() =>
                         handleStatusChange(student.student_id, AttendanceStatus.HADIR)
                       }
-                      activeOpacity={0.7}
                       accessibilityRole="button"
                       accessibilityLabel={`Hadir untuk ${student.student_name}`}
                     >
@@ -410,10 +462,10 @@ export function StaffAttendanceScreen() {
                       >
                         Hadir
                       </Text>
-                    </TouchableOpacity>
+                    </SpringPressable>
 
                     {/* SAKIT */}
-                    <TouchableOpacity
+                    <SpringPressable
                       style={[
                         styles.toggleButton,
                         currentStatus === AttendanceStatus.SAKIT
@@ -423,7 +475,6 @@ export function StaffAttendanceScreen() {
                       onPress={() =>
                         handleStatusChange(student.student_id, AttendanceStatus.SAKIT)
                       }
-                      activeOpacity={0.7}
                       accessibilityRole="button"
                       accessibilityLabel={`Sakit untuk ${student.student_name}`}
                     >
@@ -447,10 +498,10 @@ export function StaffAttendanceScreen() {
                       >
                         Sakit
                       </Text>
-                    </TouchableOpacity>
+                    </SpringPressable>
 
                     {/* IZIN */}
-                    <TouchableOpacity
+                    <SpringPressable
                       style={[
                         styles.toggleButton,
                         currentStatus === AttendanceStatus.IZIN
@@ -460,7 +511,6 @@ export function StaffAttendanceScreen() {
                       onPress={() =>
                         handleStatusChange(student.student_id, AttendanceStatus.IZIN)
                       }
-                      activeOpacity={0.7}
                       accessibilityRole="button"
                       accessibilityLabel={`Izin untuk ${student.student_name}`}
                     >
@@ -484,10 +534,10 @@ export function StaffAttendanceScreen() {
                       >
                         Izin
                       </Text>
-                    </TouchableOpacity>
+                    </SpringPressable>
 
                     {/* ALPA */}
-                    <TouchableOpacity
+                    <SpringPressable
                       style={[
                         styles.toggleButton,
                         currentStatus === AttendanceStatus.ALPA
@@ -497,7 +547,6 @@ export function StaffAttendanceScreen() {
                       onPress={() =>
                         handleStatusChange(student.student_id, AttendanceStatus.ALPA)
                       }
-                      activeOpacity={0.7}
                       accessibilityRole="button"
                       accessibilityLabel={`Alpa untuk ${student.student_name}`}
                     >
@@ -521,7 +570,7 @@ export function StaffAttendanceScreen() {
                       >
                         Alpa
                       </Text>
-                    </TouchableOpacity>
+                    </SpringPressable>
                   </View>
 
                   {/* Input Catatan Opsional */}
@@ -562,31 +611,37 @@ const styles = StyleSheet.create({
     backgroundColor: shadcn.background,
   },
   scrollContent: {
-    padding: spacing.lg,
-    paddingBottom: spacing.max,
+    flexGrow: 1,
   },
   statsRowTablet: {
     flexDirection: "row",
-    gap: spacing.md,
-    marginBottom: spacing.md,
+    alignItems: "stretch",
+    gap: 14,
   },
-  statsRowMobile: {
-    flexDirection: "column",
-    gap: spacing.sm,
-    marginBottom: spacing.md,
-  },
-  statCardItem: {
+  statCardItemTablet: {
     flex: 1,
+    minHeight: 164,
+  },
+  mobileStrip: {
+    marginHorizontal: -layout.mobilePaddingX,
+  },
+  mobileStripContent: {
+    paddingHorizontal: layout.mobilePaddingX,
+    gap: 12,
+  },
+  statCardItemMobile: {
+    width: 176,
+    minHeight: 164,
   },
   controlCard: {
     backgroundColor: shadcn.card,
     borderRadius: radius.xl,
-    padding: spacing.md,
-    marginBottom: spacing.md,
+    padding: layout.cardPadding,
     borderWidth: 1,
     borderColor: shadcn.border,
   },
   controlLabel: {
+    fontFamily: typography.family.medium,
     fontSize: typography.size.sm,
     fontWeight: typography.weight.medium,
     color: shadcn.foreground,
@@ -614,13 +669,16 @@ const styles = StyleSheet.create({
     borderColor: shadcn.border,
   },
   classChipText: {
+    fontFamily: typography.family.medium,
     fontSize: typography.size.xs,
     fontWeight: typography.weight.medium,
   },
   classChipTextSelected: {
+    fontFamily: typography.family.semibold,
     color: shadcn.primaryForeground,
   },
   classChipTextUnselected: {
+    fontFamily: typography.family.medium,
     color: shadcn.foreground,
   },
   dateRow: {
@@ -642,6 +700,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.xs,
   },
   formattedDateInfo: {
+    fontFamily: typography.family.regular,
     fontSize: typography.size.xs,
     color: shadcn.mutedForeground,
   },
@@ -656,7 +715,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.xl,
     borderWidth: 1,
     borderColor: shadcn.border,
-    padding: spacing.md,
+    padding: layout.cardPadding,
   },
   studentHeader: {
     flexDirection: "row",
@@ -670,11 +729,13 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   studentName: {
+    fontFamily: typography.family.semibold,
     fontSize: typography.size.sm,
     fontWeight: typography.weight.semibold,
     color: shadcn.foreground,
   },
   studentNis: {
+    fontFamily: typography.family.regular,
     fontSize: typography.size.xs,
     color: shadcn.mutedForeground,
     fontVariant: ["tabular-nums"],
@@ -698,6 +759,7 @@ const styles = StyleSheet.create({
     borderColor: shadcn.border,
   },
   toggleButtonText: {
+    fontFamily: typography.family.bold,
     fontSize: typography.size.sm,
     fontWeight: typography.weight.bold,
   },
@@ -705,6 +767,7 @@ const styles = StyleSheet.create({
     color: shadcn.mutedForeground,
   },
   toggleSubText: {
+    fontFamily: typography.family.medium,
     fontSize: 10,
     marginTop: 1,
   },

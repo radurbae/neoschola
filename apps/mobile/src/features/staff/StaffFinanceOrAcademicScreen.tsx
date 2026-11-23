@@ -34,11 +34,13 @@ import {
   Sheet,
   Tabs,
   Separator,
+  SpringPressable,
 } from "../../components/ui";
 import { useAuth } from "../../store/auth";
 import * as api from "../../lib/api";
 import {
   breakpoints,
+  layout,
   radius,
   shadcn,
   spacing,
@@ -415,8 +417,20 @@ export function StaffFinanceOrAcademicScreen() {
         />
 
         <ScrollView
-          contentContainerStyle={styles.scrollContent}
+          contentContainerStyle={[
+            styles.scrollContent,
+            {
+              paddingHorizontal: isTablet
+                ? layout.tabletPaddingX
+                : layout.mobilePaddingX,
+              gap: layout.sectionGap,
+              paddingBottom: layout.scrollBottomPad,
+            },
+          ]}
           showsVerticalScrollIndicator={false}
+          scrollEventThrottle={16}
+          decelerationRate="normal"
+          bounces={true}
           refreshControl={
             <RefreshControl
               refreshing={invoicesRefreshing}
@@ -426,8 +440,8 @@ export function StaffFinanceOrAcademicScreen() {
             />
           }
         >
-          {/* 2 PastelStatCard: butter "Menunggu" & mint "Lunas" */}
-          <View style={isTablet ? styles.statsRowTablet : styles.statsRowMobile}>
+          {/* 2 PastelStatCard mode Admin sejajar sama tinggi */}
+          <View style={styles.statsRow}>
             <PastelStatCard
               tone="butter"
               value={String(waitingInvoices.length)}
@@ -686,14 +700,13 @@ export function StaffFinanceOrAcademicScreen() {
                 {students.map((st) => {
                   const isSelected = selectedStudentForInvoice === st.id;
                   return (
-                    <TouchableOpacity
+                    <SpringPressable
                       key={st.id}
                       style={[
                         styles.choiceChip,
                         isSelected ? styles.choiceChipSelected : styles.choiceChipUnselected,
                       ]}
                       onPress={() => setSelectedStudentForInvoice(st.id)}
-                      activeOpacity={0.7}
                       accessibilityRole="button"
                       accessibilityLabel={`Pilih ${st.full_name}`}
                     >
@@ -707,7 +720,7 @@ export function StaffFinanceOrAcademicScreen() {
                       >
                         {st.full_name} ({st.class_name || "Siswa"})
                       </Text>
-                    </TouchableOpacity>
+                    </SpringPressable>
                   );
                 })}
               </ScrollView>
@@ -812,8 +825,20 @@ export function StaffFinanceOrAcademicScreen() {
       />
 
       <ScrollView
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[
+          styles.scrollContent,
+          {
+            paddingHorizontal: isTablet
+              ? layout.tabletPaddingX
+              : layout.mobilePaddingX,
+            gap: layout.sectionGap,
+            paddingBottom: layout.scrollBottomPad,
+          },
+        ]}
         showsVerticalScrollIndicator={false}
+        scrollEventThrottle={16}
+        decelerationRate="normal"
+        bounces={true}
         refreshControl={
           <RefreshControl
             refreshing={assignmentsRefreshing}
@@ -904,14 +929,13 @@ export function StaffFinanceOrAcademicScreen() {
               {students.map((st) => {
                 const isSelected = selectedStudentForGrade === st.id;
                 return (
-                  <TouchableOpacity
+                  <SpringPressable
                     key={st.id}
                     style={[
                       styles.choiceChip,
                       isSelected ? styles.choiceChipSelected : styles.choiceChipUnselected,
                     ]}
                     onPress={() => setSelectedStudentForGrade(st.id)}
-                    activeOpacity={0.7}
                     accessibilityRole="button"
                     accessibilityLabel={`Pilih siswa ${st.full_name}`}
                   >
@@ -925,7 +949,7 @@ export function StaffFinanceOrAcademicScreen() {
                     >
                       {st.full_name} ({st.class_name || "Siswa"})
                     </Text>
-                  </TouchableOpacity>
+                  </SpringPressable>
                 );
               })}
             </ScrollView>
@@ -1115,21 +1139,16 @@ const styles = StyleSheet.create({
     backgroundColor: shadcn.background,
   },
   scrollContent: {
-    padding: spacing.lg,
-    paddingBottom: spacing.max,
+    flexGrow: 1,
   },
-  statsRowTablet: {
+  statsRow: {
     flexDirection: "row",
-    gap: spacing.md,
-    marginBottom: spacing.md,
-  },
-  statsRowMobile: {
-    flexDirection: "column",
-    gap: spacing.sm,
-    marginBottom: spacing.md,
+    alignItems: "stretch",
+    gap: 14,
   },
   statCardItem: {
     flex: 1,
+    minHeight: 164,
   },
   actionBtnTop: {
     marginBottom: spacing.md,
@@ -1164,13 +1183,16 @@ const styles = StyleSheet.create({
     borderColor: shadcn.border,
   },
   choiceChipText: {
+    fontFamily: typography.family.medium,
     fontSize: typography.size.xs,
     fontWeight: typography.weight.medium,
   },
   choiceChipTextSelected: {
+    fontFamily: typography.family.semibold,
     color: shadcn.primaryForeground,
   },
   choiceChipTextUnselected: {
+    fontFamily: typography.family.medium,
     color: shadcn.foreground,
   },
   invoicesList: {
@@ -1196,17 +1218,20 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xs,
   },
   verificationBoxTitle: {
+    fontFamily: typography.family.semibold,
     fontSize: typography.size.xs,
     fontWeight: typography.weight.semibold,
     color: shadcn.status.warning.text,
     flexShrink: 1,
   },
   proofField: {
+    fontFamily: typography.family.regular,
     fontSize: typography.size.xs,
     color: shadcn.mutedForeground,
     marginBottom: 2,
   },
   proofValue: {
+    fontFamily: typography.family.medium,
     color: shadcn.foreground,
     fontWeight: typography.weight.medium,
   },
@@ -1233,6 +1258,7 @@ const styles = StyleSheet.create({
     borderTopColor: shadcn.border,
   },
   receiptNoText: {
+    fontFamily: typography.family.medium,
     fontSize: typography.size.xs,
     color: shadcn.status.success.text,
     fontWeight: typography.weight.medium,
@@ -1267,6 +1293,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xs,
   },
   formErrorText: {
+    fontFamily: typography.family.regular,
     color: shadcn.status.danger.text,
     fontSize: typography.size.xs,
     flex: 1,
@@ -1290,6 +1317,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   receiptSheetTitle: {
+    fontFamily: typography.family.bold,
     fontSize: typography.size.base,
     fontWeight: typography.weight.bold,
     color: shadcn.foreground,
@@ -1297,6 +1325,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xs,
   },
   receiptSheetSub: {
+    fontFamily: typography.family.regular,
     fontSize: typography.size.xs,
     color: shadcn.mutedForeground,
     textAlign: "center",
@@ -1310,11 +1339,13 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
   },
   receiptLabel: {
+    fontFamily: typography.family.regular,
     fontSize: 11,
     color: shadcn.mutedForeground,
     marginBottom: 2,
   },
   receiptValueHighlight: {
+    fontFamily: typography.family.bold,
     fontSize: typography.size.base,
     fontWeight: typography.weight.bold,
     color: shadcn.foreground,
@@ -1324,6 +1355,7 @@ const styles = StyleSheet.create({
     marginVertical: spacing.sm,
   },
   receiptValue: {
+    fontFamily: typography.family.semibold,
     fontSize: typography.size.sm,
     fontWeight: typography.weight.semibold,
     color: shadcn.foreground,
