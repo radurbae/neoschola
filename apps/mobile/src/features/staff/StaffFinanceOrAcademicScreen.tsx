@@ -6,7 +6,7 @@ import {
   TouchableOpacity,
   ScrollView,
   RefreshControl,
-  Alert,
+  Alert as NativeAlert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import {
@@ -26,13 +26,16 @@ import {
   Chip,
   Button,
   Input,
+  Label,
   StateView,
-  ModalSheet,
-  SectionHeader,
+  Sheet,
+  Tabs,
+  Separator,
+  Avatar,
 } from "../../components/ui";
 import { useAuth } from "../../store/auth";
 import * as api from "../../lib/api";
-import { colors, spacing, radius, typography, touchTarget } from "../../theme/tokens";
+import { shadcn, spacing, radius, typography, touchTarget } from "../../theme/tokens";
 
 type InvoiceFilter = "WAITING" | "UNPAID" | "PAID" | "ALL";
 type TeacherAcademicMode = "ASSIGNMENTS" | "GRADES";
@@ -190,14 +193,14 @@ export function StaffFinanceOrAcademicScreen() {
 
       await loadInvoices(true);
     } catch (err: any) {
-      Alert.alert("Kendala", err?.message || "Gagal memverifikasi pembayaran.");
+      NativeAlert.alert("Kendala", err?.message || "Gagal memverifikasi pembayaran.");
     } finally {
       setActionLoadingId(null);
     }
   };
 
   const handleRejectPayment = async (inv: Invoice) => {
-    Alert.alert(
+    NativeAlert.alert(
       "Tolak Pembayaran",
       `Apakah Anda yakin ingin menolak bukti bayar untuk ${inv.title}?`,
       [
@@ -212,10 +215,10 @@ export function StaffFinanceOrAcademicScreen() {
                 status: "REJECTED",
                 notes: "Bukti pembayaran tidak sesuai atau tidak dapat diverifikasi.",
               });
-              Alert.alert("Ditolak", "Status pembayaran telah ditolak.");
+              NativeAlert.alert("Ditolak", "Status pembayaran telah ditolak.");
               await loadInvoices(true);
             } catch (err: any) {
-              Alert.alert("Kendala", err?.message || "Gagal menolak pembayaran.");
+              NativeAlert.alert("Kendala", err?.message || "Gagal menolak pembayaran.");
             } finally {
               setActionLoadingId(null);
             }
@@ -269,7 +272,7 @@ export function StaffFinanceOrAcademicScreen() {
         due_date: invoiceDueDate.trim(),
       });
 
-      Alert.alert("Berhasil", "Tagihan baru berhasil diterbitkan.");
+      NativeAlert.alert("Berhasil", "Tagihan baru berhasil diterbitkan.");
       setInvoiceModalVisible(false);
       await loadInvoices(true);
     } catch (err: any) {
@@ -321,7 +324,7 @@ export function StaffFinanceOrAcademicScreen() {
         due_date: assignmentDueDate.trim(),
       });
 
-      Alert.alert("Berhasil", "Tugas baru berhasil dibagikan.");
+      NativeAlert.alert("Berhasil", "Tugas baru berhasil dibagikan.");
       setAssignmentModalVisible(false);
       await loadAssignments(true);
     } catch (err: any) {
@@ -334,7 +337,7 @@ export function StaffFinanceOrAcademicScreen() {
   const handleOpenCreateGrade = () => {
     setGradeSubject("Matematika");
     setGradeSemester(1);
-    setGradeAcademicYear("2024/2025");
+    setGradeAcademicYear("2026/2027");
     setGradeScoreStr("85");
     setGradeNotes("Sangat baik dalam pemahaman konsep.");
     setGradeFormError(null);
@@ -369,7 +372,7 @@ export function StaffFinanceOrAcademicScreen() {
         notes: gradeNotes.trim() || undefined,
       });
 
-      Alert.alert("Berhasil", "Nilai siswa berhasil disimpan.");
+      NativeAlert.alert("Berhasil", "Nilai siswa berhasil disimpan.");
       setGradeModalVisible(false);
       await loadGradesForStudent(selectedStudentForGrade);
     } catch (err: any) {
@@ -411,7 +414,7 @@ export function StaffFinanceOrAcademicScreen() {
             accessibilityRole="button"
             accessibilityLabel="Buat tagihan baru"
           >
-            <Ionicons name="add" size={24} color={colors.primary} />
+            <Ionicons name="add" size={20} color={shadcn.foreground} />
           </TouchableOpacity>
         }
       >
@@ -422,8 +425,8 @@ export function StaffFinanceOrAcademicScreen() {
             <RefreshControl
               refreshing={invoicesRefreshing}
               onRefresh={() => loadInvoices(true)}
-              colors={[colors.primary]}
-              tintColor={colors.primary}
+              colors={[shadcn.primary]}
+              tintColor={shadcn.primary}
             />
           }
         >
@@ -431,9 +434,9 @@ export function StaffFinanceOrAcademicScreen() {
           <Button
             title="Buat Tagihan Baru"
             onPress={handleOpenCreateInvoice}
-            variant="primary"
+            variant="default"
             accessibilityLabel="Buka formulir pembuatan tagihan baru"
-            leftIcon={<Ionicons name="wallet" size={18} color={colors.textInverse} />}
+            leftIcon={<Ionicons name="wallet-outline" size={18} color={shadcn.primaryForeground} />}
             style={styles.actionBtnTop}
           />
 
@@ -512,9 +515,9 @@ export function StaffFinanceOrAcademicScreen() {
                     case InvoiceStatus.WAITING_VERIFICATION:
                       return <Badge label="Verifikasi" variant="warning" />;
                     case InvoiceStatus.OVERDUE:
-                      return <Badge label="Terlambat" variant="danger" />;
+                      return <Badge label="Terlambat" variant="destructive" />;
                     case InvoiceStatus.REJECTED:
-                      return <Badge label="Ditolak" variant="danger" />;
+                      return <Badge label="Ditolak" variant="destructive" />;
                     case InvoiceStatus.UNPAID:
                     default:
                       return <Badge label="Belum Lunas" variant="neutral" />;
@@ -554,7 +557,7 @@ export function StaffFinanceOrAcademicScreen() {
                           <Ionicons
                             name="receipt-outline"
                             size={16}
-                            color={colors.badge.warning.text}
+                            color={shadcn.status.warning.text}
                           />
                           <Text style={styles.verificationBoxTitle}>
                             Rincian Pembayaran Masuk
@@ -579,41 +582,43 @@ export function StaffFinanceOrAcademicScreen() {
                           </Text>
                         )}
 
+                        <Separator style={styles.verifySeparator} />
+
                         {/* Tombol Aksi Verifikasi & Tolak */}
                         <View style={styles.verifyActionsRow}>
-                          <TouchableOpacity
-                            style={styles.rejectBtn}
+                          <Button
+                            title="Tolak"
+                            variant="outline"
+                            size="sm"
                             onPress={() => handleRejectPayment(inv)}
                             disabled={isActionBusy}
-                            activeOpacity={0.7}
-                            accessibilityRole="button"
+                            leftIcon={
+                              <Ionicons
+                                name="close"
+                                size={16}
+                                color={shadcn.destructive}
+                              />
+                            }
                             accessibilityLabel={`Tolak bukti pembayaran ${inv.title}`}
-                          >
-                            <Ionicons
-                              name="close"
-                              size={18}
-                              color={colors.badge.danger.text}
-                            />
-                            <Text style={styles.rejectBtnText}>Tolak</Text>
-                          </TouchableOpacity>
+                            style={styles.rejectBtn}
+                          />
 
-                          <TouchableOpacity
-                            style={styles.approveBtn}
+                          <Button
+                            title={isActionBusy ? "Memproses..." : "Verifikasi Lunas"}
+                            variant="default"
+                            size="sm"
                             onPress={() => handleVerifyPaid(inv)}
                             disabled={isActionBusy}
-                            activeOpacity={0.7}
-                            accessibilityRole="button"
+                            leftIcon={
+                              <Ionicons
+                                name="checkmark"
+                                size={16}
+                                color={shadcn.primaryForeground}
+                              />
+                            }
                             accessibilityLabel={`Verifikasi lunas tagihan ${inv.title}`}
-                          >
-                            <Ionicons
-                              name="checkmark"
-                              size={18}
-                              color={colors.textInverse}
-                            />
-                            <Text style={styles.approveBtnText}>
-                              {isActionBusy ? "Memproses..." : "Verifikasi Lunas"}
-                            </Text>
-                          </TouchableOpacity>
+                            style={styles.approveBtn}
+                          />
                         </View>
                       </View>
                     )}
@@ -624,7 +629,7 @@ export function StaffFinanceOrAcademicScreen() {
                         <Ionicons
                           name="checkmark-circle"
                           size={16}
-                          color={colors.badge.success.text}
+                          color={shadcn.status.success.text}
                         />
                         <Text style={styles.receiptNoText}>
                           No. Kuitansi: {inv.receipt_no}
@@ -637,21 +642,21 @@ export function StaffFinanceOrAcademicScreen() {
             </View>
           )}
 
-          {/* Modal Buat Tagihan Baru */}
-          <ModalSheet
+          {/* Sheet Buat Tagihan Baru */}
+          <Sheet
             visible={invoiceModalVisible}
             onClose={() => setInvoiceModalVisible(false)}
             title="Buat Tagihan Baru"
           >
-            <View style={styles.modalBody}>
+            <View style={styles.sheetBody}>
               {Boolean(invoiceFormError) && (
                 <View style={styles.formErrorBox}>
-                  <Ionicons name="alert-circle" size={18} color={colors.badge.danger.text} />
+                  <Ionicons name="alert-circle" size={18} color={shadcn.status.danger.text} />
                   <Text style={styles.formErrorText}>{invoiceFormError}</Text>
                 </View>
               )}
 
-              <Text style={styles.formSectionLabel}>Pilih Siswa Penerima:</Text>
+              <Label required>Pilih Siswa Penerima</Label>
               <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
@@ -686,16 +691,16 @@ export function StaffFinanceOrAcademicScreen() {
                 })}
               </ScrollView>
 
+              <Label required>Judul Tagihan</Label>
               <Input
-                label="Judul Tagihan"
                 value={invoiceTitle}
                 onChangeText={setInvoiceTitle}
-                placeholder="Contoh: SPP Bulan November 2024"
+                placeholder="Contoh: SPP Bulan November 2026"
                 accessibilityLabel="Input judul tagihan"
               />
 
+              <Label required>Nominal Pembayaran (Rp)</Label>
               <Input
-                label="Nominal Pembayaran (Rp)"
                 value={invoiceAmountStr}
                 onChangeText={setInvoiceAmountStr}
                 keyboardType="numeric"
@@ -703,16 +708,16 @@ export function StaffFinanceOrAcademicScreen() {
                 accessibilityLabel="Input nominal tagihan"
               />
 
+              <Label required>Jatuh Tempo (YYYY-MM-DD)</Label>
               <Input
-                label="Jatuh Tempo (YYYY-MM-DD)"
                 value={invoiceDueDate}
                 onChangeText={setInvoiceDueDate}
-                placeholder="2024-11-10"
+                placeholder="2026-11-10"
                 accessibilityLabel="Input tanggal jatuh tempo"
               />
 
+              <Label>Deskripsi / Keterangan (Opsional)</Label>
               <Input
-                label="Deskripsi / Keterangan (Opsional)"
                 value={invoiceDescription}
                 onChangeText={setInvoiceDescription}
                 placeholder="Rincian tambahan..."
@@ -722,27 +727,27 @@ export function StaffFinanceOrAcademicScreen() {
               <Button
                 title={creatingInvoice ? "Menerbitkan..." : "Terbitkan Tagihan"}
                 onPress={handleCreateInvoice}
-                variant="primary"
+                variant="default"
                 loading={creatingInvoice}
                 accessibilityLabel="Konfirmasi terbitkan tagihan baru"
-                style={styles.modalSubmitBtn}
+                style={styles.sheetSubmitBtn}
               />
             </View>
-          </ModalSheet>
+          </Sheet>
 
-          {/* Modal Pop-up Kuitansi Terbit */}
-          <ModalSheet
+          {/* Sheet Pop-up Kuitansi Terbit */}
+          <Sheet
             visible={Boolean(verifiedReceipt)}
             onClose={() => setVerifiedReceipt(null)}
             title="Kuitansi Resmi Diterbitkan"
           >
             {verifiedReceipt && (
-              <View style={styles.receiptModalBody}>
+              <View style={styles.receiptSheetBody}>
                 <View style={styles.receiptIconCircle}>
-                  <Ionicons name="checkmark-done" size={32} color={colors.primary} />
+                  <Ionicons name="checkmark-done" size={28} color={shadcn.foreground} />
                 </View>
-                <Text style={styles.receiptModalTitle}>Verifikasi Pembayaran Berhasil</Text>
-                <Text style={styles.receiptModalSub}>
+                <Text style={styles.receiptSheetTitle}>Verifikasi Pembayaran Berhasil</Text>
+                <Text style={styles.receiptSheetSub}>
                   Bukti pembayaran telah disahkan dan kuitansi resmi telah dicatat ke sistem.
                 </Text>
 
@@ -751,7 +756,7 @@ export function StaffFinanceOrAcademicScreen() {
                   <Text style={styles.receiptValueHighlight}>
                     {verifiedReceipt.receiptNo}
                   </Text>
-                  <View style={styles.receiptDivider} />
+                  <Separator style={styles.receiptDivider} />
                   <Text style={styles.receiptLabel}>Peserta Didik:</Text>
                   <Text style={styles.receiptValue}>{verifiedReceipt.studentName}</Text>
                   <Text style={styles.receiptLabel}>Jumlah Terbayar:</Text>
@@ -763,13 +768,13 @@ export function StaffFinanceOrAcademicScreen() {
                 <Button
                   title="Selesai & Tutup"
                   onPress={() => setVerifiedReceipt(null)}
-                  variant="primary"
+                  variant="default"
                   accessibilityLabel="Tutup dialog kuitansi"
-                  style={styles.modalSubmitBtn}
+                  style={styles.sheetSubmitBtn}
                 />
               </View>
             )}
-          </ModalSheet>
+          </Sheet>
         </ScrollView>
       </Screen>
     );
@@ -793,85 +798,31 @@ export function StaffFinanceOrAcademicScreen() {
               loadAssignments(true);
               if (selectedStudentForGrade) loadGradesForStudent(selectedStudentForGrade);
             }}
-            colors={[colors.primary]}
-            tintColor={colors.primary}
+            colors={[shadcn.primary]}
+            tintColor={shadcn.primary}
           />
         }
       >
-        {/* Segmented Mode: Tugas / Nilai */}
-        <View style={styles.segmentedRow}>
-          <TouchableOpacity
-            style={[
-              styles.segmentedButton,
-              teacherMode === "ASSIGNMENTS"
-                ? styles.segmentedButtonActive
-                : styles.segmentedButtonInactive,
-            ]}
-            onPress={() => setTeacherMode("ASSIGNMENTS")}
-            activeOpacity={0.7}
-            accessibilityRole="button"
-            accessibilityLabel="Pilih mode Tugas dan PR Kelas"
-          >
-            <Ionicons
-              name="book"
-              size={18}
-              color={
-                teacherMode === "ASSIGNMENTS" ? colors.primary : colors.textSecondary
-              }
-            />
-            <Text
-              style={[
-                styles.segmentedText,
-                teacherMode === "ASSIGNMENTS"
-                  ? styles.segmentedTextActive
-                  : styles.segmentedTextInactive,
-              ]}
-            >
-              Tugas / PR Kelas
-            </Text>
-          </TouchableOpacity>
+        {/* Tabs Segmented Mode: Tugas / Nilai */}
+        <Tabs
+          value={teacherMode}
+          onValueChange={(val) => setTeacherMode(val as TeacherAcademicMode)}
+          items={[
+            { value: "ASSIGNMENTS", label: "Tugas Kelas" },
+            { value: "GRADES", label: "Nilai Siswa" },
+          ]}
+          style={styles.tabsRail}
+        />
 
-          <TouchableOpacity
-            style={[
-              styles.segmentedButton,
-              teacherMode === "GRADES"
-                ? styles.segmentedButtonActive
-                : styles.segmentedButtonInactive,
-            ]}
-            onPress={() => setTeacherMode("GRADES")}
-            activeOpacity={0.7}
-            accessibilityRole="button"
-            accessibilityLabel="Pilih mode Nilai dan Catatan Siswa"
-          >
-            <Ionicons
-              name="ribbon"
-              size={18}
-              color={teacherMode === "GRADES" ? colors.primary : colors.textSecondary}
-            />
-            <Text
-              style={[
-                styles.segmentedText,
-                teacherMode === "GRADES"
-                  ? styles.segmentedTextActive
-                  : styles.segmentedTextInactive,
-              ]}
-            >
-              Nilai & Catatan
-            </Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* ======================================= */}
-        {/* TAB 1: TUGAS / PR KELAS                 */}
-        {/* ======================================= */}
+        {/* TAB 1: TUGAS KELAS */}
         {teacherMode === "ASSIGNMENTS" && (
           <View>
             <Button
               title="Buat Tugas Baru"
               onPress={handleOpenCreateAssignment}
-              variant="primary"
+              variant="default"
               accessibilityLabel="Buka formulir pembuatan tugas baru"
-              leftIcon={<Ionicons name="add-circle" size={18} color={colors.textInverse} />}
+              leftIcon={<Ionicons name="add-circle-outline" size={18} color={shadcn.primaryForeground} />}
               style={styles.actionBtnTop}
             />
 
@@ -892,43 +843,41 @@ export function StaffFinanceOrAcademicScreen() {
                 message="Belum ada tugas atau PR aktif yang dibuat untuk kelas."
               />
             ) : (
-              <View style={styles.assignmentsList}>
-                {assignments.map((item) => (
-                  <Card key={item.id} style={styles.assignmentCard}>
-                    <View style={styles.assignHeaderRow}>
-                      <Badge label={item.subject} variant="info" />
-                      <Text style={styles.assignDueDate}>
-                        Tenggat: {formatTanggalId(item.due_date, { shortMonth: true })}
-                      </Text>
+              <Card style={styles.groupedCard}>
+                {assignments.map((item, index) => (
+                  <View key={item.id}>
+                    {index > 0 && <Separator />}
+                    <View style={styles.assignmentRow}>
+                      <View style={styles.assignHeaderRow}>
+                        <Badge label={item.subject} variant="info" />
+                        <Text style={styles.assignDueDate}>
+                          Tenggat: {formatTanggalId(item.due_date, { shortMonth: true })}
+                        </Text>
+                      </View>
+                      <Text style={styles.assignTitle}>{item.title}</Text>
+                      <Text style={styles.assignDesc}>{item.description}</Text>
+                      <View style={styles.assignFooter}>
+                        <Ionicons
+                          name="person-outline"
+                          size={14}
+                          color={shadcn.mutedForeground}
+                        />
+                        <Text style={styles.assignAuthor}>
+                          Diberikan oleh: {item.assigned_by_name || "Wali Kelas"}
+                        </Text>
+                      </View>
                     </View>
-                    <Text style={styles.assignTitle}>{item.title}</Text>
-                    <Text style={styles.assignDesc}>{item.description}</Text>
-                    <View style={styles.assignFooter}>
-                      <Ionicons
-                        name="person-outline"
-                        size={14}
-                        color={colors.textMuted}
-                      />
-                      <Text style={styles.assignAuthor}>
-                        Diberikan oleh: {item.assigned_by_name || "Wali Kelas"}
-                      </Text>
-                    </View>
-                  </Card>
+                  </View>
                 ))}
-              </View>
+              </Card>
             )}
           </View>
         )}
 
-        {/* ======================================= */}
-        {/* TAB 2: NILAI & CATATAN SISWA            */}
-        {/* ======================================= */}
+        {/* TAB 2: NILAI & CATATAN SISWA */}
         {teacherMode === "GRADES" && (
           <View>
-            <SectionHeader
-              title="Pilih Siswa Binaan"
-              subtitle="Pilih peserta didik untuk meninjau dan menginput evaluasi"
-            />
+            <Label>Pilih Siswa Binaan</Label>
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
@@ -966,9 +915,9 @@ export function StaffFinanceOrAcademicScreen() {
             <Button
               title="Tambah Nilai & Catatan"
               onPress={handleOpenCreateGrade}
-              variant="primary"
+              variant="default"
               accessibilityLabel="Buka formulir input nilai dan catatan siswa"
-              leftIcon={<Ionicons name="ribbon" size={18} color={colors.textInverse} />}
+              leftIcon={<Ionicons name="ribbon-outline" size={18} color={shadcn.primaryForeground} />}
               style={styles.actionBtnTop}
             />
 
@@ -981,75 +930,78 @@ export function StaffFinanceOrAcademicScreen() {
                 message="Siswa yang dipilih belum memiliki rekaman nilai atau catatan evaluasi."
               />
             ) : (
-              <View style={styles.gradesList}>
-                {grades.map((gr) => (
-                  <Card key={gr.id} style={styles.gradeCard}>
-                    <View style={styles.gradeHeaderRow}>
-                      <View style={styles.gradeSubjectCol}>
-                        <Text style={styles.gradeSubject}>{gr.subject}</Text>
-                        <Text style={styles.gradeMeta}>
-                          Semester {gr.semester} • TA {gr.academic_year}
-                        </Text>
+              <Card style={styles.groupedCard}>
+                {grades.map((gr, index) => (
+                  <View key={gr.id}>
+                    {index > 0 && <Separator />}
+                    <View style={styles.gradeRow}>
+                      <View style={styles.gradeHeaderRow}>
+                        <View style={styles.gradeSubjectCol}>
+                          <Text style={styles.gradeSubject}>{gr.subject}</Text>
+                          <Text style={styles.gradeMeta}>
+                            Semester {gr.semester} • TA {gr.academic_year}
+                          </Text>
+                        </View>
+                        <View style={styles.gradeScoreBadge}>
+                          <Text style={styles.gradeScoreNumber}>{gr.score}</Text>
+                          <Text style={styles.gradeScoreLabel}>Skor</Text>
+                        </View>
                       </View>
-                      <View style={styles.gradeScoreBadge}>
-                        <Text style={styles.gradeScoreNumber}>{gr.score}</Text>
-                        <Text style={styles.gradeScoreLabel}>Skor</Text>
-                      </View>
-                    </View>
 
-                    {Boolean(gr.notes) && (
-                      <View style={styles.gradeNotesBox}>
-                        <Text style={styles.gradeNotesLabel}>Catatan Evaluasi:</Text>
-                        <Text style={styles.gradeNotesText}>"{gr.notes}"</Text>
-                      </View>
-                    )}
-                  </Card>
+                      {Boolean(gr.notes) && (
+                        <View style={styles.gradeNotesBox}>
+                          <Text style={styles.gradeNotesLabel}>Catatan Evaluasi:</Text>
+                          <Text style={styles.gradeNotesText}>"{gr.notes}"</Text>
+                        </View>
+                      )}
+                    </View>
+                  </View>
                 ))}
-              </View>
+              </Card>
             )}
           </View>
         )}
 
-        {/* Modal Buat Tugas (Teacher) */}
-        <ModalSheet
+        {/* Sheet Buat Tugas (Teacher) */}
+        <Sheet
           visible={assignmentModalVisible}
           onClose={() => setAssignmentModalVisible(false)}
           title="Buat Tugas Baru"
         >
-          <View style={styles.modalBody}>
+          <View style={styles.sheetBody}>
             {Boolean(assignmentFormError) && (
               <View style={styles.formErrorBox}>
-                <Ionicons name="alert-circle" size={18} color={colors.badge.danger.text} />
+                <Ionicons name="alert-circle" size={18} color={shadcn.status.danger.text} />
                 <Text style={styles.formErrorText}>{assignmentFormError}</Text>
               </View>
             )}
 
+            <Label required>Mata Pelajaran</Label>
             <Input
-              label="Mata Pelajaran"
               value={assignmentSubject}
               onChangeText={setAssignmentSubject}
               placeholder="Contoh: Matematika, Bahasa Indonesia, IPA"
               accessibilityLabel="Input mata pelajaran tugas"
             />
 
+            <Label required>Judul Tugas / PR</Label>
             <Input
-              label="Judul Tugas / PR"
               value={assignmentTitle}
               onChangeText={setAssignmentTitle}
               placeholder="Contoh: Latihan Perkalian & Pembagian Bab 2"
               accessibilityLabel="Input judul tugas"
             />
 
+            <Label required>Tenggat Pengumpulan (YYYY-MM-DD)</Label>
             <Input
-              label="Tenggat Pengumpulan (YYYY-MM-DD)"
               value={assignmentDueDate}
               onChangeText={setAssignmentDueDate}
-              placeholder="2024-11-05"
+              placeholder="2026-11-05"
               accessibilityLabel="Input batas waktu pengumpulan"
             />
 
+            <Label>Petunjuk & Deskripsi Pengerjaan</Label>
             <Input
-              label="Petunjuk & Deskripsi Pengerjaan"
               value={assignmentDescription}
               onChangeText={setAssignmentDescription}
               multiline
@@ -1061,38 +1013,38 @@ export function StaffFinanceOrAcademicScreen() {
             <Button
               title={creatingAssignment ? "Menyimpan..." : "Bagikan Tugas"}
               onPress={handleCreateAssignment}
-              variant="primary"
+              variant="default"
               loading={creatingAssignment}
               accessibilityLabel="Konfirmasi bagikan tugas ke siswa"
-              style={styles.modalSubmitBtn}
+              style={styles.sheetSubmitBtn}
             />
           </View>
-        </ModalSheet>
+        </Sheet>
 
-        {/* Modal Tambah Nilai (Teacher) */}
-        <ModalSheet
+        {/* Sheet Tambah Nilai (Teacher) */}
+        <Sheet
           visible={gradeModalVisible}
           onClose={() => setGradeModalVisible(false)}
           title="Tambah Nilai & Catatan Siswa"
         >
-          <View style={styles.modalBody}>
+          <View style={styles.sheetBody}>
             {Boolean(gradeFormError) && (
               <View style={styles.formErrorBox}>
-                <Ionicons name="alert-circle" size={18} color={colors.badge.danger.text} />
+                <Ionicons name="alert-circle" size={18} color={shadcn.status.danger.text} />
                 <Text style={styles.formErrorText}>{gradeFormError}</Text>
               </View>
             )}
 
+            <Label required>Mata Pelajaran</Label>
             <Input
-              label="Mata Pelajaran"
               value={gradeSubject}
               onChangeText={setGradeSubject}
               placeholder="Contoh: Matematika"
               accessibilityLabel="Input mata pelajaran nilai"
             />
 
+            <Label required>Nilai Skor (0 - 100)</Label>
             <Input
-              label="Nilai Skor (0 - 100)"
               value={gradeScoreStr}
               onChangeText={setGradeScoreStr}
               keyboardType="numeric"
@@ -1102,8 +1054,8 @@ export function StaffFinanceOrAcademicScreen() {
 
             <View style={styles.inputDoubleRow}>
               <View style={styles.inputDoubleCol}>
+                <Label required>Semester</Label>
                 <Input
-                  label="Semester"
                   value={String(gradeSemester)}
                   onChangeText={(val) => setGradeSemester(parseInt(val, 10) || 1)}
                   keyboardType="numeric"
@@ -1111,18 +1063,18 @@ export function StaffFinanceOrAcademicScreen() {
                 />
               </View>
               <View style={styles.inputDoubleCol}>
+                <Label required>Tahun Ajaran</Label>
                 <Input
-                  label="Tahun Ajaran"
                   value={gradeAcademicYear}
                   onChangeText={setGradeAcademicYear}
-                  placeholder="2024/2025"
+                  placeholder="2026/2027"
                   accessibilityLabel="Input tahun ajaran"
                 />
               </View>
             </View>
 
+            <Label>Catatan Guru & Evaluasi Capaian</Label>
             <Input
-              label="Catatan Guru & Evaluasi Capaian"
               value={gradeNotes}
               onChangeText={setGradeNotes}
               multiline
@@ -1134,13 +1086,13 @@ export function StaffFinanceOrAcademicScreen() {
             <Button
               title={creatingGrade ? "Menyimpan..." : "Simpan Nilai & Catatan"}
               onPress={handleCreateGrade}
-              variant="primary"
+              variant="default"
               loading={creatingGrade}
               accessibilityLabel="Konfirmasi simpan nilai siswa"
-              style={styles.modalSubmitBtn}
+              style={styles.sheetSubmitBtn}
             />
           </View>
-        </ModalSheet>
+        </Sheet>
       </ScrollView>
     </Screen>
   );
@@ -1152,6 +1104,10 @@ const styles = StyleSheet.create({
     height: touchTarget.minHeight,
     alignItems: "center",
     justifyContent: "center",
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: shadcn.border,
+    backgroundColor: shadcn.background,
   },
   scrollContent: {
     padding: spacing.lg,
@@ -1164,39 +1120,8 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.xs,
     marginBottom: spacing.md,
   },
-  segmentedRow: {
-    flexDirection: "row",
-    backgroundColor: colors.card,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: 3,
+  tabsRail: {
     marginBottom: spacing.md,
-  },
-  segmentedButton: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    minHeight: touchTarget.minHeight,
-    borderRadius: radius.sm,
-  },
-  segmentedButtonActive: {
-    backgroundColor: colors.primarySoft,
-  },
-  segmentedButtonInactive: {
-    backgroundColor: "transparent",
-  },
-  segmentedText: {
-    fontSize: typography.size.sm,
-    fontWeight: typography.weight.semibold,
-    marginLeft: spacing.xs,
-  },
-  segmentedTextActive: {
-    color: colors.primary,
-  },
-  segmentedTextInactive: {
-    color: colors.textSecondary,
   },
   studentChipsScroll: {
     paddingVertical: spacing.xs,
@@ -1205,35 +1130,38 @@ const styles = StyleSheet.create({
   choiceChip: {
     minHeight: touchTarget.minHeight,
     paddingHorizontal: spacing.md,
-    borderRadius: radius.full,
+    borderRadius: radius.md,
     borderWidth: 1,
     alignItems: "center",
     justifyContent: "center",
     marginRight: spacing.xs,
   },
   choiceChipSelected: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
+    backgroundColor: shadcn.primary,
+    borderColor: shadcn.primary,
   },
   choiceChipUnselected: {
-    backgroundColor: colors.card,
-    borderColor: colors.border,
+    backgroundColor: shadcn.background,
+    borderColor: shadcn.border,
   },
   choiceChipText: {
     fontSize: typography.size.xs,
-    fontWeight: typography.weight.semibold,
+    fontWeight: typography.weight.medium,
   },
   choiceChipTextSelected: {
-    color: colors.textInverse,
+    color: shadcn.primaryForeground,
+    fontWeight: typography.weight.semibold,
   },
   choiceChipTextUnselected: {
-    color: colors.textSecondary,
+    color: shadcn.foreground,
   },
   invoicesList: {
     marginBottom: spacing.md,
   },
   invoiceCard: {
-    padding: spacing.lg,
+    padding: spacing.md,
+    backgroundColor: shadcn.card,
+    borderColor: shadcn.border,
     marginBottom: spacing.md,
   },
   invHeaderRow: {
@@ -1247,13 +1175,13 @@ const styles = StyleSheet.create({
     marginRight: spacing.sm,
   },
   invTitle: {
-    fontSize: typography.size.base,
-    fontWeight: typography.weight.bold,
-    color: colors.textPrimary,
+    fontSize: typography.size.sm,
+    fontWeight: typography.weight.semibold,
+    color: shadcn.foreground,
   },
   invStudentName: {
     fontSize: typography.size.xs,
-    color: colors.textSecondary,
+    color: shadcn.mutedForeground,
     marginTop: 2,
   },
   invBadgeCol: {
@@ -1263,22 +1191,22 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-end",
-    backgroundColor: "#F8FAFC",
+    backgroundColor: shadcn.secondary,
     padding: spacing.md,
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: shadcn.border,
     marginBottom: spacing.sm,
   },
   invAmountLabel: {
     fontSize: 11,
-    color: colors.textSecondary,
+    color: shadcn.mutedForeground,
     marginBottom: 2,
   },
   invAmountValue: {
-    fontSize: typography.size.lg,
-    fontWeight: typography.weight.heavy,
-    color: colors.primary,
+    fontSize: typography.size.base,
+    fontWeight: typography.weight.bold,
+    color: shadcn.foreground,
     fontVariant: ["tabular-nums"],
   },
   invDueCol: {
@@ -1286,18 +1214,18 @@ const styles = StyleSheet.create({
   },
   invDueLabel: {
     fontSize: 11,
-    color: colors.textSecondary,
+    color: shadcn.mutedForeground,
     marginBottom: 2,
   },
   invDueValue: {
-    fontSize: typography.size.sm,
-    fontWeight: typography.weight.semibold,
-    color: colors.textPrimary,
+    fontSize: typography.size.xs,
+    fontWeight: typography.weight.medium,
+    color: shadcn.foreground,
     fontVariant: ["tabular-nums"],
   },
   verificationBox: {
-    backgroundColor: "#FFFBEB",
-    borderColor: colors.badge.warning.border,
+    backgroundColor: shadcn.secondary,
+    borderColor: shadcn.border,
     borderWidth: 1,
     padding: spacing.md,
     borderRadius: radius.md,
@@ -1310,82 +1238,60 @@ const styles = StyleSheet.create({
   },
   verificationBoxTitle: {
     fontSize: typography.size.xs,
-    fontWeight: typography.weight.bold,
-    color: colors.badge.warning.text,
+    fontWeight: typography.weight.semibold,
+    color: shadcn.status.warning.text,
     marginLeft: spacing.xs,
   },
   proofField: {
     fontSize: typography.size.xs,
-    color: colors.textSecondary,
+    color: shadcn.mutedForeground,
     marginTop: 2,
   },
   proofValue: {
-    fontWeight: typography.weight.semibold,
-    color: colors.textPrimary,
+    fontWeight: typography.weight.medium,
+    color: shadcn.foreground,
+  },
+  verifySeparator: {
+    marginVertical: spacing.sm,
   },
   verifyActionsRow: {
     flexDirection: "row",
     justifyContent: "flex-end",
     alignItems: "center",
-    marginTop: spacing.md,
-    paddingTop: spacing.sm,
-    borderTopWidth: 1,
-    borderTopColor: "rgba(133, 77, 14, 0.15)",
   },
   rejectBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    minHeight: touchTarget.minHeight,
-    paddingHorizontal: spacing.md,
-    borderRadius: radius.md,
-    backgroundColor: colors.badge.danger.bg,
-    borderWidth: 1,
-    borderColor: colors.badge.danger.border,
     marginRight: spacing.sm,
-  },
-  rejectBtnText: {
-    fontSize: typography.size.xs,
-    fontWeight: typography.weight.bold,
-    color: colors.badge.danger.text,
-    marginLeft: 2,
+    minHeight: touchTarget.minHeight,
   },
   approveBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
     minHeight: touchTarget.minHeight,
-    paddingHorizontal: spacing.lg,
-    borderRadius: radius.md,
-    backgroundColor: colors.primary,
-  },
-  approveBtnText: {
-    fontSize: typography.size.xs,
-    fontWeight: typography.weight.bold,
-    color: colors.textInverse,
-    marginLeft: 4,
   },
   receiptBox: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: colors.badge.success.bg,
+    backgroundColor: shadcn.status.success.bg,
+    borderWidth: 1,
+    borderColor: shadcn.status.success.border,
     padding: spacing.sm,
-    borderRadius: radius.sm,
+    borderRadius: radius.md,
     marginTop: spacing.xs,
   },
   receiptNoText: {
     fontSize: typography.size.xs,
-    fontWeight: typography.weight.bold,
-    color: colors.badge.success.text,
+    fontWeight: typography.weight.semibold,
+    color: shadcn.status.success.text,
     marginLeft: spacing.xs,
     fontVariant: ["tabular-nums"],
   },
-  assignmentsList: {
+  groupedCard: {
+    padding: 0,
+    backgroundColor: shadcn.card,
+    borderColor: shadcn.border,
+    overflow: "hidden",
     marginBottom: spacing.md,
   },
-  assignmentCard: {
-    padding: spacing.lg,
-    marginBottom: spacing.md,
+  assignmentRow: {
+    padding: spacing.md,
   },
   assignHeaderRow: {
     flexDirection: "row",
@@ -1395,39 +1301,32 @@ const styles = StyleSheet.create({
   },
   assignDueDate: {
     fontSize: 11,
-    color: colors.textSecondary,
+    color: shadcn.mutedForeground,
     fontVariant: ["tabular-nums"],
   },
   assignTitle: {
-    fontSize: typography.size.base,
-    fontWeight: typography.weight.bold,
-    color: colors.textPrimary,
+    fontSize: typography.size.sm,
+    fontWeight: typography.weight.semibold,
+    color: shadcn.foreground,
     marginBottom: spacing.xs,
   },
   assignDesc: {
-    fontSize: typography.size.sm,
-    color: colors.textSecondary,
+    fontSize: typography.size.xs,
+    color: shadcn.mutedForeground,
     lineHeight: typography.lineHeight.sm,
     marginBottom: spacing.sm,
   },
   assignFooter: {
     flexDirection: "row",
     alignItems: "center",
-    paddingTop: spacing.xs,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
   },
   assignAuthor: {
     fontSize: 11,
-    color: colors.textMuted,
+    color: shadcn.mutedForeground,
     marginLeft: spacing.xs,
   },
-  gradesList: {
-    marginBottom: spacing.md,
-  },
-  gradeCard: {
+  gradeRow: {
     padding: spacing.md,
-    marginBottom: spacing.sm,
   },
   gradeHeaderRow: {
     flexDirection: "row",
@@ -1438,82 +1337,79 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   gradeSubject: {
-    fontSize: typography.size.base,
-    fontWeight: typography.weight.bold,
-    color: colors.textPrimary,
+    fontSize: typography.size.sm,
+    fontWeight: typography.weight.semibold,
+    color: shadcn.foreground,
   },
   gradeMeta: {
     fontSize: typography.size.xs,
-    color: colors.textSecondary,
+    color: shadcn.mutedForeground,
     marginTop: 2,
     fontVariant: ["tabular-nums"],
   },
   gradeScoreBadge: {
     alignItems: "center",
     justifyContent: "center",
-    width: 52,
-    height: 52,
+    width: 48,
+    height: 48,
     borderRadius: radius.md,
-    backgroundColor: colors.primarySoft,
+    backgroundColor: shadcn.secondary,
     borderWidth: 1,
-    borderColor: "#BBF7D0",
+    borderColor: shadcn.border,
   },
   gradeScoreNumber: {
-    fontSize: typography.size.xl,
-    fontWeight: typography.weight.heavy,
-    color: colors.primary,
+    fontSize: typography.size.lg,
+    fontWeight: typography.weight.bold,
+    color: shadcn.foreground,
     fontVariant: ["tabular-nums"],
   },
   gradeScoreLabel: {
     fontSize: 9,
-    fontWeight: typography.weight.bold,
-    color: colors.primary,
+    fontWeight: typography.weight.medium,
+    color: shadcn.mutedForeground,
   },
   gradeNotesBox: {
-    backgroundColor: "#F8FAFC",
+    backgroundColor: shadcn.secondary,
     padding: spacing.sm,
-    borderRadius: radius.sm,
+    borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: shadcn.border,
     marginTop: spacing.sm,
   },
   gradeNotesLabel: {
     fontSize: 10,
-    fontWeight: typography.weight.bold,
-    color: colors.textMuted,
+    fontWeight: typography.weight.medium,
+    color: shadcn.mutedForeground,
     marginBottom: 1,
   },
   gradeNotesText: {
     fontSize: typography.size.xs,
-    color: colors.textSecondary,
+    color: shadcn.foreground,
     fontStyle: "italic",
   },
-  modalBody: {
+  sheetBody: {
     paddingVertical: spacing.xs,
   },
   formErrorBox: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: colors.badge.danger.bg,
+    backgroundColor: shadcn.status.danger.bg,
+    borderWidth: 1,
+    borderColor: shadcn.status.danger.border,
     padding: spacing.sm,
     borderRadius: radius.md,
     marginBottom: spacing.md,
   },
   formErrorText: {
     fontSize: typography.size.xs,
-    color: colors.badge.danger.text,
+    color: shadcn.status.danger.text,
     marginLeft: spacing.xs,
     flex: 1,
   },
-  formSectionLabel: {
-    fontSize: typography.size.sm,
-    fontWeight: typography.weight.semibold,
-    color: colors.textPrimary,
-    marginBottom: spacing.xs,
-  },
-  modalSubmitBtn: {
+  sheetSubmitBtn: {
     marginTop: spacing.md,
     width: "100%",
+    minHeight: touchTarget.minHeight,
   },
   inputDoubleRow: {
     flexDirection: "row",
@@ -1522,60 +1418,60 @@ const styles = StyleSheet.create({
     flex: 1,
     marginRight: spacing.sm,
   },
-  receiptModalBody: {
+  receiptSheetBody: {
     alignItems: "center",
     paddingVertical: spacing.md,
   },
   receiptIconCircle: {
-    width: 64,
-    height: 64,
+    width: 56,
+    height: 56,
     borderRadius: radius.full,
-    backgroundColor: colors.primarySoft,
+    backgroundColor: shadcn.secondary,
+    borderWidth: 1,
+    borderColor: shadcn.border,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: spacing.md,
   },
-  receiptModalTitle: {
-    fontSize: typography.size.lg,
-    fontWeight: typography.weight.bold,
-    color: colors.textPrimary,
+  receiptSheetTitle: {
+    fontSize: typography.size.base,
+    fontWeight: typography.weight.semibold,
+    color: shadcn.foreground,
     textAlign: "center",
   },
-  receiptModalSub: {
+  receiptSheetSub: {
     fontSize: typography.size.xs,
-    color: colors.textSecondary,
+    color: shadcn.mutedForeground,
     textAlign: "center",
     marginTop: spacing.xs,
     marginBottom: spacing.lg,
   },
   receiptDetailCard: {
     width: "100%",
-    backgroundColor: "#F8FAFC",
+    backgroundColor: shadcn.secondary,
     padding: spacing.md,
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: shadcn.border,
     marginBottom: spacing.lg,
   },
   receiptLabel: {
     fontSize: 11,
-    color: colors.textSecondary,
+    color: shadcn.mutedForeground,
     marginTop: spacing.xs,
   },
   receiptValue: {
     fontSize: typography.size.sm,
-    fontWeight: typography.weight.bold,
-    color: colors.textPrimary,
+    fontWeight: typography.weight.medium,
+    color: shadcn.foreground,
   },
   receiptValueHighlight: {
     fontSize: typography.size.base,
-    fontWeight: typography.weight.heavy,
-    color: colors.primary,
+    fontWeight: typography.weight.bold,
+    color: shadcn.foreground,
     fontVariant: ["tabular-nums"],
   },
   receiptDivider: {
-    height: 1,
-    backgroundColor: colors.border,
     marginVertical: spacing.sm,
   },
 });

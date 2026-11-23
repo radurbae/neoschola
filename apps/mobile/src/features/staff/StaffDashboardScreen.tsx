@@ -6,15 +6,23 @@ import {
   TouchableOpacity,
   RefreshControl,
   ScrollView,
-  Platform,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { Role, LeaveStatus, InvoiceStatus, formatTanggalId } from "@neoschola/shared";
-import { Screen, Card, Badge, Button, StateView, SectionHeader } from "../../components/ui";
+import {
+  Screen,
+  Card,
+  Badge,
+  Button,
+  StateView,
+  SectionHeader,
+  Avatar,
+  Separator,
+} from "../../components/ui";
 import { useAuth } from "../../store/auth";
 import * as api from "../../lib/api";
-import { colors, spacing, radius, typography, touchTarget } from "../../theme/tokens";
+import { shadcn, spacing, radius, typography, touchTarget, shadows } from "../../theme/tokens";
 
 interface StaffMetrics {
   studentCount: number;
@@ -104,22 +112,22 @@ export function StaffDashboardScreen() {
       rightAction={
         <View style={styles.headerRightActions}>
           <TouchableOpacity
-            style={styles.iconButton}
+            style={styles.headerIconButton}
             onPress={() => router.push("/notifications")}
             activeOpacity={0.7}
             accessibilityRole="button"
             accessibilityLabel="Buka notifikasi"
           >
-            <Ionicons name="notifications-outline" size={24} color={colors.textPrimary} />
+            <Ionicons name="notifications-outline" size={20} color={shadcn.foreground} />
           </TouchableOpacity>
           <TouchableOpacity
-            style={styles.iconButton}
+            style={[styles.headerIconButton, styles.headerLogoutButton]}
             onPress={handleLogout}
             activeOpacity={0.7}
             accessibilityRole="button"
             accessibilityLabel="Keluar dari akun staf"
           >
-            <Ionicons name="log-out-outline" size={24} color={colors.badge.danger.text} />
+            <Ionicons name="log-out-outline" size={20} color={shadcn.destructive} />
           </TouchableOpacity>
         </View>
       }
@@ -131,26 +139,24 @@ export function StaffDashboardScreen() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={() => fetchMetrics(true)}
-            colors={[colors.primary]}
-            tintColor={colors.primary}
+            colors={[shadcn.primary]}
+            tintColor={shadcn.primary}
           />
         }
       >
         {/* Salam & Profil Staf */}
         <Card style={styles.welcomeCard}>
           <View style={styles.welcomeRow}>
-            <View style={styles.avatarCircle}>
-              <Ionicons
-                name={isAdmin ? "briefcase" : "school"}
-                size={26}
-                color={colors.primary}
-              />
-            </View>
+            <Avatar
+              name={user?.name || "Staf"}
+              size="lg"
+              style={styles.staffAvatar}
+            />
             <View style={styles.welcomeTextCol}>
               <View style={styles.badgeRow}>
                 <Badge
                   label={roleLabel}
-                  variant={isAdmin ? "warning" : "success"}
+                  variant="secondary"
                 />
               </View>
               <Text style={styles.welcomeName}>
@@ -186,7 +192,7 @@ export function StaffDashboardScreen() {
                 <Card style={styles.metricCard}>
                   <View style={styles.metricTopRow}>
                     <Text style={styles.metricLabel}>Siswa Terpantau</Text>
-                    <Ionicons name="people-outline" size={20} color={colors.primary} />
+                    <Ionicons name="people-outline" size={18} color={shadcn.mutedForeground} />
                   </View>
                   <Text style={styles.metricNumber}>{metrics.studentCount}</Text>
                   <Text style={styles.metricSub}>Siswa aktif</Text>
@@ -198,7 +204,7 @@ export function StaffDashboardScreen() {
                 <Card
                   style={[
                     styles.metricCard,
-                    metrics.pendingLeaveCount > 0 && styles.metricCardHighlightWarning,
+                    metrics.pendingLeaveCount > 0 && styles.metricCardHighlight,
                   ]}
                   onPress={() => router.push("/(staff)/izin" as any)}
                   accessibilityLabel={`Tinjau ${metrics.pendingLeaveCount} permohonan izin pending`}
@@ -207,11 +213,11 @@ export function StaffDashboardScreen() {
                     <Text style={styles.metricLabel}>Antrean Izin</Text>
                     <Ionicons
                       name="hourglass-outline"
-                      size={20}
+                      size={18}
                       color={
                         metrics.pendingLeaveCount > 0
-                          ? colors.badge.warning.text
-                          : colors.textSecondary
+                          ? shadcn.status.warning.text
+                          : shadcn.mutedForeground
                       }
                     />
                   </View>
@@ -232,7 +238,7 @@ export function StaffDashboardScreen() {
                 <Card
                   style={[
                     styles.metricCard,
-                    metrics.unreadMessageCount > 0 && styles.metricCardHighlightInfo,
+                    metrics.unreadMessageCount > 0 && styles.metricCardHighlight,
                   ]}
                   onPress={() => router.push("/(staff)/pesan" as any)}
                   accessibilityLabel={`Buka ${metrics.unreadMessageCount} pesan wali murid belum dibaca`}
@@ -241,11 +247,11 @@ export function StaffDashboardScreen() {
                     <Text style={styles.metricLabel}>Pesan Wali</Text>
                     <Ionicons
                       name="chatbubble-ellipses-outline"
-                      size={20}
+                      size={18}
                       color={
                         metrics.unreadMessageCount > 0
-                          ? colors.badge.info.text
-                          : colors.textSecondary
+                          ? shadcn.status.info.text
+                          : shadcn.mutedForeground
                       }
                     />
                   </View>
@@ -267,7 +273,7 @@ export function StaffDashboardScreen() {
                   <Card
                     style={[
                       styles.metricCard,
-                      metrics.waitingInvoiceCount > 0 && styles.metricCardHighlightWarning,
+                      metrics.waitingInvoiceCount > 0 && styles.metricCardHighlight,
                     ]}
                     onPress={() => router.push("/(staff)/keuangan" as any)}
                     accessibilityLabel={`Verifikasi ${metrics.waitingInvoiceCount} pembayaran tagihan`}
@@ -276,11 +282,11 @@ export function StaffDashboardScreen() {
                       <Text style={styles.metricLabel}>Verifikasi SPP</Text>
                       <Ionicons
                         name="wallet-outline"
-                        size={20}
+                        size={18}
                         color={
                           metrics.waitingInvoiceCount > 0
-                            ? colors.badge.warning.text
-                            : colors.textSecondary
+                            ? shadcn.status.warning.text
+                            : shadcn.mutedForeground
                         }
                       />
                     </View>
@@ -304,16 +310,16 @@ export function StaffDashboardScreen() {
               subtitle="Pintas navigasi ke modul tugas harian"
             />
 
-            <View style={styles.actionsList}>
+            <Card style={styles.actionsCard}>
               <TouchableOpacity
-                style={styles.actionItem}
+                style={styles.actionRow}
                 onPress={() => router.push("/(staff)/presensi" as any)}
                 activeOpacity={0.7}
                 accessibilityRole="button"
                 accessibilityLabel="Menuju Input Presensi Kelas"
               >
-                <View style={[styles.actionIconBox, { backgroundColor: "#DCFCE7" }]}>
-                  <Ionicons name="calendar" size={22} color="#166534" />
+                <View style={styles.actionIconWrapper}>
+                  <Ionicons name="calendar-outline" size={20} color={shadcn.foreground} />
                 </View>
                 <View style={styles.actionTextBox}>
                   <Text style={styles.actionTitle}>Input Presensi Kelas</Text>
@@ -321,37 +327,41 @@ export function StaffDashboardScreen() {
                     Catat kehadiran siswa secara cepat dan massal
                   </Text>
                 </View>
-                <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
+                <Ionicons name="chevron-forward" size={18} color={shadcn.mutedForeground} />
               </TouchableOpacity>
 
+              <Separator />
+
               <TouchableOpacity
-                style={styles.actionItem}
+                style={styles.actionRow}
                 onPress={() => router.push("/(staff)/izin" as any)}
                 activeOpacity={0.7}
                 accessibilityRole="button"
                 accessibilityLabel="Menuju Tinjau Pengajuan Izin"
               >
-                <View style={[styles.actionIconBox, { backgroundColor: "#FEF9C3" }]}>
-                  <Ionicons name="document-text" size={22} color="#854D0E" />
+                <View style={styles.actionIconWrapper}>
+                  <Ionicons name="document-text-outline" size={20} color={shadcn.foreground} />
                 </View>
                 <View style={styles.actionTextBox}>
                   <Text style={styles.actionTitle}>Tinjau Pengajuan Izin</Text>
                   <Text style={styles.actionDescription}>
-                    Setujui atau tolak izin sakit / dispensasi dari wali
+                    Setujui atau tolak permohonan izin dari wali murid
                   </Text>
                 </View>
-                <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
+                <Ionicons name="chevron-forward" size={18} color={shadcn.mutedForeground} />
               </TouchableOpacity>
 
+              <Separator />
+
               <TouchableOpacity
-                style={styles.actionItem}
+                style={styles.actionRow}
                 onPress={() => router.push("/(staff)/pengumuman" as any)}
                 activeOpacity={0.7}
                 accessibilityRole="button"
                 accessibilityLabel="Menuju Publikasi Pengumuman"
               >
-                <View style={[styles.actionIconBox, { backgroundColor: "#DBEAFE" }]}>
-                  <Ionicons name="megaphone" size={22} color="#1E40AF" />
+                <View style={styles.actionIconWrapper}>
+                  <Ionicons name="megaphone-outline" size={20} color={shadcn.foreground} />
                 </View>
                 <View style={styles.actionTextBox}>
                   <Text style={styles.actionTitle}>Publikasi Pengumuman</Text>
@@ -359,30 +369,34 @@ export function StaffDashboardScreen() {
                     Buat dan siarkan pengumuman sekolah atau kelas
                   </Text>
                 </View>
-                <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
+                <Ionicons name="chevron-forward" size={18} color={shadcn.mutedForeground} />
               </TouchableOpacity>
 
+              <Separator />
+
               <TouchableOpacity
-                style={styles.actionItem}
+                style={styles.actionRow}
                 onPress={() => router.push("/(staff)/pesan" as any)}
                 activeOpacity={0.7}
                 accessibilityRole="button"
                 accessibilityLabel="Menuju Pesan Wali Murid"
               >
-                <View style={[styles.actionIconBox, { backgroundColor: "#F3E8FF" }]}>
-                  <Ionicons name="chatbubbles" size={22} color="#6B21A8" />
+                <View style={styles.actionIconWrapper}>
+                  <Ionicons name="chatbubbles-outline" size={20} color={shadcn.foreground} />
                 </View>
                 <View style={styles.actionTextBox}>
                   <Text style={styles.actionTitle}>Pesan Wali Murid</Text>
                   <Text style={styles.actionDescription}>
-                    Konsultasi langsung dengan wali murid binaan
+                    Konsultasi langsung dengan orang tua murid
                   </Text>
                 </View>
-                <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
+                <Ionicons name="chevron-forward" size={18} color={shadcn.mutedForeground} />
               </TouchableOpacity>
 
+              <Separator />
+
               <TouchableOpacity
-                style={styles.actionItem}
+                style={styles.actionRow}
                 onPress={() => router.push("/(staff)/keuangan" as any)}
                 activeOpacity={0.7}
                 accessibilityRole="button"
@@ -392,16 +406,11 @@ export function StaffDashboardScreen() {
                     : "Menuju Tugas & Catatan Akademik"
                 }
               >
-                <View
-                  style={[
-                    styles.actionIconBox,
-                    { backgroundColor: isAdmin ? "#FEF3C7" : "#E0E7FF" },
-                  ]}
-                >
+                <View style={styles.actionIconWrapper}>
                   <Ionicons
-                    name={isAdmin ? "card" : "school"}
-                    size={22}
-                    color={isAdmin ? "#92400E" : "#3730A3"}
+                    name={isAdmin ? "wallet-outline" : "school-outline"}
+                    size={20}
+                    color={shadcn.foreground}
                   />
                 </View>
                 <View style={styles.actionTextBox}>
@@ -414,9 +423,9 @@ export function StaffDashboardScreen() {
                       : "Kelola tugas PR kelas serta catatan nilai peserta didik"}
                   </Text>
                 </View>
-                <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
+                <Ionicons name="chevron-forward" size={18} color={shadcn.mutedForeground} />
               </TouchableOpacity>
-            </View>
+            </Card>
           </>
         )}
       </ScrollView>
@@ -429,12 +438,19 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
   },
-  iconButton: {
+  headerIconButton: {
     width: touchTarget.minWidth,
     height: touchTarget.minHeight,
     alignItems: "center",
     justifyContent: "center",
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: shadcn.border,
+    backgroundColor: shadcn.background,
     marginLeft: spacing.xs,
+  },
+  headerLogoutButton: {
+    borderColor: shadcn.border,
   },
   scrollContent: {
     padding: spacing.lg,
@@ -442,22 +458,16 @@ const styles = StyleSheet.create({
   },
   welcomeCard: {
     marginBottom: spacing.lg,
-    backgroundColor: colors.card,
+    padding: spacing.lg,
+    backgroundColor: shadcn.card,
+    borderColor: shadcn.border,
   },
   welcomeRow: {
     flexDirection: "row",
     alignItems: "center",
   },
-  avatarCircle: {
-    width: 52,
-    height: 52,
-    borderRadius: radius.full,
-    backgroundColor: colors.primarySoft,
-    alignItems: "center",
-    justifyContent: "center",
+  staffAvatar: {
     marginRight: spacing.md,
-    borderWidth: 1,
-    borderColor: "#BBF7D0",
   },
   welcomeTextCol: {
     flex: 1,
@@ -466,13 +476,13 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xs,
   },
   welcomeName: {
-    fontSize: typography.size.lg,
-    fontWeight: typography.weight.bold,
-    color: colors.textPrimary,
+    fontSize: typography.size.base,
+    fontWeight: typography.weight.semibold,
+    color: shadcn.foreground,
   },
   welcomeEmail: {
     fontSize: typography.size.xs,
-    color: colors.textSecondary,
+    color: shadcn.mutedForeground,
     marginTop: 2,
   },
   metricsGrid: {
@@ -490,14 +500,11 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
     minHeight: 104,
     justifyContent: "space-between",
+    backgroundColor: shadcn.card,
+    borderColor: shadcn.border,
   },
-  metricCardHighlightWarning: {
-    borderColor: colors.badge.warning.border,
-    backgroundColor: "#FFFBEB",
-  },
-  metricCardHighlightInfo: {
-    borderColor: colors.badge.info.border,
-    backgroundColor: "#F0F9FF",
+  metricCardHighlight: {
+    borderColor: shadcn.border,
   },
   metricTopRow: {
     flexDirection: "row",
@@ -506,61 +513,61 @@ const styles = StyleSheet.create({
   },
   metricLabel: {
     fontSize: typography.size.xs,
-    fontWeight: typography.weight.semibold,
-    color: colors.textSecondary,
+    fontWeight: typography.weight.medium,
+    color: shadcn.mutedForeground,
     flex: 1,
   },
   metricNumber: {
     fontSize: typography.size.xxl,
-    fontWeight: typography.weight.heavy,
-    color: colors.primary,
+    fontWeight: typography.weight.bold,
+    color: shadcn.foreground,
     fontVariant: ["tabular-nums"],
     marginVertical: spacing.xs,
   },
   metricNumberWarning: {
-    color: colors.badge.warning.text,
+    color: shadcn.status.warning.text,
   },
   metricNumberInfo: {
-    color: colors.badge.info.text,
+    color: shadcn.status.info.text,
   },
   metricSub: {
     fontSize: 11,
-    color: colors.textMuted,
+    color: shadcn.mutedForeground,
   },
-  actionsList: {
-    backgroundColor: colors.card,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
+  actionsCard: {
+    padding: 0,
+    backgroundColor: shadcn.card,
+    borderColor: shadcn.border,
     overflow: "hidden",
   },
-  actionItem: {
+  actionRow: {
     flexDirection: "row",
     alignItems: "center",
-    padding: spacing.md,
-    minHeight: 64,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    minHeight: 56,
   },
-  actionIconBox: {
-    width: 44,
-    height: 44,
+  actionIconWrapper: {
+    width: 36,
+    height: 36,
     borderRadius: radius.md,
+    backgroundColor: shadcn.secondary,
     alignItems: "center",
     justifyContent: "center",
     marginRight: spacing.md,
   },
   actionTextBox: {
     flex: 1,
+    marginRight: spacing.sm,
   },
   actionTitle: {
-    fontSize: typography.size.base,
+    fontSize: typography.size.sm,
     fontWeight: typography.weight.semibold,
-    color: colors.textPrimary,
+    color: shadcn.foreground,
   },
   actionDescription: {
     fontSize: typography.size.xs,
-    color: colors.textSecondary,
+    color: shadcn.mutedForeground,
     marginTop: 2,
   },
 });

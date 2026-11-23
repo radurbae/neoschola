@@ -10,9 +10,17 @@ import {
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { MessageThread, formatTanggalId } from "@neoschola/shared";
-import { Screen, Card, Badge, StateView } from "../../components/ui";
+import {
+  Screen,
+  Card,
+  Badge,
+  StateView,
+  Alert,
+  Avatar,
+  Separator,
+} from "../../components/ui";
 import * as api from "../../lib/api";
-import { colors, spacing, radius, typography, touchTarget } from "../../theme/tokens";
+import { shadcn, spacing, radius, typography, touchTarget } from "../../theme/tokens";
 
 export function StaffMessagesScreen() {
   const router = useRouter();
@@ -36,7 +44,8 @@ export function StaffMessagesScreen() {
       const res = await api.getThreads();
       setThreads(res.threads || []);
       if (res.service_hours) {
-        setServiceHours(res.service_hours);
+        // Normalisasi tanda hubung
+        setServiceHours(res.service_hours.replace(/[\u2013\u2014]/g, "-"));
       }
     } catch (err: any) {
       setErrorMessage(
@@ -53,13 +62,14 @@ export function StaffMessagesScreen() {
   }, [fetchThreads]);
 
   const handleOpenThread = (thread: MessageThread) => {
-    // Navigasi ke layar chat dengan thread id yang sesuai
     router.push(`/chat/${thread.id}` as any);
   };
 
   const handleBackToDashboard = () => {
     router.replace("/(staff)");
   };
+
+  const cleanServiceHours = serviceHours.replace(/[\u2013\u2014]/g, "-");
 
   return (
     <Screen
@@ -75,7 +85,7 @@ export function StaffMessagesScreen() {
           accessibilityRole="button"
           accessibilityLabel="Kembali ke Dasbor Staf"
         >
-          <Ionicons name="home-outline" size={24} color={colors.primary} />
+          <Ionicons name="home-outline" size={20} color={shadcn.foreground} />
         </TouchableOpacity>
       }
     >
@@ -86,19 +96,19 @@ export function StaffMessagesScreen() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={() => fetchThreads(true)}
-            colors={[colors.primary]}
-            tintColor={colors.primary}
+            colors={[shadcn.primary]}
+            tintColor={shadcn.primary}
           />
         }
       >
-        {/* Banner Informasi Jam Layanan Sekolah */}
-        <View style={styles.serviceBanner}>
-          <Ionicons name="time-outline" size={20} color={colors.primary} />
-          <View style={styles.serviceTextCol}>
-            <Text style={styles.serviceTitle}>Jam Layanan Komunikasi</Text>
-            <Text style={styles.serviceBody}>{serviceHours}</Text>
-          </View>
-        </View>
+        {/* Banner Informasi Jam Layanan Sekolah (Menggunakan Alert variant default) */}
+        <Alert
+          variant="default"
+          title="Jam Layanan Komunikasi"
+          description={cleanServiceHours}
+          icon={<Ionicons name="time-outline" size={20} color={shadcn.foreground} />}
+          style={styles.serviceAlert}
+        />
 
         {/* State Loading / Error / Empty */}
         {loading && !refreshing ? (
@@ -118,65 +128,72 @@ export function StaffMessagesScreen() {
             message="Saat ini belum ada percakapan aktif dari wali murid binaan."
           />
         ) : (
-          <View style={styles.threadsList}>
-            {threads.map((thread) => {
+          <Card style={styles.threadsCard}>
+            {threads.map((thread, index) => {
               const unread = (thread.unread_count || 0) > 0;
               const formattedTime = formatTanggalId(thread.last_message_at, {
                 shortMonth: true,
               });
+              const contactName = thread.guardian_name || thread.student_name || "Wali";
 
               return (
-                <Card
-                  key={thread.id}
-                  style={[styles.threadCard, unread && styles.threadCardUnread]}
-                  onPress={() => handleOpenThread(thread)}
-                  accessibilityLabel={`Buka percakapan ${thread.subject} dengan ${
-                    thread.guardian_name || "Wali"
-                  }`}
-                >
-                  <View style={styles.threadTopRow}>
-                    <View style={styles.titleCol}>
-                      <Text
-                        style={[styles.threadSubject, unread && styles.threadSubjectBold]}
-                        numberOfLines={1}
-                      >
-                        {thread.subject}
-                      </Text>
-                      <Text style={styles.studentInfo}>
+                <View key={thread.id}>
+                  {index > 0 && <Separator />}
+                  <TouchableOpacity
+                    style={[styles.threadRow, unread && styles.threadRowUnread]}
+                    onPress={() => handleOpenThread(thread)}
+                    activeOpacity={0.7}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Buka percakapan ${thread.subject} dengan ${contactName}`}
+                  >
+                    <Avatar name={contactName} size="md" style={styles.threadAvatar} />
+
+                    <View style={styles.threadBody}>
+                      <View style={styles.threadTopRow}>
+                        <Text
+                          style={[styles.threadSubject, unread && styles.threadSubjectBold]}
+                          numberOfLines={1}
+                        >
+                          {thread.subject}
+                        </Text>
+                        <Text style={styles.timeText}>{formattedTime}</Text>
+                      </View>
+
+                      <Text style={styles.studentInfo} numberOfLines={1}>
                         Wali dari: {thread.student_name || "Siswa"}
                         {thread.guardian_name ? ` (${thread.guardian_name})` : ""}
                       </Text>
-                    </View>
-                    <View style={styles.metaCol}>
-                      <Text style={styles.timeText}>{formattedTime}</Text>
-                      {unread && (
-                        <View style={styles.unreadBadgeWrap}>
-                          <Badge
-                            label={`${thread.unread_count} baru`}
-                            variant="danger"
-                          />
-                        </View>
-                      )}
-                    </View>
-                  </View>
 
-                  {/* Cuplikan Pesan Terakhir */}
-                  <View style={styles.messageSnippetRow}>
-                    <Text
-                      style={[
-                        styles.snippetText,
-                        unread ? styles.snippetTextUnread : styles.snippetTextRead,
-                      ]}
-                      numberOfLines={2}
-                    >
-                      {thread.last_message || "Ketuk untuk melihat riwayat percakapan..."}
-                    </Text>
-                    <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
-                  </View>
-                </Card>
+                      <View style={styles.threadBottomRow}>
+                        <Text
+                          style={[
+                            styles.snippetText,
+                            unread ? styles.snippetTextUnread : styles.snippetTextRead,
+                          ]}
+                          numberOfLines={1}
+                        >
+                          {thread.last_message || "Ketuk untuk melihat riwayat percakapan..."}
+                        </Text>
+                        {unread && (
+                          <View style={styles.unreadBadge}>
+                            <Text style={styles.unreadBadgeText}>
+                              {thread.unread_count}
+                            </Text>
+                          </View>
+                        )}
+                        <Ionicons
+                          name="chevron-forward"
+                          size={16}
+                          color={shadcn.mutedForeground}
+                          style={styles.chevronIcon}
+                        />
+                      </View>
+                    </View>
+                  </TouchableOpacity>
+                </View>
               );
             })}
-          </View>
+          </Card>
         )}
       </ScrollView>
     </Screen>
@@ -189,99 +206,100 @@ const styles = StyleSheet.create({
     height: touchTarget.minHeight,
     alignItems: "center",
     justifyContent: "center",
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: shadcn.border,
+    backgroundColor: shadcn.background,
   },
   scrollContent: {
     padding: spacing.lg,
     paddingBottom: spacing.max,
   },
-  serviceBanner: {
+  serviceAlert: {
+    marginBottom: spacing.md,
+  },
+  threadsCard: {
+    padding: 0,
+    backgroundColor: shadcn.card,
+    borderColor: shadcn.border,
+    overflow: "hidden",
+    marginBottom: spacing.md,
+  },
+  threadRow: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: colors.primarySoft,
-    borderColor: "#BBF7D0",
-    borderWidth: 1,
-    padding: spacing.md,
-    borderRadius: radius.lg,
-    marginBottom: spacing.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
+    minHeight: 64,
   },
-  serviceTextCol: {
-    marginLeft: spacing.md,
+  threadRowUnread: {
+    backgroundColor: shadcn.secondary,
+  },
+  threadAvatar: {
+    marginRight: spacing.md,
+  },
+  threadBody: {
     flex: 1,
-  },
-  serviceTitle: {
-    fontSize: typography.size.xs,
-    fontWeight: typography.weight.bold,
-    color: colors.primary,
-  },
-  serviceBody: {
-    fontSize: typography.size.xs,
-    color: colors.textSecondary,
-    marginTop: 1,
-  },
-  threadsList: {
-    marginBottom: spacing.md,
-  },
-  threadCard: {
-    padding: spacing.md,
-    marginBottom: spacing.sm,
-  },
-  threadCardUnread: {
-    borderColor: colors.borderFocus,
-    backgroundColor: "#FCFDFD",
   },
   threadTopRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "flex-start",
-    marginBottom: spacing.xs,
-  },
-  titleCol: {
-    flex: 1,
-    marginRight: spacing.sm,
-  },
-  threadSubject: {
-    fontSize: typography.size.base,
-    color: colors.textPrimary,
-  },
-  threadSubjectBold: {
-    fontWeight: typography.weight.bold,
-  },
-  studentInfo: {
-    fontSize: typography.size.xs,
-    color: colors.textSecondary,
-    marginTop: 2,
-  },
-  metaCol: {
-    alignItems: "flex-end",
+    alignItems: "center",
+    marginBottom: 2,
   },
   timeText: {
     fontSize: 11,
-    color: colors.textMuted,
+    color: shadcn.mutedForeground,
     fontVariant: ["tabular-nums"],
   },
-  unreadBadgeWrap: {
-    marginTop: spacing.xs,
+  threadSubject: {
+    fontSize: typography.size.sm,
+    color: shadcn.foreground,
+    flex: 1,
+    marginRight: spacing.sm,
   },
-  messageSnippetRow: {
+  threadSubjectBold: {
+    fontWeight: typography.weight.semibold,
+  },
+  studentInfo: {
+    fontSize: typography.size.xs,
+    color: shadcn.mutedForeground,
+    marginBottom: 4,
+  },
+  threadBottomRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginTop: spacing.xs,
-    paddingTop: spacing.xs,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
   },
   snippetText: {
     flex: 1,
-    fontSize: typography.size.sm,
-    lineHeight: typography.lineHeight.sm,
+    fontSize: typography.size.xs,
     marginRight: spacing.sm,
   },
   snippetTextUnread: {
-    color: colors.textPrimary,
+    color: shadcn.foreground,
     fontWeight: typography.weight.medium,
   },
   snippetTextRead: {
-    color: colors.textSecondary,
+    color: shadcn.mutedForeground,
+  },
+  unreadBadge: {
+    minWidth: 20,
+    height: 20,
+    borderRadius: radius.full,
+    backgroundColor: shadcn.primary,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 6,
+    marginRight: spacing.xs,
+  },
+  unreadBadgeText: {
+    color: shadcn.primaryForeground,
+    fontSize: 10,
+    fontWeight: typography.weight.bold,
+    fontVariant: ["tabular-nums"],
+  },
+  chevronIcon: {
+    marginLeft: 2,
   },
 });

@@ -3,10 +3,9 @@ import {
   View,
   Text,
   StyleSheet,
-  TouchableOpacity,
   ScrollView,
   RefreshControl,
-  Alert,
+  Alert as NativeAlert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import {
@@ -22,12 +21,14 @@ import {
   Chip,
   Button,
   Input,
+  Label,
   StateView,
-  ModalSheet,
-  SectionHeader,
+  Sheet,
+  Avatar,
+  Separator,
 } from "../../components/ui";
 import * as api from "../../lib/api";
-import { colors, spacing, radius, typography, touchTarget } from "../../theme/tokens";
+import { shadcn, spacing, radius, typography, touchTarget } from "../../theme/tokens";
 
 type LeaveFilter = "PENDING" | "APPROVED" | "REJECTED" | "ALL";
 
@@ -94,7 +95,7 @@ export function StaffLeaveScreen() {
         review_notes: reviewNotes.trim() || undefined,
       });
 
-      Alert.alert(
+      NativeAlert.alert(
         "Berhasil",
         `Pengajuan izin untuk ${selectedRequest.student_name || "siswa"} telah ${
           reviewAction === "APPROVED" ? "disetujui" : "ditolak"
@@ -103,7 +104,7 @@ export function StaffLeaveScreen() {
       handleCloseReview();
       await fetchLeaveRequests(true);
     } catch (err: any) {
-      Alert.alert(
+      NativeAlert.alert(
         "Kendala",
         err?.message || "Gagal memproses peninjauan izin. Silakan coba lagi."
       );
@@ -128,7 +129,7 @@ export function StaffLeaveScreen() {
       scroll={false}
       headerShown={true}
       title="Pengajuan Izin"
-      subtitle="Tinjau dan proses permohonan izin sakit & dispensasi"
+      subtitle="Tinjau dan proses permohonan izin sakit dan dispensasi"
     >
       <ScrollView
         contentContainerStyle={styles.scrollContent}
@@ -137,8 +138,8 @@ export function StaffLeaveScreen() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={() => fetchLeaveRequests(true)}
-            colors={[colors.primary]}
-            tintColor={colors.primary}
+            colors={[shadcn.primary]}
+            tintColor={shadcn.primary}
           />
         }
       >
@@ -217,8 +218,13 @@ export function StaffLeaveScreen() {
 
               return (
                 <Card key={request.id} style={styles.requestCard}>
-                  {/* Header Kartu */}
+                  {/* Header Kartu: Avatar + Info Siswa + Status Badge */}
                   <View style={styles.cardHeaderRow}>
+                    <Avatar
+                      name={request.student_name || "Siswa"}
+                      size="md"
+                      style={styles.studentAvatar}
+                    />
                     <View style={styles.headerTitleCol}>
                       <Text style={styles.studentName}>
                         {request.student_name || "Peserta Didik"}
@@ -235,9 +241,11 @@ export function StaffLeaveScreen() {
                     </View>
                   </View>
 
+                  <Separator style={styles.cardSeparator} />
+
                   {/* Info Rentang Waktu & Alasan */}
                   <View style={styles.infoRow}>
-                    <Ionicons name="calendar-outline" size={16} color={colors.textSecondary} />
+                    <Ionicons name="calendar-outline" size={16} color={shadcn.mutedForeground} />
                     <Text style={styles.infoText}>Periode: {periodeText}</Text>
                   </View>
 
@@ -247,7 +255,7 @@ export function StaffLeaveScreen() {
                   </View>
 
                   <View style={styles.guardianRow}>
-                    <Ionicons name="person-outline" size={14} color={colors.textMuted} />
+                    <Ionicons name="person-outline" size={14} color={shadcn.mutedForeground} />
                     <Text style={styles.guardianText}>
                       Diajukan oleh: {request.guardian_name || "Wali Murid"}
                     </Text>
@@ -273,8 +281,8 @@ export function StaffLeaveScreen() {
                           size={16}
                           color={
                             request.status === LeaveStatus.APPROVED
-                              ? colors.badge.success.text
-                              : colors.badge.danger.text
+                              ? shadcn.status.success.text
+                              : shadcn.status.danger.text
                           }
                         />
                         <Text
@@ -283,8 +291,8 @@ export function StaffLeaveScreen() {
                             {
                               color:
                                 request.status === LeaveStatus.APPROVED
-                                  ? colors.badge.success.text
-                                  : colors.badge.danger.text,
+                                  ? shadcn.status.success.text
+                                  : shadcn.status.danger.text,
                             },
                           ]}
                         >
@@ -301,29 +309,41 @@ export function StaffLeaveScreen() {
 
                   {/* Tombol Aksi Untuk Status PENDING (Min 44pt) */}
                   {isPending && (
-                    <View style={styles.actionsRow}>
-                      <TouchableOpacity
-                        style={styles.rejectButton}
-                        onPress={() => handleOpenReview(request, "REJECTED")}
-                        activeOpacity={0.7}
-                        accessibilityRole="button"
-                        accessibilityLabel={`Tolak pengajuan izin ${request.student_name}`}
-                      >
-                        <Ionicons name="close-circle-outline" size={18} color={colors.badge.danger.text} />
-                        <Text style={styles.rejectButtonText}>Tolak</Text>
-                      </TouchableOpacity>
-
-                      <TouchableOpacity
-                        style={styles.approveButton}
-                        onPress={() => handleOpenReview(request, "APPROVED")}
-                        activeOpacity={0.7}
-                        accessibilityRole="button"
-                        accessibilityLabel={`Setujui pengajuan izin ${request.student_name}`}
-                      >
-                        <Ionicons name="checkmark-circle-outline" size={18} color={colors.textInverse} />
-                        <Text style={styles.approveButtonText}>Setujui</Text>
-                      </TouchableOpacity>
-                    </View>
+                    <>
+                      <Separator style={styles.actionsSeparator} />
+                      <View style={styles.actionsRow}>
+                        <Button
+                          title="Tolak"
+                          variant="outline"
+                          size="default"
+                          onPress={() => handleOpenReview(request, "REJECTED")}
+                          leftIcon={
+                            <Ionicons
+                              name="close-circle-outline"
+                              size={18}
+                              color={shadcn.foreground}
+                            />
+                          }
+                          accessibilityLabel={`Tolak pengajuan izin ${request.student_name}`}
+                          style={styles.actionBtnOutline}
+                        />
+                        <Button
+                          title="Setujui"
+                          variant="default"
+                          size="default"
+                          onPress={() => handleOpenReview(request, "APPROVED")}
+                          leftIcon={
+                            <Ionicons
+                              name="checkmark-circle-outline"
+                              size={18}
+                              color={shadcn.primaryForeground}
+                            />
+                          }
+                          accessibilityLabel={`Setujui pengajuan izin ${request.student_name}`}
+                          style={styles.actionBtnDefault}
+                        />
+                      </View>
+                    </>
                   )}
                 </Card>
               );
@@ -331,29 +351,35 @@ export function StaffLeaveScreen() {
           </View>
         )}
 
-        {/* Modal Konfirmasi Peninjauan */}
-        <ModalSheet
+        {/* Modal Konfirmasi Peninjauan menggunakan Sheet */}
+        <Sheet
           visible={Boolean(selectedRequest)}
           onClose={handleCloseReview}
           title={reviewAction === "APPROVED" ? "Setujui Pengajuan Izin" : "Tolak Pengajuan Izin"}
         >
           {selectedRequest && (
-            <View style={styles.modalContent}>
-              <View style={styles.modalSummaryBox}>
-                <Text style={styles.modalStudentName}>
-                  {selectedRequest.student_name}
-                </Text>
-                <Text style={styles.modalClassText}>
-                  {selectedRequest.class_name ? `Kelas ${selectedRequest.class_name}` : "Siswa"} •{" "}
-                  {selectedRequest.leave_type === LeaveType.SAKIT ? "Sakit" : "Izin"}
-                </Text>
-                <Text style={styles.modalReasonText}>
+            <View style={styles.sheetContent}>
+              <View style={styles.sheetSummaryBox}>
+                <View style={styles.sheetSummaryHeader}>
+                  <Avatar name={selectedRequest.student_name || "Siswa"} size="sm" />
+                  <View style={styles.sheetStudentInfo}>
+                    <Text style={styles.sheetStudentName}>
+                      {selectedRequest.student_name}
+                    </Text>
+                    <Text style={styles.sheetClassText}>
+                      {selectedRequest.class_name ? `Kelas ${selectedRequest.class_name}` : "Siswa"} •{" "}
+                      {selectedRequest.leave_type === LeaveType.SAKIT ? "Sakit" : "Izin"}
+                    </Text>
+                  </View>
+                </View>
+                <Separator style={styles.sheetSummarySeparator} />
+                <Text style={styles.sheetReasonText}>
                   "{selectedRequest.reason}"
                 </Text>
               </View>
 
+              <Label required>Catatan Peninjauan</Label>
               <Input
-                label="Catatan Peninjauan (Dapat dibaca oleh wali murid)"
                 value={reviewNotes}
                 onChangeText={setReviewNotes}
                 placeholder="Tuliskan catatan atau instruksi bagi orang tua..."
@@ -362,7 +388,7 @@ export function StaffLeaveScreen() {
                 accessibilityLabel="Catatan peninjauan izin"
               />
 
-              <View style={styles.modalButtonRow}>
+              <View style={styles.sheetButtonRow}>
                 <Button
                   title={
                     submittingReview
@@ -372,15 +398,15 @@ export function StaffLeaveScreen() {
                       : "Konfirmasi Tolak"
                   }
                   onPress={handleSubmitReview}
-                  variant={reviewAction === "APPROVED" ? "primary" : "danger"}
+                  variant={reviewAction === "APPROVED" ? "default" : "destructive"}
                   loading={submittingReview}
                   accessibilityLabel="Kirim hasil peninjauan izin"
-                  style={styles.modalSubmitButton}
+                  style={styles.sheetSubmitButton}
                 />
               </View>
             </View>
           )}
-        </ModalSheet>
+        </Sheet>
       </ScrollView>
     </Screen>
   );
@@ -399,85 +425,92 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   requestCard: {
-    padding: spacing.lg,
+    padding: spacing.md,
+    backgroundColor: shadcn.card,
+    borderColor: shadcn.border,
     marginBottom: spacing.md,
   },
   cardHeaderRow: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    marginBottom: spacing.sm,
+    alignItems: "center",
+  },
+  studentAvatar: {
+    marginRight: spacing.sm,
   },
   headerTitleCol: {
     flex: 1,
     marginRight: spacing.sm,
   },
   studentName: {
-    fontSize: typography.size.base,
-    fontWeight: typography.weight.bold,
-    color: colors.textPrimary,
+    fontSize: typography.size.sm,
+    fontWeight: typography.weight.semibold,
+    color: shadcn.foreground,
   },
   classInfo: {
     fontSize: typography.size.xs,
-    color: colors.textSecondary,
+    color: shadcn.mutedForeground,
     marginTop: 2,
   },
   badgeCol: {
     alignItems: "flex-end",
   },
+  cardSeparator: {
+    marginVertical: spacing.sm,
+  },
   infoRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: spacing.sm,
+    marginBottom: spacing.xs,
   },
   infoText: {
     fontSize: typography.size.xs,
     fontWeight: typography.weight.medium,
-    color: colors.textSecondary,
+    color: shadcn.mutedForeground,
     marginLeft: spacing.xs,
   },
   reasonBox: {
-    backgroundColor: "#F8FAFC",
-    padding: spacing.md,
+    backgroundColor: shadcn.secondary,
+    padding: spacing.sm,
     borderRadius: radius.md,
-    marginBottom: spacing.sm,
+    marginVertical: spacing.xs,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: shadcn.border,
   },
   reasonLabel: {
     fontSize: 11,
-    fontWeight: typography.weight.semibold,
-    color: colors.textMuted,
+    fontWeight: typography.weight.medium,
+    color: shadcn.mutedForeground,
     marginBottom: 2,
   },
   reasonText: {
     fontSize: typography.size.sm,
-    color: colors.textPrimary,
+    color: shadcn.foreground,
     lineHeight: typography.lineHeight.sm,
   },
   guardianRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: spacing.md,
+    marginTop: spacing.xs,
+    marginBottom: spacing.xs,
   },
   guardianText: {
     fontSize: 11,
-    color: colors.textMuted,
+    color: shadcn.mutedForeground,
     marginLeft: spacing.xs,
   },
   reviewNotesBox: {
-    padding: spacing.md,
+    padding: spacing.sm,
     borderRadius: radius.md,
     borderWidth: 1,
     marginTop: spacing.xs,
   },
   reviewNotesBoxApproved: {
-    backgroundColor: colors.badge.success.bg,
-    borderColor: colors.badge.success.border,
+    backgroundColor: shadcn.status.success.bg,
+    borderColor: shadcn.status.success.border,
   },
   reviewNotesBoxRejected: {
-    backgroundColor: colors.badge.danger.bg,
-    borderColor: colors.badge.danger.border,
+    backgroundColor: shadcn.status.danger.bg,
+    borderColor: shadcn.status.danger.border,
   },
   reviewStatusRow: {
     flexDirection: "row",
@@ -486,87 +519,73 @@ const styles = StyleSheet.create({
   },
   reviewStatusTitle: {
     fontSize: typography.size.xs,
-    fontWeight: typography.weight.bold,
+    fontWeight: typography.weight.semibold,
     marginLeft: spacing.xs,
   },
   reviewNotesText: {
     fontSize: typography.size.xs,
-    color: colors.textSecondary,
+    color: shadcn.mutedForeground,
     fontStyle: "italic",
     marginTop: 2,
+  },
+  actionsSeparator: {
+    marginTop: spacing.sm,
+    marginBottom: spacing.sm,
   },
   actionsRow: {
     flexDirection: "row",
     justifyContent: "flex-end",
     alignItems: "center",
-    paddingTop: spacing.sm,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
   },
-  rejectButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    minHeight: touchTarget.minHeight,
-    paddingHorizontal: spacing.lg,
-    borderRadius: radius.md,
-    backgroundColor: colors.badge.danger.bg,
-    borderWidth: 1,
-    borderColor: colors.badge.danger.border,
+  actionBtnOutline: {
     marginRight: spacing.sm,
-  },
-  rejectButtonText: {
-    fontSize: typography.size.sm,
-    fontWeight: typography.weight.bold,
-    color: colors.badge.danger.text,
-    marginLeft: spacing.xs,
-  },
-  approveButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
     minHeight: touchTarget.minHeight,
-    paddingHorizontal: spacing.lg,
-    borderRadius: radius.md,
-    backgroundColor: colors.primary,
   },
-  approveButtonText: {
-    fontSize: typography.size.sm,
-    fontWeight: typography.weight.bold,
-    color: colors.textInverse,
-    marginLeft: spacing.xs,
+  actionBtnDefault: {
+    minHeight: touchTarget.minHeight,
   },
-  modalContent: {
+  sheetContent: {
     paddingVertical: spacing.xs,
   },
-  modalSummaryBox: {
-    backgroundColor: "#F8FAFC",
+  sheetSummaryBox: {
+    backgroundColor: shadcn.secondary,
     padding: spacing.md,
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: shadcn.border,
     marginBottom: spacing.md,
   },
-  modalStudentName: {
-    fontSize: typography.size.base,
-    fontWeight: typography.weight.bold,
-    color: colors.textPrimary,
+  sheetSummaryHeader: {
+    flexDirection: "row",
+    alignItems: "center",
   },
-  modalClassText: {
+  sheetStudentInfo: {
+    marginLeft: spacing.sm,
+    flex: 1,
+  },
+  sheetStudentName: {
+    fontSize: typography.size.sm,
+    fontWeight: typography.weight.semibold,
+    color: shadcn.foreground,
+  },
+  sheetClassText: {
     fontSize: typography.size.xs,
-    color: colors.textSecondary,
+    color: shadcn.mutedForeground,
     marginTop: 2,
   },
-  modalReasonText: {
+  sheetSummarySeparator: {
+    marginVertical: spacing.sm,
+  },
+  sheetReasonText: {
     fontSize: typography.size.xs,
-    color: colors.textSecondary,
-    marginTop: spacing.xs,
+    color: shadcn.mutedForeground,
     fontStyle: "italic",
   },
-  modalButtonRow: {
+  sheetButtonRow: {
     marginTop: spacing.md,
   },
-  modalSubmitButton: {
+  sheetSubmitButton: {
     width: "100%",
+    minHeight: touchTarget.minHeight,
   },
 });
