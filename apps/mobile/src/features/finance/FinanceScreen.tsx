@@ -33,6 +33,7 @@ import * as api from "../../lib/api";
 import {
   bento,
   breakpoints,
+  layout,
   shadcn,
   spacing,
   radius,
@@ -51,6 +52,9 @@ const PAYMENT_METHODS = [
 export function FinanceScreen() {
   const { width } = useWindowDimensions();
   const isTablet = width >= breakpoints.tablet;
+  const responsiveHorizontalPadding = isTablet
+    ? layout.tabletPaddingX
+    : layout.mobilePaddingX;
 
   const { students, activeStudentId, activeStudent, setActiveStudentId } =
     useAuth();
@@ -236,8 +240,18 @@ export function FinanceScreen() {
 
       <ScrollView
         style={styles.screenScroll}
-        contentContainerStyle={styles.screenScrollContent}
+        contentContainerStyle={[
+          styles.screenScrollContent,
+          {
+            paddingHorizontal: responsiveHorizontalPadding,
+            paddingBottom: layout.scrollBottomPad,
+            gap: layout.sectionGap,
+          },
+        ]}
         showsVerticalScrollIndicator={false}
+        scrollEventThrottle={16}
+        decelerationRate="normal"
+        bounces={true}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -332,6 +346,9 @@ export function FinanceScreen() {
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
+            scrollEventThrottle={16}
+            decelerationRate="normal"
+            bounces={true}
             contentContainerStyle={styles.filterScroll}
           >
             <Chip
@@ -732,29 +749,27 @@ const styles = StyleSheet.create({
     backgroundColor: bento.surface,
   },
   screenScrollContent: {
-    padding: spacing.lg,
-    paddingBottom: spacing.xxxl,
+    paddingVertical: spacing.md,
   },
-  childSwitcherStyle: {
-    marginBottom: spacing.md,
-  },
+  childSwitcherStyle: {},
 
   bentoRow: {
-    marginBottom: spacing.lg,
     gap: spacing.md,
   },
   bentoRowTablet: {
     flexDirection: "row",
     alignItems: "stretch",
+    gap: 20,
   },
 
   heroCard: {
     backgroundColor: bento.iceBlue,
     borderRadius: radius.xxl,
-    padding: spacing.xl,
+    padding: layout.heroPadding,
+    justifyContent: "space-between",
   },
   heroCardTablet: {
-    flex: 1.2,
+    flex: 1.15,
   },
   heroTopRow: {
     flexDirection: "row",
@@ -767,17 +782,20 @@ const styles = StyleSheet.create({
   },
   heroEyebrow: {
     fontSize: typography.size.xs,
+    fontFamily: typography.family.medium,
     color: bento.pastelMutedText,
     fontWeight: typography.weight.medium,
   },
   heroStudentName: {
     fontSize: typography.size.sm,
+    fontFamily: typography.family.semibold,
     color: shadcn.foreground,
     fontWeight: typography.weight.semibold,
     marginTop: 2,
   },
   heroAmount: {
     fontSize: typography.size.xxxl,
+    fontFamily: typography.family.bold,
     fontWeight: typography.weight.bold,
     color: shadcn.foreground,
     fontVariant: ["tabular-nums"],
@@ -795,24 +813,28 @@ const styles = StyleSheet.create({
   },
   heroFooterText: {
     fontSize: typography.size.xs,
+    fontFamily: typography.family.regular,
     color: bento.pastelMutedText,
     flexShrink: 1,
   },
 
   statsGroup: {
-    gap: spacing.md,
+    flexDirection: "row",
+    alignItems: "stretch",
+    gap: 12,
   },
   statsGroupTablet: {
-    flex: 1,
-    justifyContent: "space-between",
+    flex: 1.25,
+    flexDirection: "row",
+    alignItems: "stretch",
+    gap: 14,
   },
   statCardItem: {
     flex: 1,
+    alignSelf: "stretch",
   },
 
-  filterSection: {
-    marginBottom: spacing.md,
-  },
+  filterSection: {},
   filterScroll: {
     flexDirection: "row",
     gap: spacing.xs,
@@ -831,6 +853,7 @@ const styles = StyleSheet.create({
   },
   invoiceDescription: {
     fontSize: typography.size.sm,
+    fontFamily: typography.family.regular,
     color: shadcn.mutedForeground,
     marginTop: spacing.xs,
     marginHorizontal: spacing.xs,
@@ -856,11 +879,13 @@ const styles = StyleSheet.create({
   },
   paymentSummaryLabel: {
     fontSize: typography.size.xs,
+    fontFamily: typography.family.medium,
     color: bento.pastelMutedText,
     fontWeight: typography.weight.medium,
   },
   paymentSummaryAmount: {
     fontSize: typography.size.xxl,
+    fontFamily: typography.family.bold,
     fontWeight: typography.weight.bold,
     color: shadcn.foreground,
     fontVariant: ["tabular-nums"],
@@ -869,6 +894,7 @@ const styles = StyleSheet.create({
   },
   paymentSummaryTitle: {
     fontSize: typography.size.sm,
+    fontFamily: typography.family.medium,
     color: shadcn.foreground,
   },
   sheetSeparator: {
@@ -893,17 +919,20 @@ const styles = StyleSheet.create({
   },
   bankInfoTitle: {
     fontSize: typography.size.xs,
+    fontFamily: typography.family.regular,
     color: shadcn.mutedForeground,
     marginBottom: 2,
   },
   bankInfoNumber: {
     fontSize: typography.size.base,
+    fontFamily: typography.family.semibold,
     fontWeight: typography.weight.semibold,
     color: shadcn.foreground,
     fontVariant: ["tabular-nums"],
   },
   bankInfoName: {
     fontSize: typography.size.xs,
+    fontFamily: typography.family.regular,
     color: shadcn.mutedForeground,
     marginTop: 2,
   },
@@ -933,17 +962,20 @@ const styles = StyleSheet.create({
   },
   schoolBadgeText: {
     fontSize: typography.size.sm,
+    fontFamily: typography.family.semibold,
     fontWeight: typography.weight.semibold,
     color: shadcn.foreground,
   },
   receiptMainTitle: {
     fontSize: typography.size.base,
+    fontFamily: typography.family.semibold,
     fontWeight: typography.weight.semibold,
     color: shadcn.foreground,
     letterSpacing: 0.5,
   },
   receiptNo: {
     fontSize: typography.size.xs,
+    fontFamily: typography.family.regular,
     color: shadcn.mutedForeground,
     marginTop: 2,
     fontVariant: ["tabular-nums"],
@@ -973,11 +1005,13 @@ const styles = StyleSheet.create({
   },
   receiptFieldLabel: {
     fontSize: typography.size.sm,
+    fontFamily: typography.family.regular,
     color: shadcn.mutedForeground,
     flex: 1,
   },
   receiptFieldValue: {
     fontSize: typography.size.sm,
+    fontFamily: typography.family.medium,
     fontWeight: typography.weight.medium,
     color: shadcn.foreground,
     flex: 1,
@@ -985,6 +1019,7 @@ const styles = StyleSheet.create({
     fontVariant: ["tabular-nums"],
   },
   receiptAmount: {
+    fontFamily: typography.family.semibold,
     fontWeight: typography.weight.semibold,
     color: shadcn.foreground,
   },

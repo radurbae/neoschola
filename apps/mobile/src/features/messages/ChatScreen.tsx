@@ -3,10 +3,10 @@ import {
   View,
   Text,
   StyleSheet,
-  TouchableOpacity,
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  useWindowDimensions,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -18,11 +18,14 @@ import {
   Avatar,
   Alert,
   StateView,
+  SpringPressable,
 } from "../../components/ui";
 import { useAuth } from "../../store/auth";
 import * as api from "../../lib/api";
 import {
   bento,
+  breakpoints,
+  layout,
   shadcn,
   spacing,
   radius,
@@ -32,6 +35,12 @@ import {
 
 export function ChatScreen() {
   const router = useRouter();
+  const { width } = useWindowDimensions();
+  const isTablet = width >= breakpoints.tablet;
+  const responsiveHorizontalPadding = isTablet
+    ? layout.tabletPaddingX
+    : layout.mobilePaddingX;
+
   const { id } = useLocalSearchParams<{ id: string }>();
   const { user } = useAuth();
 
@@ -111,16 +120,20 @@ export function ChatScreen() {
 
   return (
     <Screen scroll={false} headerShown={false}>
-      <View style={styles.headerBar}>
-        <TouchableOpacity
+      <View
+        style={[
+          styles.headerBar,
+          { paddingHorizontal: responsiveHorizontalPadding },
+        ]}
+      >
+        <SpringPressable
           style={styles.backButton}
           onPress={() => router.back()}
-          activeOpacity={0.7}
           accessibilityRole="button"
           accessibilityLabel="Kembali ke daftar pesan"
         >
           <Ionicons name="arrow-back" size={20} color={shadcn.foreground} />
-        </TouchableOpacity>
+        </SpringPressable>
 
         <Avatar
           name={thread?.teacher_name || "Wali Kelas"}
@@ -162,8 +175,17 @@ export function ChatScreen() {
           <ScrollView
             ref={scrollViewRef}
             style={styles.messagesScroll}
-            contentContainerStyle={styles.messagesContent}
+            contentContainerStyle={[
+              styles.messagesContent,
+              {
+                paddingHorizontal: responsiveHorizontalPadding,
+                paddingVertical: 20,
+              },
+            ]}
             showsVerticalScrollIndicator={false}
+            scrollEventThrottle={16}
+            decelerationRate="normal"
+            bounces={true}
           >
             {/* Notifikasi Monokrom Resmi Percakapan */}
             {thread && (
@@ -256,7 +278,15 @@ export function ChatScreen() {
         )}
 
         {/* Composer Bawah Rounded Pill Rapi dengan Input + Tombol Kirim >= 44pt */}
-        <View style={styles.composerBar}>
+        <View
+          style={[
+            styles.composerBar,
+            {
+              paddingHorizontal: responsiveHorizontalPadding,
+              paddingVertical: 14,
+            },
+          ]}
+        >
           <View style={styles.composerInputCol}>
             <Input
               placeholder="Ketik pesan untuk guru..."
@@ -319,11 +349,13 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: typography.size.base,
     fontWeight: typography.weight.semibold,
+    fontFamily: typography.family.semibold,
     color: shadcn.foreground,
     letterSpacing: typography.tracking.snug,
   },
   headerSubtitle: {
     fontSize: typography.size.xs,
+    fontFamily: typography.family.regular,
     color: shadcn.mutedForeground,
     marginTop: 2,
   },
@@ -334,10 +366,7 @@ const styles = StyleSheet.create({
   messagesScroll: {
     flex: 1,
   },
-  messagesContent: {
-    padding: spacing.lg,
-    paddingBottom: spacing.lg,
-  },
+  messagesContent: {},
   threadAlert: {
     marginBottom: spacing.lg,
   },
@@ -347,6 +376,7 @@ const styles = StyleSheet.create({
   },
   emptyMessagesText: {
     fontSize: typography.size.sm,
+    fontFamily: typography.family.regular,
     color: shadcn.mutedForeground,
     textAlign: "center",
     lineHeight: typography.lineHeight.sm,
@@ -380,11 +410,13 @@ const styles = StyleSheet.create({
   senderNameText: {
     fontSize: typography.size.xs,
     fontWeight: typography.weight.semibold,
+    fontFamily: typography.family.semibold,
     color: bento.iceBlueText,
     marginBottom: 2,
   },
   messageText: {
     fontSize: typography.size.sm,
+    fontFamily: typography.family.regular,
     lineHeight: typography.lineHeight.sm + 2,
   },
   messageTextMy: {
@@ -402,6 +434,7 @@ const styles = StyleSheet.create({
   },
   messageTimeText: {
     fontSize: 11,
+    fontFamily: typography.family.regular,
     fontVariant: ["tabular-nums"],
   },
   messageTimeTextMy: {
