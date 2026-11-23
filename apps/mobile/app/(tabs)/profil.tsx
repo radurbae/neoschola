@@ -63,23 +63,6 @@ export default function ProfileScreen() {
 
   return (
     <Screen scroll={false} headerShown={false} style={styles.screen}>
-      {/* Top Utility Bar */}
-      <TopUtilityBar
-        title="Profil"
-        subtitle="Informasi akun dan kontak sekolah"
-        leftAction={
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => router.back()}
-            activeOpacity={0.7}
-            accessibilityRole="button"
-            accessibilityLabel="Kembali ke layar sebelumnya"
-          >
-            <Ionicons name="arrow-back" size={22} color={shadcn.foreground} />
-          </TouchableOpacity>
-        }
-      />
-
       <ScrollView
         style={styles.scrollBody}
         contentContainerStyle={[
@@ -88,6 +71,10 @@ export default function ProfileScreen() {
             paddingHorizontal: isTablet
               ? layout.tabletPaddingX
               : layout.mobilePaddingX,
+            paddingTop: isTablet ? 8 : 4,
+            paddingBottom: isTablet
+              ? layout.scrollBottomPad
+              : layout.mobileDockClearance,
           },
         ]}
         showsVerticalScrollIndicator={false}
@@ -95,6 +82,23 @@ export default function ProfileScreen() {
         decelerationRate="normal"
         bounces={true}
       >
+        {/* Top Utility Bar menyatu di aliran scroll */}
+        <TopUtilityBar
+          noHorizontalPadding
+          title="Profil"
+          subtitle="Informasi akun dan kontak sekolah"
+          leftAction={
+            <TouchableOpacity
+              style={styles.backButton}
+              onPress={() => router.back()}
+              activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel="Kembali ke layar sebelumnya"
+            >
+              <Ionicons name="arrow-back" size={22} color={shadcn.foreground} />
+            </TouchableOpacity>
+          }
+        />
         {/* 1. Kartu Profil Soft Ice Blue */}
         <View style={styles.profileCardIceBlue}>
           <View style={styles.profileHeaderRow}>
@@ -256,8 +260,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingTop: 12,
-    paddingBottom: layout.scrollBottomPad,
+    flexGrow: 1,
     gap: layout.sectionGap,
   },
   profileCardIceBlue: {

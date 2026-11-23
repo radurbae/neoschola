@@ -128,86 +128,89 @@ export default function NotificationsScreen() {
 
   return (
     <Screen scroll={false} headerShown={false} style={styles.screen}>
-      {/* Top Utility Bar dengan Tombol Kembali 44x44 */}
-      <TopUtilityBar
-        title="Notifikasi"
-        subtitle={
-          unreadCount > 0
-            ? `${unreadCount} kabar belum dibaca`
-            : "Semua kabar sudah dibaca"
-        }
-        leftAction={
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => router.back()}
-            activeOpacity={0.7}
-            accessibilityRole="button"
-            accessibilityLabel="Kembali ke layar sebelumnya"
-          >
-            <Ionicons name="arrow-back" size={22} color={shadcn.foreground} />
-          </TouchableOpacity>
-        }
-      />
-
-      {/* Baris Tombol Tandai Semua jika ada notifikasi belum dibaca */}
-      {unreadCount > 0 && (
-        <View style={styles.actionToolbar}>
-          <Button
-            title="Tandai Semua Sudah Dibaca"
-            onPress={handleMarkAllRead}
-            variant="ghost"
-            size="sm"
-            loading={markingAll}
-            accessibilityLabel="Tandai semua notifikasi sudah dibaca"
+      <ScrollView
+        style={styles.listContainer}
+        contentContainerStyle={[
+          styles.listContent,
+          {
+            paddingHorizontal: isTablet
+              ? layout.tabletPaddingX
+              : layout.mobilePaddingX,
+            paddingTop: isTablet ? 8 : 4,
+            paddingBottom: layout.scrollBottomPad,
+          },
+        ]}
+        showsVerticalScrollIndicator={false}
+        scrollEventThrottle={16}
+        decelerationRate="normal"
+        bounces={true}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={() => fetchNotifications(true)}
+            tintColor={shadcn.primary}
           />
-        </View>
-      )}
-
-      {/* Main Content Body */}
-      {loading ? (
-        <StateView
-          type="loading"
-          message="Memuat daftar notifikasi sekolah..."
-        />
-      ) : errorMessage ? (
-        <StateView
-          type="error"
-          title="Gagal Memuat Notifikasi"
-          message={errorMessage}
-          actionLabel="Coba Lagi"
-          onAction={() => fetchNotifications()}
-        />
-      ) : notifications.length === 0 ? (
-        <StateView
-          type="empty"
-          title="Belum Ada Notifikasi"
-          message="Semua kabar penting, presensi harian, dan pengumuman sekolah akan muncul di sini."
-          actionLabel="Muat Ulang"
-          onAction={() => fetchNotifications()}
-        />
-      ) : (
-        <ScrollView
-          style={styles.listContainer}
-          contentContainerStyle={[
-            styles.listContent,
-            {
-              paddingHorizontal: isTablet
-                ? layout.tabletPaddingX
-                : layout.mobilePaddingX,
-            },
-          ]}
-          showsVerticalScrollIndicator={false}
-          scrollEventThrottle={16}
-          decelerationRate="normal"
-          bounces={true}
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={() => fetchNotifications(true)}
-              tintColor={shadcn.primary}
-            />
+        }
+      >
+        {/* Top Utility Bar dengan Tombol Kembali 44x44 menyatu di aliran scroll */}
+        <TopUtilityBar
+          noHorizontalPadding
+          title="Notifikasi"
+          subtitle={
+            unreadCount > 0
+              ? `${unreadCount} kabar belum dibaca`
+              : "Semua kabar sudah dibaca"
           }
-        >
+          leftAction={
+            <TouchableOpacity
+              style={styles.backButton}
+              onPress={() => router.back()}
+              activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel="Kembali ke layar sebelumnya"
+            >
+              <Ionicons name="arrow-back" size={22} color={shadcn.foreground} />
+            </TouchableOpacity>
+          }
+        />
+
+        {/* Baris Tombol Tandai Semua jika ada notifikasi belum dibaca */}
+        {unreadCount > 0 && (
+          <View style={styles.actionToolbar}>
+            <Button
+              title="Tandai Semua Sudah Dibaca"
+              onPress={handleMarkAllRead}
+              variant="ghost"
+              size="sm"
+              loading={markingAll}
+              accessibilityLabel="Tandai semua notifikasi sudah dibaca"
+            />
+          </View>
+        )}
+
+        {/* Main Content Body */}
+        {loading ? (
+          <StateView
+            type="loading"
+            message="Memuat daftar notifikasi sekolah..."
+          />
+        ) : errorMessage ? (
+          <StateView
+            type="error"
+            title="Gagal Memuat Notifikasi"
+            message={errorMessage}
+            actionLabel="Coba Lagi"
+            onAction={() => fetchNotifications()}
+          />
+        ) : notifications.length === 0 ? (
+          <StateView
+            type="empty"
+            title="Belum Ada Notifikasi"
+            message="Semua kabar penting, presensi harian, dan pengumuman sekolah akan muncul di sini."
+            actionLabel="Muat Ulang"
+            onAction={() => fetchNotifications()}
+          />
+        ) : (
           <View style={styles.notificationsCard}>
             {notifications.map((item, index) => {
               const formattedTime = formatTanggalId(item.created_at, {
@@ -234,8 +237,8 @@ export default function NotificationsScreen() {
               );
             })}
           </View>
-        </ScrollView>
-      )}
+        )}
+      </ScrollView>
     </Screen>
   );
 }
@@ -253,17 +256,15 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   actionToolbar: {
-    paddingHorizontal: spacing.lg,
     paddingVertical: spacing.xs,
     alignItems: "flex-end",
-    backgroundColor: bento.surface,
   },
   listContainer: {
     flex: 1,
   },
   listContent: {
-    paddingTop: 12,
-    paddingBottom: layout.scrollBottomPad,
+    flexGrow: 1,
+    gap: layout.sectionGap,
   },
   notificationsCard: {
     backgroundColor: bento.surface,

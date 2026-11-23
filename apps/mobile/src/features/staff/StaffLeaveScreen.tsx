@@ -139,13 +139,6 @@ export function StaffLeaveScreen() {
 
   return (
     <View style={styles.container}>
-      <TopUtilityBar
-        title="Pengajuan Izin"
-        subtitle="Tinjau dan proses permohonan izin sakit dan dispensasi"
-        profileName={user?.name || "Staf"}
-        onPressNotifications={() => router.push("/notifications")}
-      />
-
       <ScrollView
         contentContainerStyle={[
           styles.scrollContent,
@@ -153,8 +146,11 @@ export function StaffLeaveScreen() {
             paddingHorizontal: isTablet
               ? layout.tabletPaddingX
               : layout.mobilePaddingX,
+            paddingTop: isTablet ? 8 : 4,
             gap: layout.sectionGap,
-            paddingBottom: layout.scrollBottomPad,
+            paddingBottom: isTablet
+              ? layout.scrollBottomPad
+              : layout.mobileDockClearance,
           },
         ]}
         showsVerticalScrollIndicator={false}
@@ -170,6 +166,13 @@ export function StaffLeaveScreen() {
           />
         }
       >
+        <TopUtilityBar
+          noHorizontalPadding
+          title="Pengajuan Izin"
+          subtitle="Tinjau dan proses permohonan izin sakit dan dispensasi"
+          profileName={user?.name || "Staf"}
+          onPressNotifications={() => router.push("/notifications")}
+        />
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}

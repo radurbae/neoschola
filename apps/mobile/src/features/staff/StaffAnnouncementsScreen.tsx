@@ -205,13 +205,6 @@ export function StaffAnnouncementsScreen() {
 
   return (
     <View style={styles.container}>
-      <TopUtilityBar
-        title="Pengumuman"
-        subtitle="Publikasi maklumat penting bagi warga sekolah"
-        profileName={user?.name || "Staf"}
-        onPressNotifications={() => router.push("/notifications")}
-      />
-
       <ScrollView
         contentContainerStyle={[
           styles.scrollContent,
@@ -219,8 +212,11 @@ export function StaffAnnouncementsScreen() {
             paddingHorizontal: isTablet
               ? layout.tabletPaddingX
               : layout.mobilePaddingX,
+            paddingTop: isTablet ? 8 : 4,
             gap: layout.sectionGap,
-            paddingBottom: layout.scrollBottomPad,
+            paddingBottom: isTablet
+              ? layout.scrollBottomPad
+              : layout.mobileDockClearance,
           },
         ]}
         showsVerticalScrollIndicator={false}
@@ -236,6 +232,13 @@ export function StaffAnnouncementsScreen() {
           />
         }
       >
+        <TopUtilityBar
+          noHorizontalPadding
+          title="Pengumuman"
+          subtitle="Publikasi maklumat penting bagi warga sekolah"
+          profileName={user?.name || "Staf"}
+          onPressNotifications={() => router.push("/notifications")}
+        />
         {/* DarkActionCard CTA Buat Pengumuman */}
         <DarkActionCard
           eyebrow="Publikasi"

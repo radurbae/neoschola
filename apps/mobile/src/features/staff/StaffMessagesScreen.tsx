@@ -87,21 +87,6 @@ export function StaffMessagesScreen() {
 
   return (
     <View style={styles.container}>
-      <TopUtilityBar
-        title="Pesan Wali"
-        subtitle="Komunikasi dan konsultasi dengan wali siswa"
-        leftAction={
-          <SpringPressable
-            style={styles.backButton}
-            onPress={handleBack}
-            accessibilityRole="button"
-            accessibilityLabel="Kembali ke Dasbor Staf"
-          >
-            <Ionicons name="arrow-back" size={20} color={shadcn.foreground} />
-          </SpringPressable>
-        }
-      />
-
       <ScrollView
         contentContainerStyle={[
           styles.scrollContent,
@@ -109,8 +94,11 @@ export function StaffMessagesScreen() {
             paddingHorizontal: isTablet
               ? layout.tabletPaddingX
               : layout.mobilePaddingX,
+            paddingTop: isTablet ? 8 : 4,
             gap: layout.sectionGap,
-            paddingBottom: layout.scrollBottomPad,
+            paddingBottom: isTablet
+              ? layout.scrollBottomPad
+              : layout.mobileDockClearance,
           },
         ]}
         showsVerticalScrollIndicator={false}
@@ -126,6 +114,21 @@ export function StaffMessagesScreen() {
           />
         }
       >
+        <TopUtilityBar
+          noHorizontalPadding
+          title="Pesan Wali"
+          subtitle="Komunikasi dan konsultasi dengan wali siswa"
+          leftAction={
+            <SpringPressable
+              style={styles.backButton}
+              onPress={handleBack}
+              accessibilityRole="button"
+              accessibilityLabel="Kembali ke Dasbor Staf"
+            >
+              <Ionicons name="arrow-back" size={20} color={shadcn.foreground} />
+            </SpringPressable>
+          }
+        />
         <Alert
           variant="default"
           title="Jam Layanan Komunikasi"

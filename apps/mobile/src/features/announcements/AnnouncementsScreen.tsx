@@ -182,142 +182,153 @@ export function AnnouncementsScreen() {
 
   return (
     <Screen scroll={false} headerShown={false}>
-      {/* TopUtilityBar dengan tombol kembali 44x44pt via leftAction */}
-      <TopUtilityBar
-        title="Pengumuman"
-        subtitle="Agenda dan informasi resmi sekolah"
-        leftAction={
-          <SpringPressable
-            style={styles.backButton}
-            onPress={() => router.back()}
-            accessibilityRole="button"
-            accessibilityLabel="Kembali ke layar sebelumnya"
-          >
-            <Ionicons name="arrow-back" size={20} color={shadcn.foreground} />
-          </SpringPressable>
+      <ScrollView
+        style={styles.listScrollView}
+        contentContainerStyle={[
+          styles.listScrollContent,
+          {
+            paddingHorizontal: responsiveHorizontalPadding,
+            paddingTop: isTablet ? 8 : 4,
+            paddingBottom: layout.scrollBottomPad,
+            gap: layout.sectionGap,
+          },
+        ]}
+        showsVerticalScrollIndicator={false}
+        scrollEventThrottle={16}
+        decelerationRate="normal"
+        bounces={true}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={() => fetchAnnouncements(true)}
+            tintColor={shadcn.primary}
+            colors={[shadcn.primary]}
+          />
         }
-      />
+      >
+        <View style={styles.headerBlock}>
+          {/* TopUtilityBar dengan tombol kembali 44x44pt via leftAction */}
+          <TopUtilityBar
+            noHorizontalPadding
+            title="Pengumuman"
+            subtitle="Agenda dan informasi resmi sekolah"
+            leftAction={
+              <SpringPressable
+                style={styles.backButton}
+                onPress={() => router.back()}
+                accessibilityRole="button"
+                accessibilityLabel="Kembali ke layar sebelumnya"
+              >
+                <Ionicons name="arrow-back" size={20} color={shadcn.foreground} />
+              </SpringPressable>
+            }
+          />
 
-      {/* Filter Kategori Chips Horizontal (Aman di 360px) */}
-      <View style={styles.filterSection}>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          scrollEventThrottle={16}
-          decelerationRate="normal"
-          bounces={true}
-          contentContainerStyle={[
-            styles.filterScroll,
-            { paddingHorizontal: responsiveHorizontalPadding },
-          ]}
-        >
-          {CATEGORIES.map((cat) => {
-            const count = categoryCounts[cat.key];
-            return (
-              <Chip
-                key={cat.key}
-                label={cat.label}
-                selected={selectedCategory === cat.key}
-                count={count}
-                onPress={() => setSelectedCategory(cat.key)}
-                accessibilityLabel={`Kategori ${cat.label}, ${count} pengumuman`}
-              />
-            );
-          })}
-        </ScrollView>
-      </View>
-
-      {/* Konten Utama */}
-      {loading ? (
-        <StateView type="loading" message="Memuat daftar pengumuman sekolah..." />
-      ) : errorMessage ? (
-        <StateView
-          type="error"
-          title="Gagal Memuat Pengumuman"
-          message={errorMessage}
-          actionLabel="Muat Ulang"
-          onAction={() => fetchAnnouncements(false)}
-        />
-      ) : filteredAnnouncements.length === 0 ? (
-        <StateView
-          type="empty"
-          title="Belum Ada Pengumuman"
-          message={
-            selectedCategory === "SEMUA"
-              ? "Belum ada pengumuman yang diterbitkan oleh pihak sekolah."
-              : `Belum ada pengumuman untuk kategori ${selectedCategory.toLowerCase()}.`
-          }
-          actionLabel="Segarkan Data"
-          onAction={() => fetchAnnouncements(false)}
-        />
-      ) : (
-        <ScrollView
-          style={styles.listScrollView}
-          contentContainerStyle={[
-            styles.listScrollContent,
-            {
-              paddingHorizontal: responsiveHorizontalPadding,
-              paddingBottom: layout.scrollBottomPad,
-              gap: layout.sectionGap,
-            },
-          ]}
-          showsVerticalScrollIndicator={false}
-          scrollEventThrottle={16}
-          decelerationRate="normal"
-          bounces={true}
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={() => fetchAnnouncements(true)}
-              tintColor={shadcn.primary}
-              colors={[shadcn.primary]}
-            />
-          }
-        >
-          {/* Pengumuman DARURAT yang disematkan disorot dengan DarkActionCard */}
-          {emergencyPinnedAnnouncements.map((item) => (
-            <DarkActionCard
-              key={item.id}
-              eyebrow="Darurat"
-              title={item.title}
-              description={item.content}
-              ctaLabel="Baca Detail"
-              onPress={() => setActiveAnnouncement(item)}
-              style={styles.emergencyCard}
-            />
-          ))}
-
-          {/* Daftar pengumuman lain memakai DarkIconRow dipisah Separator di dalam Card rounded 20pt */}
-          {regularAnnouncements.length > 0 && (
-            <Card style={styles.announcementsCard}>
-              {regularAnnouncements.map((item, index) => {
-                const catBadge = getCategoryBadge(item.category);
-                const icon = getCategoryIcon(item.category);
-                const dateStr = formatTanggalId(item.created_at, { includeDay: true });
-                const authorStr = item.created_by_name ? ` • ${item.created_by_name}` : "";
-
+          {/* Filter Kategori Chips Horizontal (Aman di 360px) */}
+          <View
+            style={[
+              styles.filterSection,
+              { marginHorizontal: -responsiveHorizontalPadding },
+            ]}
+          >
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              scrollEventThrottle={16}
+              decelerationRate="normal"
+              bounces={true}
+              contentContainerStyle={[
+                styles.filterScroll,
+                { paddingHorizontal: responsiveHorizontalPadding },
+              ]}
+            >
+              {CATEGORIES.map((cat) => {
+                const count = categoryCounts[cat.key];
                 return (
-                  <React.Fragment key={item.id}>
-                    {index > 0 && <Separator />}
-                    <DarkIconRow
-                      icon={icon}
-                      title={item.title}
-                      subtitle={`${dateStr}${authorStr}`}
-                      rightPrimary={catBadge.label}
-                      rightSecondary={item.is_read ? "Sudah Dibaca" : "Belum Dibaca"}
-                      rightSecondaryTone={item.is_read ? "neutral" : "warning"}
-                      onPress={() => setActiveAnnouncement(item)}
-                      accessibilityLabel={`Pengumuman: ${item.title}. Kategori ${catBadge.label}. Status: ${
-                        item.is_read ? "Sudah Dibaca" : "Belum Dibaca"
-                      }`}
-                    />
-                  </React.Fragment>
+                  <Chip
+                    key={cat.key}
+                    label={cat.label}
+                    selected={selectedCategory === cat.key}
+                    count={count}
+                    onPress={() => setSelectedCategory(cat.key)}
+                    accessibilityLabel={`Kategori ${cat.label}, ${count} pengumuman`}
+                  />
                 );
               })}
-            </Card>
-          )}
-        </ScrollView>
-      )}
+            </ScrollView>
+          </View>
+        </View>
+
+        {/* Konten Utama */}
+        {loading ? (
+          <StateView type="loading" message="Memuat daftar pengumuman sekolah..." />
+        ) : errorMessage ? (
+          <StateView
+            type="error"
+            title="Gagal Memuat Pengumuman"
+            message={errorMessage}
+            actionLabel="Muat Ulang"
+            onAction={() => fetchAnnouncements(false)}
+          />
+        ) : filteredAnnouncements.length === 0 ? (
+          <StateView
+            type="empty"
+            title="Belum Ada Pengumuman"
+            message={
+              selectedCategory === "SEMUA"
+                ? "Belum ada pengumuman yang diterbitkan oleh pihak sekolah."
+                : `Belum ada pengumuman untuk kategori ${selectedCategory.toLowerCase()}.`
+            }
+            actionLabel="Segarkan Data"
+            onAction={() => fetchAnnouncements(false)}
+          />
+        ) : (
+          <>
+            {/* Pengumuman DARURAT yang disematkan disorot dengan DarkActionCard */}
+            {emergencyPinnedAnnouncements.map((item) => (
+              <DarkActionCard
+                key={item.id}
+                eyebrow="Darurat"
+                title={item.title}
+                description={item.content}
+                ctaLabel="Baca Detail"
+                onPress={() => setActiveAnnouncement(item)}
+                style={styles.emergencyCard}
+              />
+            ))}
+
+            {/* Daftar pengumuman lain memakai DarkIconRow dipisah Separator di dalam Card rounded 20pt */}
+            {regularAnnouncements.length > 0 && (
+              <Card style={styles.announcementsCard}>
+                {regularAnnouncements.map((item, index) => {
+                  const catBadge = getCategoryBadge(item.category);
+                  const icon = getCategoryIcon(item.category);
+                  const dateStr = formatTanggalId(item.created_at, { includeDay: true });
+                  const authorStr = item.created_by_name ? ` • ${item.created_by_name}` : "";
+
+                  return (
+                    <React.Fragment key={item.id}>
+                      {index > 0 && <Separator />}
+                      <DarkIconRow
+                        icon={icon}
+                        title={item.title}
+                        subtitle={`${dateStr}${authorStr}`}
+                        rightPrimary={catBadge.label}
+                        rightSecondary={item.is_read ? "Sudah Dibaca" : "Belum Dibaca"}
+                        rightSecondaryTone={item.is_read ? "neutral" : "warning"}
+                        onPress={() => setActiveAnnouncement(item)}
+                        accessibilityLabel={`Pengumuman: ${item.title}. Kategori ${catBadge.label}. Status: ${
+                          item.is_read ? "Sudah Dibaca" : "Belum Dibaca"
+                        }`}
+                      />
+                    </React.Fragment>
+                  );
+                })}
+              </Card>
+            )}
+          </>
+        )}
+      </ScrollView>
 
       <Sheet
         visible={Boolean(activeAnnouncement)}
@@ -450,14 +461,13 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     borderRadius: radius.md,
   },
+  headerBlock: {
+    gap: 12,
+  },
   filterSection: {
-    backgroundColor: shadcn.background,
-    borderBottomWidth: 1,
-    borderBottomColor: shadcn.border,
-    paddingVertical: spacing.sm,
+    paddingVertical: spacing.xs,
   },
   filterScroll: {
-    paddingHorizontal: spacing.lg,
     flexDirection: "row",
     gap: spacing.xs,
   },
@@ -466,7 +476,7 @@ const styles = StyleSheet.create({
     backgroundColor: bento.surface,
   },
   listScrollContent: {
-    paddingVertical: spacing.md,
+    flexGrow: 1,
   },
   emergencyCard: {},
   announcementsCard: {

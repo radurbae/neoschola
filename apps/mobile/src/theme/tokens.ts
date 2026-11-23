@@ -17,6 +17,7 @@ export const layout = {
   cardPadding: 20,
   heroPadding: 24,
   scrollBottomPad: 48,
+  mobileDockClearance: 108,
 } as const;
 
 export const bento = {

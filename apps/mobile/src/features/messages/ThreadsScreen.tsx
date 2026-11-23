@@ -152,22 +152,16 @@ export function ThreadsScreen() {
 
   return (
     <Screen scroll={false} headerShown={false}>
-      {/* TopUtilityBar ("Pesan", tombol notif/profil) */}
-      <TopUtilityBar
-        title="Pesan"
-        subtitle="Komunikasi langsung wali murid dan sekolah"
-        unreadCount={totalUnreadCount}
-        profileName={user?.name || "Wali Murid"}
-        onPressNotifications={() => {}}
-      />
-
       <ScrollView
         style={styles.container}
         contentContainerStyle={[
           styles.scrollContent,
           {
             paddingHorizontal: responsiveHorizontalPadding,
-            paddingBottom: layout.scrollBottomPad,
+            paddingTop: isTablet ? 8 : 4,
+            paddingBottom: isTablet
+              ? layout.scrollBottomPad
+              : layout.mobileDockClearance,
             gap: layout.sectionGap,
           },
         ]}
@@ -184,6 +178,15 @@ export function ThreadsScreen() {
           />
         }
       >
+        {/* TopUtilityBar ("Pesan", tombol notif/profil) menyatu di aliran scroll */}
+        <TopUtilityBar
+          noHorizontalPadding
+          title="Pesan"
+          subtitle="Komunikasi langsung wali murid dan sekolah"
+          unreadCount={totalUnreadCount}
+          profileName={user?.name || "Wali Murid"}
+          onPressNotifications={() => {}}
+        />
         {/* Alert jam layanan bersih (pakai - bukan en-dash) */}
         <Alert
           variant="default"
@@ -415,7 +418,7 @@ const styles = StyleSheet.create({
     backgroundColor: bento.surface,
   },
   scrollContent: {
-    paddingVertical: spacing.md,
+    flexGrow: 1,
   },
   serviceAlert: {},
   actionCard: {},

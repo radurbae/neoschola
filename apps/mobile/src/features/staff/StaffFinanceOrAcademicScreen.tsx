@@ -409,13 +409,6 @@ export function StaffFinanceOrAcademicScreen() {
 
     return (
       <View style={styles.container}>
-        <TopUtilityBar
-          title="Keuangan Sekolah"
-          subtitle="Verifikasi pembayaran dan kelola tagihan siswa"
-          profileName={user?.name || "Staf"}
-          onPressNotifications={() => router.push("/notifications")}
-        />
-
         <ScrollView
           contentContainerStyle={[
             styles.scrollContent,
@@ -423,8 +416,11 @@ export function StaffFinanceOrAcademicScreen() {
               paddingHorizontal: isTablet
                 ? layout.tabletPaddingX
                 : layout.mobilePaddingX,
+              paddingTop: isTablet ? 8 : 4,
               gap: layout.sectionGap,
-              paddingBottom: layout.scrollBottomPad,
+              paddingBottom: isTablet
+                ? layout.scrollBottomPad
+                : layout.mobileDockClearance,
             },
           ]}
           showsVerticalScrollIndicator={false}
@@ -440,6 +436,13 @@ export function StaffFinanceOrAcademicScreen() {
             />
           }
         >
+          <TopUtilityBar
+            noHorizontalPadding
+            title="Keuangan Sekolah"
+            subtitle="Verifikasi pembayaran dan kelola tagihan siswa"
+            profileName={user?.name || "Staf"}
+            onPressNotifications={() => router.push("/notifications")}
+          />
           {/* 2 PastelStatCard mode Admin sejajar sama tinggi */}
           <View style={styles.statsRow}>
             <PastelStatCard
@@ -817,13 +820,6 @@ export function StaffFinanceOrAcademicScreen() {
   // Tampilan Guru (Akademik)
   return (
     <View style={styles.container}>
-      <TopUtilityBar
-        title="Akademik Siswa"
-        subtitle="Kelola tugas PR kelas serta catatan nilai evaluasi"
-        profileName={user?.name || "Staf"}
-        onPressNotifications={() => router.push("/notifications")}
-      />
-
       <ScrollView
         contentContainerStyle={[
           styles.scrollContent,
@@ -831,8 +827,11 @@ export function StaffFinanceOrAcademicScreen() {
             paddingHorizontal: isTablet
               ? layout.tabletPaddingX
               : layout.mobilePaddingX,
+            paddingTop: isTablet ? 8 : 4,
             gap: layout.sectionGap,
-            paddingBottom: layout.scrollBottomPad,
+            paddingBottom: isTablet
+              ? layout.scrollBottomPad
+              : layout.mobileDockClearance,
           },
         ]}
         showsVerticalScrollIndicator={false}
@@ -851,6 +850,13 @@ export function StaffFinanceOrAcademicScreen() {
           />
         }
       >
+        <TopUtilityBar
+          noHorizontalPadding
+          title="Akademik Siswa"
+          subtitle="Kelola tugas PR kelas serta catatan nilai evaluasi"
+          profileName={user?.name || "Staf"}
+          onPressNotifications={() => router.push("/notifications")}
+        />
         {/* Tabs Segmented Mode: Tugas / Nilai */}
         <Tabs
           value={teacherMode}

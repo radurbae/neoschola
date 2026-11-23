@@ -135,290 +135,289 @@ export default function AcademicScreen() {
 
   return (
     <Screen scroll={false} headerShown={false} style={styles.screen}>
-      <TopUtilityBar
-        title="Akademik"
-        subtitle={activeStudent ? activeStudent.full_name : undefined}
-        profileName={user?.name || "Wali Murid"}
-        onPressNotifications={() => router.push("/notifications")}
-        onPressProfile={() => router.push("/(tabs)/profil")}
-      />
-
-      {students.length > 0 && (
-        <View
-          style={[
-            styles.childSwitcherWrapper,
-            {
-              paddingHorizontal: isTablet
-                ? layout.tabletPaddingX
-                : layout.mobilePaddingX,
-            },
-          ]}
-        >
-          <ChildSwitcher
-            students={students}
-            activeStudentId={activeStudentId}
-            onSelectStudent={(id) => setActiveStudentId(id)}
+      <ScrollView
+        style={styles.scrollBody}
+        contentContainerStyle={[
+          styles.scrollContent,
+          {
+            paddingHorizontal: isTablet
+              ? layout.tabletPaddingX
+              : layout.mobilePaddingX,
+            paddingTop: isTablet ? 8 : 4,
+            paddingBottom: isTablet
+              ? layout.scrollBottomPad
+              : layout.mobileDockClearance,
+          },
+        ]}
+        showsVerticalScrollIndicator={false}
+        scrollEventThrottle={16}
+        decelerationRate="normal"
+        bounces={true}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={() => fetchAcademicData(true)}
+            tintColor={shadcn.primary}
           />
-        </View>
-      )}
+        }
+      >
+        <View style={styles.headerBlock}>
+          <TopUtilityBar
+            noHorizontalPadding
+            title="Akademik"
+            subtitle={activeStudent ? activeStudent.full_name : undefined}
+            profileName={user?.name || "Wali Murid"}
+            onPressNotifications={() => router.push("/notifications")}
+            onPressProfile={() => router.push("/(tabs)/profil")}
+          />
 
-      {loading ? (
-        <StateView
-          type="loading"
-          message="Memuat data akademik peserta didik..."
-        />
-      ) : errorMessage ? (
-        <StateView
-          type="error"
-          title="Gagal Memuat Akademik"
-          message={errorMessage}
-          actionLabel="Coba Lagi"
-          onAction={() => fetchAcademicData()}
-        />
-      ) : !activeStudent ? (
-        <StateView
-          type="empty"
-          title="Peserta Didik Belum Dipilih"
-          message="Silakan pilih anak asuh untuk memantau jadwal dan perkembangannya."
-          actionLabel="Muat Ulang"
-          onAction={() => fetchAcademicData()}
-        />
-      ) : (
-        <ScrollView
-          style={styles.scrollBody}
-          contentContainerStyle={[
-            styles.scrollContent,
-            {
-              paddingHorizontal: isTablet
-                ? layout.tabletPaddingX
-                : layout.mobilePaddingX,
-            },
-          ]}
-          showsVerticalScrollIndicator={false}
-          scrollEventThrottle={16}
-          decelerationRate="normal"
-          bounces={true}
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={() => fetchAcademicData(true)}
-              tintColor={shadcn.primary}
+          {students.length > 0 && (
+            <ChildSwitcher
+              students={students}
+              activeStudentId={activeStudentId}
+              onSelectStudent={(id) => setActiveStudentId(id)}
             />
-          }
-        >
-          <View style={styles.sectionHeaderRow}>
-            <Text style={styles.sectionHeading}>Ringkasan Akademik</Text>
-          </View>
-
-          {isTablet ? (
-            <View style={styles.statCardsRowTablet}>
-              <PastelStatCard
-                tone="iceBlue"
-                value={`${schedules.length} Mapel`}
-                label="Jadwal Belajar"
-                trendText={selectedDay}
-                icon="time-outline"
-                style={styles.statCardItemTablet}
-              />
-              <PastelStatCard
-                tone="lavender"
-                value={`${assignments.length} Tugas`}
-                label="Tugas Aktif"
-                trendText="PR dan Tugas"
-                icon="document-text-outline"
-                style={styles.statCardItemTablet}
-              />
-              <PastelStatCard
-                tone="mint"
-                value={`${grades.length} Rilis`}
-                label="Catatan Nilai"
-                trendText="Evaluasi"
-                icon="ribbon-outline"
-                style={styles.statCardItemTablet}
-              />
-            </View>
-          ) : (
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              snapToInterval={180}
-              decelerationRate="fast"
-              snapToAlignment="start"
-              contentContainerStyle={styles.statCardsScrollMobile}
-            >
-              <PastelStatCard
-                tone="iceBlue"
-                value={`${schedules.length} Mapel`}
-                label="Jadwal Belajar"
-                trendText={selectedDay}
-                icon="time-outline"
-                style={styles.statCardItemMobile}
-              />
-              <PastelStatCard
-                tone="lavender"
-                value={`${assignments.length} Tugas`}
-                label="Tugas Aktif"
-                trendText="PR dan Tugas"
-                icon="document-text-outline"
-                style={styles.statCardItemMobile}
-              />
-              <PastelStatCard
-                tone="mint"
-                value={`${grades.length} Rilis`}
-                label="Catatan Nilai"
-                trendText="Evaluasi"
-                icon="ribbon-outline"
-                style={styles.statCardItemMobile}
-              />
-            </ScrollView>
           )}
+        </View>
 
-          {/* Segmented Tab Navigation dengan Komponen Tabs shadcn/ui */}
-          <View style={styles.tabBarWrapper}>
-            <Tabs
-              value={activeTab}
-              onValueChange={(val) => setActiveTab(val as AcademicTab)}
-              items={[
-                { value: "JADWAL", label: "Jadwal" },
-                {
-                  value: "TUGAS",
-                  label: "Tugas dan PR",
-                  count: assignments.length > 0 ? assignments.length : undefined,
-                },
-                { value: "NILAI", label: "Nilai" },
-              ]}
-            />
-          </View>
+        {loading ? (
+          <StateView
+            type="loading"
+            message="Memuat data akademik peserta didik..."
+          />
+        ) : errorMessage ? (
+          <StateView
+            type="error"
+            title="Gagal Memuat Akademik"
+            message={errorMessage}
+            actionLabel="Coba Lagi"
+            onAction={() => fetchAcademicData()}
+          />
+        ) : !activeStudent ? (
+          <StateView
+            type="empty"
+            title="Peserta Didik Belum Dipilih"
+            message="Silakan pilih anak asuh untuk memantau jadwal dan perkembangannya."
+            actionLabel="Muat Ulang"
+            onAction={() => fetchAcademicData()}
+          />
+        ) : (
+          <>
+            <View style={styles.sectionHeaderRow}>
+              <Text style={styles.sectionHeading}>Ringkasan Akademik</Text>
+            </View>
 
-          {/* TAB 1: JADWAL PELAJARAN */}
-          {activeTab === "JADWAL" && (
-            <View style={styles.tabContentContainer}>
-              {/* Day filter selector menggunakan Chip horizontal */}
+            {isTablet ? (
+              <View style={styles.statCardsRowTablet}>
+                <PastelStatCard
+                  tone="iceBlue"
+                  value={`${schedules.length} Mapel`}
+                  label="Jadwal Belajar"
+                  trendText={selectedDay}
+                  icon="time-outline"
+                  style={styles.statCardItemTablet}
+                />
+                <PastelStatCard
+                  tone="lavender"
+                  value={`${assignments.length} Tugas`}
+                  label="Tugas Aktif"
+                  trendText="PR dan Tugas"
+                  icon="document-text-outline"
+                  style={styles.statCardItemTablet}
+                />
+                <PastelStatCard
+                  tone="mint"
+                  value={`${grades.length} Rilis`}
+                  label="Catatan Nilai"
+                  trendText="Evaluasi"
+                  icon="ribbon-outline"
+                  style={styles.statCardItemTablet}
+                />
+              </View>
+            ) : (
               <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.daySelectorRow}
+                snapToInterval={180}
+                decelerationRate="fast"
+                snapToAlignment="start"
+                style={styles.statCardsMobileStrip}
+                contentContainerStyle={styles.statCardsScrollMobile}
               >
-                {days.map((day) => (
-                  <Chip
-                    key={day}
-                    label={day}
-                    selected={selectedDay === day}
-                    onPress={() => setSelectedDay(day)}
-                    accessibilityLabel={`Pilih jadwal hari ${day}`}
-                  />
-                ))}
+                <PastelStatCard
+                  tone="iceBlue"
+                  value={`${schedules.length} Mapel`}
+                  label="Jadwal Belajar"
+                  trendText={selectedDay}
+                  icon="time-outline"
+                  style={styles.statCardItemMobile}
+                />
+                <PastelStatCard
+                  tone="lavender"
+                  value={`${assignments.length} Tugas`}
+                  label="Tugas Aktif"
+                  trendText="PR dan Tugas"
+                  icon="document-text-outline"
+                  style={styles.statCardItemMobile}
+                />
+                <PastelStatCard
+                  tone="mint"
+                  value={`${grades.length} Rilis`}
+                  label="Catatan Nilai"
+                  trendText="Evaluasi"
+                  icon="ribbon-outline"
+                  style={styles.statCardItemMobile}
+                />
               </ScrollView>
+            )}
 
-              <View style={styles.listCard}>
-                {filteredSchedules.length === 0 ? (
-                  <View style={styles.emptyInlineRow}>
-                    <Text style={styles.emptyInlineText}>
-                      Tidak ada jadwal kegiatan belajar mengajar tercatat di hari{" "}
-                      {selectedDay}.
-                    </Text>
-                  </View>
-                ) : (
-                  filteredSchedules.map((schedule, idx) => (
-                    <React.Fragment key={schedule.id}>
-                      {idx > 0 && <Separator />}
-                      <DarkIconRow
-                        icon="book-outline"
-                        title={schedule.subject}
-                        subtitle={`Guru: ${schedule.teacher_name} • Ruang: ${schedule.room}`}
-                        rightPrimary={`${schedule.start_time} - ${schedule.end_time}`}
-                        rightSecondary="WIB"
-                        accessibilityLabel={`Jadwal: ${schedule.subject}, waktu ${schedule.start_time} sampai ${schedule.end_time}`}
-                      />
-                    </React.Fragment>
-                  ))
-                )}
-              </View>
+            {/* Segmented Tab Navigation dengan Komponen Tabs shadcn/ui */}
+            <View style={styles.tabBarWrapper}>
+              <Tabs
+                value={activeTab}
+                onValueChange={(val) => setActiveTab(val as AcademicTab)}
+                items={[
+                  { value: "JADWAL", label: "Jadwal" },
+                  {
+                    value: "TUGAS",
+                    label: "Tugas dan PR",
+                    count: assignments.length > 0 ? assignments.length : undefined,
+                  },
+                  { value: "NILAI", label: "Nilai" },
+                ]}
+              />
             </View>
-          )}
 
-          {/* TAB 2: TUGAS & PR */}
-          {activeTab === "TUGAS" && (
-            <View style={styles.tabContentContainer}>
-              <View style={styles.listCard}>
-                {assignments.length === 0 ? (
-                  <View style={styles.emptyInlineRow}>
-                    <Text style={styles.emptyInlineText}>
-                      Saat ini belum ada tugas atau pekerjaan rumah baru untuk
-                      kelas anak Anda.
-                    </Text>
-                  </View>
-                ) : (
-                  assignments.map((assignment, idx) => (
-                    <React.Fragment key={assignment.id}>
-                      {idx > 0 && <Separator />}
-                      <DarkIconRow
-                        icon="document-text-outline"
-                        title={assignment.title}
-                        subtitle={`${assignment.subject} • Oleh: ${
-                          assignment.assigned_by_name || assignment.assigned_by
-                        }${
-                          assignment.description
-                            ? ` • ${assignment.description}`
-                            : ""
-                        }`}
-                        rightPrimary={formatTanggalId(assignment.due_date, {
-                          shortMonth: true,
-                        })}
-                        rightSecondary="Tenggat"
-                        rightSecondaryTone="warning"
-                        accessibilityLabel={`Tugas: ${assignment.title}, tenggat ${formatTanggalId(
-                          assignment.due_date,
-                          { shortMonth: true }
-                        )}`}
-                      />
-                    </React.Fragment>
-                  ))
-                )}
-              </View>
-            </View>
-          )}
+            {/* TAB 1: JADWAL PELAJARAN */}
+            {activeTab === "JADWAL" && (
+              <View style={styles.tabContentContainer}>
+                {/* Day filter selector menggunakan Chip horizontal */}
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.daySelectorRow}
+                >
+                  {days.map((day) => (
+                    <Chip
+                      key={day}
+                      label={day}
+                      selected={selectedDay === day}
+                      onPress={() => setSelectedDay(day)}
+                      accessibilityLabel={`Pilih jadwal hari ${day}`}
+                    />
+                  ))}
+                </ScrollView>
 
-          {/* TAB 3: NILAI & CATATAN */}
-          {activeTab === "NILAI" && (
-            <View style={styles.tabContentContainer}>
-              <View style={styles.listCard}>
-                {grades.length === 0 ? (
-                  <View style={styles.emptyInlineRow}>
-                    <Text style={styles.emptyInlineText}>
-                      Catatan capaian nilai dan perkembangan dari guru mata
-                      pelajaran belum dirilis.
-                    </Text>
-                  </View>
-                ) : (
-                  grades.map((grade, idx) => (
-                    <React.Fragment key={grade.id}>
-                      {idx > 0 && <Separator />}
-                      <DarkIconRow
-                        icon="ribbon-outline"
-                        title={grade.subject}
-                        subtitle={`Sem ${grade.semester} (${
-                          grade.academic_year
-                        }) • ${grade.teacher_name || "Guru Pengampu"}${
-                          grade.notes ? ` • ${grade.notes}` : ""
-                        }`}
-                        rightPrimary={`${grade.score} / 100`}
-                        rightSecondary={
-                          grade.score >= 80 ? "Sangat Baik" : "Cukup"
-                        }
-                        rightSecondaryTone={
-                          grade.score >= 80 ? "success" : "info"
-                        }
-                        accessibilityLabel={`Nilai ${grade.subject}: ${grade.score} dari 100`}
-                      />
-                    </React.Fragment>
-                  ))
-                )}
+                <View style={styles.listCard}>
+                  {filteredSchedules.length === 0 ? (
+                    <View style={styles.emptyInlineRow}>
+                      <Text style={styles.emptyInlineText}>
+                        Tidak ada jadwal kegiatan belajar mengajar tercatat di hari{" "}
+                        {selectedDay}.
+                      </Text>
+                    </View>
+                  ) : (
+                    filteredSchedules.map((schedule, idx) => (
+                      <React.Fragment key={schedule.id}>
+                        {idx > 0 && <Separator />}
+                        <DarkIconRow
+                          icon="book-outline"
+                          title={schedule.subject}
+                          subtitle={`Guru: ${schedule.teacher_name} • Ruang: ${schedule.room}`}
+                          rightPrimary={`${schedule.start_time} - ${schedule.end_time}`}
+                          rightSecondary="WIB"
+                          accessibilityLabel={`Jadwal: ${schedule.subject}, waktu ${schedule.start_time} sampai ${schedule.end_time}`}
+                        />
+                      </React.Fragment>
+                    ))
+                  )}
+                </View>
               </View>
-            </View>
-          )}
-        </ScrollView>
-      )}
+            )}
+
+            {/* TAB 2: TUGAS & PR */}
+            {activeTab === "TUGAS" && (
+              <View style={styles.tabContentContainer}>
+                <View style={styles.listCard}>
+                  {assignments.length === 0 ? (
+                    <View style={styles.emptyInlineRow}>
+                      <Text style={styles.emptyInlineText}>
+                        Saat ini belum ada tugas atau pekerjaan rumah baru untuk
+                        kelas anak Anda.
+                      </Text>
+                    </View>
+                  ) : (
+                    assignments.map((assignment, idx) => (
+                      <React.Fragment key={assignment.id}>
+                        {idx > 0 && <Separator />}
+                        <DarkIconRow
+                          icon="document-text-outline"
+                          title={assignment.title}
+                          subtitle={`${assignment.subject} • Oleh: ${
+                            assignment.assigned_by_name || assignment.assigned_by
+                          }${
+                            assignment.description
+                              ? ` • ${assignment.description}`
+                              : ""
+                          }`}
+                          rightPrimary={formatTanggalId(assignment.due_date, {
+                            shortMonth: true,
+                          })}
+                          rightSecondary="Tenggat"
+                          rightSecondaryTone="warning"
+                          accessibilityLabel={`Tugas: ${assignment.title}, tenggat ${formatTanggalId(
+                            assignment.due_date,
+                            { shortMonth: true }
+                          )}`}
+                        />
+                      </React.Fragment>
+                    ))
+                  )}
+                </View>
+              </View>
+            )}
+
+            {/* TAB 3: NILAI & CATATAN */}
+            {activeTab === "NILAI" && (
+              <View style={styles.tabContentContainer}>
+                <View style={styles.listCard}>
+                  {grades.length === 0 ? (
+                    <View style={styles.emptyInlineRow}>
+                      <Text style={styles.emptyInlineText}>
+                        Catatan capaian nilai dan perkembangan dari guru mata
+                        pelajaran belum dirilis.
+                      </Text>
+                    </View>
+                  ) : (
+                    grades.map((grade, idx) => (
+                      <React.Fragment key={grade.id}>
+                        {idx > 0 && <Separator />}
+                        <DarkIconRow
+                          icon="ribbon-outline"
+                          title={grade.subject}
+                          subtitle={`Sem ${grade.semester} (${
+                            grade.academic_year
+                          }) • ${grade.teacher_name || "Guru Pengampu"}${
+                            grade.notes ? ` • ${grade.notes}` : ""
+                          }`}
+                          rightPrimary={`${grade.score} / 100`}
+                          rightSecondary={
+                            grade.score >= 80 ? "Sangat Baik" : "Cukup"
+                          }
+                          rightSecondaryTone={
+                            grade.score >= 80 ? "success" : "info"
+                          }
+                          accessibilityLabel={`Nilai ${grade.subject}: ${grade.score} dari 100`}
+                        />
+                      </React.Fragment>
+                    ))
+                  )}
+                </View>
+              </View>
+            )}
+          </>
+        )}
+      </ScrollView>
     </Screen>
   );
 }
@@ -427,17 +426,14 @@ const styles = StyleSheet.create({
   screen: {
     backgroundColor: bento.surface,
   },
-  childSwitcherWrapper: {
-    backgroundColor: bento.surface,
-    paddingTop: 12,
-    paddingBottom: 4,
+  headerBlock: {
+    gap: 12,
   },
   scrollBody: {
     flex: 1,
   },
   scrollContent: {
-    paddingTop: 12,
-    paddingBottom: layout.scrollBottomPad,
+    flexGrow: 1,
     gap: layout.sectionGap,
   },
   sectionHeaderRow: {
@@ -459,9 +455,13 @@ const styles = StyleSheet.create({
     flex: 1,
     alignSelf: "stretch",
   },
+  statCardsMobileStrip: {
+    marginHorizontal: -layout.mobilePaddingX,
+  },
   statCardsScrollMobile: {
     flexDirection: "row",
     gap: 12,
+    paddingHorizontal: layout.mobilePaddingX,
     paddingVertical: spacing.xs,
   },
   statCardItemMobile: {

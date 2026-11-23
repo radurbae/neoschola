@@ -3,11 +3,15 @@ import {
   View,
   Text,
   StyleSheet,
-  Platform,
   useWindowDimensions,
   StyleProp,
   ViewStyle,
 } from "react-native";
+import {
+  SafeAreaView,
+  SafeAreaInsetsContext,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import {
   bento,
@@ -47,6 +51,7 @@ export function ResponsiveShell({
   children,
 }: ResponsiveShellProps) {
   const { width } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
   const isTablet = width >= breakpoints.tablet;
 
   if (isTablet) {
@@ -110,16 +115,20 @@ export function ResponsiveShell({
   }
 
   const mobileNavItems = navItems.slice(0, 5);
+  const dockBottom = Math.max(insets.bottom, 14);
+  const contentInsets = { ...insets, top: 0 };
 
   return (
-    <View style={styles.mobileContainer}>
-      <View style={styles.mobileContentArea}>
-        <FadeSlideView transitionKey={activeKey} style={styles.fillArea}>
-          {children}
-        </FadeSlideView>
-      </View>
+    <SafeAreaView edges={["top"]} style={styles.mobileContainer}>
+      <SafeAreaInsetsContext.Provider value={contentInsets}>
+        <View style={styles.mobileContentArea}>
+          <FadeSlideView transitionKey={activeKey} style={styles.fillArea}>
+            {children}
+          </FadeSlideView>
+        </View>
+      </SafeAreaInsetsContext.Provider>
 
-      <View style={styles.mobileDock}>
+      <View style={[styles.mobileDock, { bottom: dockBottom }]}>
         {mobileNavItems.map((item) => {
           const isActive = item.key === activeKey;
           return (
@@ -150,7 +159,7 @@ export function ResponsiveShell({
           );
         })}
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -158,6 +167,7 @@ export interface TopUtilityBarProps {
   title: string;
   subtitle?: string;
   leftAction?: React.ReactNode;
+  noHorizontalPadding?: boolean;
   onPressNotifications?: () => void;
   unreadCount?: number;
   onPressAnnouncements?: () => void;
@@ -169,6 +179,7 @@ export function TopUtilityBar({
   title,
   subtitle,
   leftAction,
+  noHorizontalPadding = false,
   onPressNotifications,
   unreadCount = 0,
   onPressAnnouncements,
@@ -180,9 +191,13 @@ export function TopUtilityBar({
   const firstName = profileName ? profileName.trim().split(/\s+/)[0] : "Profil";
 
   const dynamicBarPadding = {
-    paddingHorizontal: isTablet ? layout.tabletPaddingX : layout.mobilePaddingX,
-    paddingTop: isTablet ? 24 : 16,
-    paddingBottom: 14,
+    paddingHorizontal: noHorizontalPadding
+      ? 0
+      : isTablet
+      ? layout.tabletPaddingX
+      : layout.mobilePaddingX,
+    paddingTop: isTablet ? 20 : 10,
+    paddingBottom: 6,
     gap: 12,
   };
 
@@ -670,21 +685,31 @@ const styles = StyleSheet.create({
 
   mobileContainer: {
     flex: 1,
+    position: "relative",
     backgroundColor: bento.surface,
   },
   mobileContentArea: {
     flex: 1,
   },
   mobileDock: {
+    position: "absolute",
+    left: 16,
+    right: 16,
+    zIndex: 30,
     backgroundColor: bento.obsidian,
     borderRadius: radius.xxl,
+    borderWidth: 1,
+    borderColor: bento.obsidianBorder,
     height: 64,
-    marginHorizontal: 20,
-    marginBottom: Platform.OS === "ios" ? 22 : 14,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-around",
     paddingHorizontal: 12,
+    shadowColor: bento.obsidian,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.22,
+    shadowRadius: 20,
+    elevation: 12,
   },
   mobileDockButton: {
     width: 44,
@@ -710,7 +735,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    backgroundColor: bento.surface,
+    backgroundColor: "transparent",
     minHeight: 56,
   },
   topUtilityLeft: {

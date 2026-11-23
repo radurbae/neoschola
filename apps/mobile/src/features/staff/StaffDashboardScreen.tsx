@@ -107,15 +107,6 @@ export function StaffDashboardScreen() {
 
   return (
     <View style={styles.container}>
-      <TopUtilityBar
-        title="Ringkasan"
-        subtitle={hariIni}
-        profileName={user?.name || "Staf"}
-        unreadCount={metrics.unreadMessageCount}
-        onPressNotifications={() => router.push("/notifications")}
-        onPressAnnouncements={() => router.push("/(staff)/pesan" as any)}
-      />
-
       <ScrollView
         contentContainerStyle={[
           styles.scrollContent,
@@ -123,8 +114,10 @@ export function StaffDashboardScreen() {
             paddingHorizontal: isTablet
               ? layout.tabletPaddingX
               : layout.mobilePaddingX,
-            paddingTop: 12,
-            paddingBottom: layout.scrollBottomPad,
+            paddingTop: isTablet ? 8 : 4,
+            paddingBottom: isTablet
+              ? layout.scrollBottomPad
+              : layout.mobileDockClearance,
             gap: layout.sectionGap,
           },
         ]}
@@ -141,6 +134,15 @@ export function StaffDashboardScreen() {
           />
         }
       >
+        <TopUtilityBar
+          noHorizontalPadding
+          title="Ringkasan"
+          subtitle={hariIni}
+          profileName={user?.name || "Staf"}
+          unreadCount={metrics.unreadMessageCount}
+          onPressNotifications={() => router.push("/notifications")}
+          onPressAnnouncements={() => router.push("/(staff)/pesan" as any)}
+        />
         {loading && !refreshing ? (
           <StateView type="loading" message="Memuat ringkasan metrik sekolah..." />
         ) : errorMessage ? (

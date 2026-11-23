@@ -205,299 +205,298 @@ export default function AttendanceScreen() {
 
   return (
     <Screen scroll={false} headerShown={false} style={styles.screen}>
-      <TopUtilityBar
-        title="Presensi"
-        subtitle={activeStudent ? activeStudent.full_name : undefined}
-        profileName={user?.name || "Wali Murid"}
-        onPressNotifications={() => router.push("/notifications")}
-        onPressProfile={() => router.push("/(tabs)/profil")}
-      />
-
-      {students.length > 0 && (
-        <View
-          style={[
-            styles.childSwitcherWrapper,
-            {
-              paddingHorizontal: isTablet
-                ? layout.tabletPaddingX
-                : layout.mobilePaddingX,
-            },
-          ]}
-        >
-          <ChildSwitcher
-            students={students}
-            activeStudentId={activeStudentId}
-            onSelectStudent={(id) => setActiveStudentId(id)}
+      <ScrollView
+        style={styles.scrollBody}
+        contentContainerStyle={[
+          styles.scrollContent,
+          {
+            paddingHorizontal: isTablet
+              ? layout.tabletPaddingX
+              : layout.mobilePaddingX,
+            paddingTop: isTablet ? 8 : 4,
+            paddingBottom: isTablet
+              ? layout.scrollBottomPad
+              : layout.mobileDockClearance,
+          },
+        ]}
+        showsVerticalScrollIndicator={false}
+        scrollEventThrottle={16}
+        decelerationRate="normal"
+        bounces={true}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={() => fetchData(true)}
+            tintColor={shadcn.primary}
           />
-        </View>
-      )}
+        }
+      >
+        <View style={styles.headerBlock}>
+          <TopUtilityBar
+            noHorizontalPadding
+            title="Presensi"
+            subtitle={activeStudent ? activeStudent.full_name : undefined}
+            profileName={user?.name || "Wali Murid"}
+            onPressNotifications={() => router.push("/notifications")}
+            onPressProfile={() => router.push("/(tabs)/profil")}
+          />
 
-      {Boolean(successBanner) && (
-        <View style={styles.successBannerContainer}>
-          <Text style={styles.successBannerText}>{successBanner}</Text>
-        </View>
-      )}
-
-      {/* Main Content Body */}
-      {loading ? (
-        <StateView
-          type="loading"
-          message="Memuat catatan presensi peserta didik..."
-        />
-      ) : errorMessage ? (
-        <StateView
-          type="error"
-          title="Gagal Memuat Presensi"
-          message={errorMessage}
-          actionLabel="Coba Lagi"
-          onAction={() => fetchData()}
-        />
-      ) : !activeStudent ? (
-        <StateView
-          type="empty"
-          title="Data Siswa Tidak Ditemukan"
-          message="Silakan pilih siswa aktif untuk melihat catatan presensi."
-          actionLabel="Muat Ulang"
-          onAction={() => fetchData()}
-        />
-      ) : (
-        <ScrollView
-          style={styles.scrollBody}
-          contentContainerStyle={[
-            styles.scrollContent,
-            {
-              paddingHorizontal: isTablet
-                ? layout.tabletPaddingX
-                : layout.mobilePaddingX,
-            },
-          ]}
-          showsVerticalScrollIndicator={false}
-          scrollEventThrottle={16}
-          decelerationRate="normal"
-          bounces={true}
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={() => fetchData(true)}
-              tintColor={shadcn.primary}
+          {students.length > 0 && (
+            <ChildSwitcher
+              students={students}
+              activeStudentId={activeStudentId}
+              onSelectStudent={(id) => setActiveStudentId(id)}
             />
-          }
-        >
-          <View style={styles.sectionHeaderRow}>
-            <Text style={styles.sectionHeading}>Ringkasan Kehadiran</Text>
-          </View>
-
-          {isTablet ? (
-            <View style={styles.statCardsRowTablet}>
-              <PastelStatCard
-                tone="mint"
-                value={`${summary.hadir} Hari`}
-                label="Kehadiran Hadir"
-                trendText={`${summary.percentage}% Total`}
-                icon="checkmark-circle-outline"
-                style={styles.statCardItemTablet}
-              />
-              <PastelStatCard
-                tone="butter"
-                value={`${summary.sakit} Hari`}
-                label="Izin Sakit"
-                trendText="Izin Medis"
-                icon="medkit-outline"
-                style={styles.statCardItemTablet}
-              />
-              <PastelStatCard
-                tone="iceBlue"
-                value={`${summary.izin} Hari`}
-                label="Izin Keperluan"
-                trendText="Dispensasi"
-                icon="calendar-outline"
-                style={styles.statCardItemTablet}
-              />
-            </View>
-          ) : (
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              snapToInterval={180}
-              decelerationRate="fast"
-              snapToAlignment="start"
-              contentContainerStyle={styles.statCardsScrollMobile}
-            >
-              <PastelStatCard
-                tone="mint"
-                value={`${summary.hadir} Hari`}
-                label="Kehadiran Hadir"
-                trendText={`${summary.percentage}% Total`}
-                icon="checkmark-circle-outline"
-                style={styles.statCardItemMobile}
-              />
-              <PastelStatCard
-                tone="butter"
-                value={`${summary.sakit} Hari`}
-                label="Izin Sakit"
-                trendText="Izin Medis"
-                icon="medkit-outline"
-                style={styles.statCardItemMobile}
-              />
-              <PastelStatCard
-                tone="iceBlue"
-                value={`${summary.izin} Hari`}
-                label="Izin Keperluan"
-                trendText="Dispensasi"
-                icon="calendar-outline"
-                style={styles.statCardItemMobile}
-              />
-            </ScrollView>
           )}
+        </View>
 
-          {/* 2. DarkActionCard untuk Membuka Sheet Form Izin */}
-          <DarkActionCard
-            eyebrow="Layanan Mandiri"
-            title="Ajukan Izin atau Sakit"
-            description="Kirimkan surat permohonan izin atau surat keterangan sakit anak ke wali kelas secara praktis dan terpantau."
-            ctaLabel="Buka Formulir Izin"
-            onPress={handleOpenModal}
+        {Boolean(successBanner) && (
+          <View style={styles.successBannerContainer}>
+            <Text style={styles.successBannerText}>{successBanner}</Text>
+          </View>
+        )}
+
+        {/* Main Content Body */}
+        {loading ? (
+          <StateView
+            type="loading"
+            message="Memuat catatan presensi peserta didik..."
           />
-
-          {/* 3. Daftar Pengajuan Izin memakai DarkIconRow dipisah Separator */}
-          <View style={styles.sectionContainer}>
+        ) : errorMessage ? (
+          <StateView
+            type="error"
+            title="Gagal Memuat Presensi"
+            message={errorMessage}
+            actionLabel="Coba Lagi"
+            onAction={() => fetchData()}
+          />
+        ) : !activeStudent ? (
+          <StateView
+            type="empty"
+            title="Data Siswa Tidak Ditemukan"
+            message="Silakan pilih siswa aktif untuk melihat catatan presensi."
+            actionLabel="Muat Ulang"
+            onAction={() => fetchData()}
+          />
+        ) : (
+          <>
             <View style={styles.sectionHeaderRow}>
-              <Text style={styles.sectionHeading}>Status Pengajuan Izin</Text>
-              <Text style={styles.sectionSubheading}>
-                {leaveRequests.length} permohonan diajukan
-              </Text>
+              <Text style={styles.sectionHeading}>Ringkasan Kehadiran</Text>
             </View>
 
-            <View style={styles.listCard}>
-              {leaveRequests.length === 0 ? (
-                <View style={styles.emptyInlineRow}>
-                  <Text style={styles.emptyInlineText}>
-                    Belum ada riwayat permohonan izin atau sakit yang diajukan.
-                  </Text>
-                </View>
-              ) : (
-                leaveRequests.map((item, idx) => {
-                  const isSakit = item.leave_type === LeaveType.SAKIT;
-                  const dateRange =
-                    item.start_date === item.end_date
-                      ? formatTanggalId(item.start_date, {
-                          includeDay: true,
-                          shortMonth: true,
-                        })
-                      : `${formatTanggalId(item.start_date, {
-                          shortMonth: true,
-                        })} sampai ${formatTanggalId(item.end_date, {
-                          includeDay: true,
-                          shortMonth: true,
-                        })}`;
+            {isTablet ? (
+              <View style={styles.statCardsRowTablet}>
+                <PastelStatCard
+                  tone="mint"
+                  value={`${summary.hadir} Hari`}
+                  label="Kehadiran Hadir"
+                  trendText={`${summary.percentage}% Total`}
+                  icon="checkmark-circle-outline"
+                  style={styles.statCardItemTablet}
+                />
+                <PastelStatCard
+                  tone="butter"
+                  value={`${summary.sakit} Hari`}
+                  label="Izin Sakit"
+                  trendText="Izin Medis"
+                  icon="medkit-outline"
+                  style={styles.statCardItemTablet}
+                />
+                <PastelStatCard
+                  tone="iceBlue"
+                  value={`${summary.izin} Hari`}
+                  label="Izin Keperluan"
+                  trendText="Dispensasi"
+                  icon="calendar-outline"
+                  style={styles.statCardItemTablet}
+                />
+              </View>
+            ) : (
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                snapToInterval={180}
+                decelerationRate="fast"
+                snapToAlignment="start"
+                style={styles.statCardsMobileStrip}
+                contentContainerStyle={styles.statCardsScrollMobile}
+              >
+                <PastelStatCard
+                  tone="mint"
+                  value={`${summary.hadir} Hari`}
+                  label="Kehadiran Hadir"
+                  trendText={`${summary.percentage}% Total`}
+                  icon="checkmark-circle-outline"
+                  style={styles.statCardItemMobile}
+                />
+                <PastelStatCard
+                  tone="butter"
+                  value={`${summary.sakit} Hari`}
+                  label="Izin Sakit"
+                  trendText="Izin Medis"
+                  icon="medkit-outline"
+                  style={styles.statCardItemMobile}
+                />
+                <PastelStatCard
+                  tone="iceBlue"
+                  value={`${summary.izin} Hari`}
+                  label="Izin Keperluan"
+                  trendText="Dispensasi"
+                  icon="calendar-outline"
+                  style={styles.statCardItemMobile}
+                />
+              </ScrollView>
+            )}
 
-                  const statusLabel =
-                    item.status === "APPROVED"
-                      ? "Disetujui"
-                      : item.status === "REJECTED"
-                      ? "Ditolak"
-                      : "Menunggu";
+            {/* 2. DarkActionCard untuk Membuka Sheet Form Izin */}
+            <DarkActionCard
+              eyebrow="Layanan Mandiri"
+              title="Ajukan Izin atau Sakit"
+              description="Kirimkan surat permohonan izin atau surat keterangan sakit anak ke wali kelas secara praktis dan terpantau."
+              ctaLabel="Buka Formulir Izin"
+              onPress={handleOpenModal}
+            />
 
-                  const statusTone =
-                    item.status === "APPROVED"
-                      ? "success"
-                      : item.status === "REJECTED"
-                      ? "danger"
-                      : "warning";
+            {/* 3. Daftar Pengajuan Izin memakai DarkIconRow dipisah Separator */}
+            <View style={styles.sectionContainer}>
+              <View style={styles.sectionHeaderRow}>
+                <Text style={styles.sectionHeading}>Status Pengajuan Izin</Text>
+                <Text style={styles.sectionSubheading}>
+                  {leaveRequests.length} permohonan diajukan
+                </Text>
+              </View>
 
-                  return (
-                    <React.Fragment key={item.id}>
-                      {idx > 0 && <Separator />}
-                      <DarkIconRow
-                        icon={isSakit ? "medkit-outline" : "calendar-outline"}
-                        title={isSakit ? "Izin Sakit" : "Izin Keperluan"}
-                        subtitle={`${dateRange} • ${item.reason}${
-                          item.review_notes
-                            ? ` (Catatan: ${item.review_notes})`
-                            : ""
-                        }`}
-                        rightPrimary={statusLabel}
-                        rightSecondary={item.status}
-                        rightSecondaryTone={statusTone}
-                        accessibilityLabel={`Pengajuan ${
-                          isSakit ? "sakit" : "izin"
-                        }: ${statusLabel}, tanggal ${dateRange}`}
-                      />
-                    </React.Fragment>
-                  );
-                })
-              )}
+              <View style={styles.listCard}>
+                {leaveRequests.length === 0 ? (
+                  <View style={styles.emptyInlineRow}>
+                    <Text style={styles.emptyInlineText}>
+                      Belum ada riwayat permohonan izin atau sakit yang diajukan.
+                    </Text>
+                  </View>
+                ) : (
+                  leaveRequests.map((item, idx) => {
+                    const isSakit = item.leave_type === LeaveType.SAKIT;
+                    const dateRange =
+                      item.start_date === item.end_date
+                        ? formatTanggalId(item.start_date, {
+                            includeDay: true,
+                            shortMonth: true,
+                          })
+                        : `${formatTanggalId(item.start_date, {
+                            shortMonth: true,
+                          })} sampai ${formatTanggalId(item.end_date, {
+                            includeDay: true,
+                            shortMonth: true,
+                          })}`;
+
+                    const statusLabel =
+                      item.status === "APPROVED"
+                        ? "Disetujui"
+                        : item.status === "REJECTED"
+                        ? "Ditolak"
+                        : "Menunggu";
+
+                    const statusTone =
+                      item.status === "APPROVED"
+                        ? "success"
+                        : item.status === "REJECTED"
+                        ? "danger"
+                        : "warning";
+
+                    return (
+                      <React.Fragment key={item.id}>
+                        {idx > 0 && <Separator />}
+                        <DarkIconRow
+                          icon={isSakit ? "medkit-outline" : "calendar-outline"}
+                          title={isSakit ? "Izin Sakit" : "Izin Keperluan"}
+                          subtitle={`${dateRange} • ${item.reason}${
+                            item.review_notes
+                              ? ` (Catatan: ${item.review_notes})`
+                              : ""
+                          }`}
+                          rightPrimary={statusLabel}
+                          rightSecondary={item.status}
+                          rightSecondaryTone={statusTone}
+                          accessibilityLabel={`Pengajuan ${
+                            isSakit ? "sakit" : "izin"
+                          }: ${statusLabel}, tanggal ${dateRange}`}
+                        />
+                      </React.Fragment>
+                    );
+                  })
+                )}
+              </View>
             </View>
-          </View>
 
-          {/* 4. Riwayat Presensi Harian memakai DarkIconRow dipisah Separator */}
-          <View style={styles.sectionContainer}>
-            <View style={styles.sectionHeaderRow}>
-              <Text style={styles.sectionHeading}>Riwayat Presensi Harian</Text>
-              <Text style={styles.sectionSubheading}>
-                Catatan absensi harian kelas
-              </Text>
+            {/* 4. Riwayat Presensi Harian memakai DarkIconRow dipisah Separator */}
+            <View style={styles.sectionContainer}>
+              <View style={styles.sectionHeaderRow}>
+                <Text style={styles.sectionHeading}>Riwayat Presensi Harian</Text>
+                <Text style={styles.sectionSubheading}>
+                  Catatan absensi harian kelas
+                </Text>
+              </View>
+
+              <View style={styles.listCard}>
+                {attendanceList.length === 0 ? (
+                  <View style={styles.emptyInlineRow}>
+                    <Text style={styles.emptyInlineText}>
+                      Catatan absensi harian peserta didik belum terekam bulan ini.
+                    </Text>
+                  </View>
+                ) : (
+                  attendanceList.map((att, idx) => {
+                    const formattedDate = formatTanggalId(att.date, {
+                      includeDay: true,
+                    });
+
+                    const iconName =
+                      att.status === AttendanceStatus.HADIR
+                        ? "checkmark-circle-outline"
+                        : att.status === AttendanceStatus.SAKIT
+                        ? "medkit-outline"
+                        : att.status === AttendanceStatus.IZIN
+                        ? "calendar-outline"
+                        : "alert-circle-outline";
+
+                    const tone =
+                      att.status === AttendanceStatus.HADIR
+                        ? "success"
+                        : att.status === AttendanceStatus.SAKIT
+                        ? "warning"
+                        : att.status === AttendanceStatus.IZIN
+                        ? "info"
+                        : "danger";
+
+                    return (
+                      <React.Fragment key={att.id}>
+                        {idx > 0 && <Separator />}
+                        <DarkIconRow
+                          icon={iconName}
+                          title={formattedDate}
+                          subtitle={`Masuk: ${
+                            att.check_in_time ? `${att.check_in_time} WIB` : "-"
+                          } • Pulang: ${
+                            att.check_out_time ? `${att.check_out_time} WIB` : "-"
+                          } • ${att.notes || "Sesuai jadwal"}`}
+                          rightPrimary={att.status}
+                          rightSecondary={
+                            att.status === AttendanceStatus.HADIR
+                              ? "Tepat Waktu"
+                              : "Tercatat"
+                          }
+                          rightSecondaryTone={tone}
+                          accessibilityLabel={`Presensi tanggal ${formattedDate}: ${att.status}`}
+                        />
+                      </React.Fragment>
+                    );
+                  })
+                )}
+              </View>
             </View>
-
-            <View style={styles.listCard}>
-              {attendanceList.length === 0 ? (
-                <View style={styles.emptyInlineRow}>
-                  <Text style={styles.emptyInlineText}>
-                    Catatan absensi harian peserta didik belum terekam bulan ini.
-                  </Text>
-                </View>
-              ) : (
-                attendanceList.map((att, idx) => {
-                  const formattedDate = formatTanggalId(att.date, {
-                    includeDay: true,
-                  });
-
-                  const iconName =
-                    att.status === AttendanceStatus.HADIR
-                      ? "checkmark-circle-outline"
-                      : att.status === AttendanceStatus.SAKIT
-                      ? "medkit-outline"
-                      : att.status === AttendanceStatus.IZIN
-                      ? "calendar-outline"
-                      : "alert-circle-outline";
-
-                  const tone =
-                    att.status === AttendanceStatus.HADIR
-                      ? "success"
-                      : att.status === AttendanceStatus.SAKIT
-                      ? "warning"
-                      : att.status === AttendanceStatus.IZIN
-                      ? "info"
-                      : "danger";
-
-                  return (
-                    <React.Fragment key={att.id}>
-                      {idx > 0 && <Separator />}
-                      <DarkIconRow
-                        icon={iconName}
-                        title={formattedDate}
-                        subtitle={`Masuk: ${
-                          att.check_in_time ? `${att.check_in_time} WIB` : "-"
-                        } • Pulang: ${
-                          att.check_out_time ? `${att.check_out_time} WIB` : "-"
-                        } • ${att.notes || "Sesuai jadwal"}`}
-                        rightPrimary={att.status}
-                        rightSecondary={
-                          att.status === AttendanceStatus.HADIR
-                            ? "Tepat Waktu"
-                            : "Tercatat"
-                        }
-                        rightSecondaryTone={tone}
-                        accessibilityLabel={`Presensi tanggal ${formattedDate}: ${att.status}`}
-                      />
-                    </React.Fragment>
-                  );
-                })
-              )}
-            </View>
-          </View>
-        </ScrollView>
-      )}
+          </>
+        )}
+      </ScrollView>
 
       {/* Modal Sheet Formulir Pengajuan Izin */}
       <Sheet
@@ -610,15 +609,14 @@ const styles = StyleSheet.create({
   screen: {
     backgroundColor: bento.surface,
   },
-  childSwitcherWrapper: {
-    backgroundColor: bento.surface,
-    paddingTop: 12,
-    paddingBottom: 4,
+  headerBlock: {
+    gap: 12,
   },
   successBannerContainer: {
     backgroundColor: shadcn.status.success.bg,
-    borderBottomWidth: 1,
-    borderBottomColor: shadcn.status.success.border,
+    borderWidth: 1,
+    borderColor: shadcn.status.success.border,
+    borderRadius: radius.lg,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
   },
@@ -632,8 +630,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingTop: 12,
-    paddingBottom: layout.scrollBottomPad,
+    flexGrow: 1,
     gap: layout.sectionGap,
   },
   sectionHeaderRow: {
@@ -661,9 +658,13 @@ const styles = StyleSheet.create({
     flex: 1,
     alignSelf: "stretch",
   },
+  statCardsMobileStrip: {
+    marginHorizontal: -layout.mobilePaddingX,
+  },
   statCardsScrollMobile: {
     flexDirection: "row",
     gap: 12,
+    paddingHorizontal: layout.mobilePaddingX,
     paddingVertical: spacing.xs,
   },
   statCardItemMobile: {

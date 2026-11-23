@@ -232,19 +232,16 @@ export function FinanceScreen() {
 
   return (
     <Screen scroll={false} headerShown={false}>
-      {/* TopUtilityBar ("Keuangan") */}
-      <TopUtilityBar
-        title="Keuangan"
-        subtitle="Pengelolaan tagihan dan kuitansi siswa"
-      />
-
       <ScrollView
         style={styles.screenScroll}
         contentContainerStyle={[
           styles.screenScrollContent,
           {
             paddingHorizontal: responsiveHorizontalPadding,
-            paddingBottom: layout.scrollBottomPad,
+            paddingTop: isTablet ? 8 : 4,
+            paddingBottom: isTablet
+              ? layout.scrollBottomPad
+              : layout.mobileDockClearance,
             gap: layout.sectionGap,
           },
         ]}
@@ -261,15 +258,24 @@ export function FinanceScreen() {
           />
         }
       >
-        {/* Pemilih Anak Asuh */}
-        {students.length > 0 && (
-          <ChildSwitcher
-            students={students}
-            activeStudentId={activeStudentId}
-            onSelectStudent={setActiveStudentId}
-            style={styles.childSwitcherStyle}
+        <View style={styles.headerBlock}>
+          {/* TopUtilityBar ("Keuangan") menyatu di aliran scroll */}
+          <TopUtilityBar
+            noHorizontalPadding
+            title="Keuangan"
+            subtitle="Pengelolaan tagihan dan kuitansi siswa"
           />
-        )}
+
+          {/* Pemilih Anak Asuh */}
+          {students.length > 0 && (
+            <ChildSwitcher
+              students={students}
+              activeStudentId={activeStudentId}
+              onSelectStudent={setActiveStudentId}
+              style={styles.childSwitcherStyle}
+            />
+          )}
+        </View>
 
         {/* Bento Row Atas (Tablet: 2 kolom sejajar, Mobile: bertumpuk) */}
         <View style={[styles.bentoRow, isTablet && styles.bentoRowTablet]}>
@@ -749,7 +755,10 @@ const styles = StyleSheet.create({
     backgroundColor: bento.surface,
   },
   screenScrollContent: {
-    paddingVertical: spacing.md,
+    flexGrow: 1,
+  },
+  headerBlock: {
+    gap: 12,
   },
   childSwitcherStyle: {},
 

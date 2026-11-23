@@ -207,13 +207,6 @@ export function StaffAttendanceScreen() {
 
   return (
     <View style={styles.container}>
-      <TopUtilityBar
-        title="Presensi Kelas"
-        subtitle="Input dan perbarui kehadiran peserta didik"
-        profileName={user?.name || "Staf"}
-        onPressNotifications={() => router.push("/notifications")}
-      />
-
       <ScrollView
         contentContainerStyle={[
           styles.scrollContent,
@@ -221,8 +214,11 @@ export function StaffAttendanceScreen() {
             paddingHorizontal: isTablet
               ? layout.tabletPaddingX
               : layout.mobilePaddingX,
+            paddingTop: isTablet ? 8 : 4,
             gap: layout.sectionGap,
-            paddingBottom: layout.scrollBottomPad,
+            paddingBottom: isTablet
+              ? layout.scrollBottomPad
+              : layout.mobileDockClearance,
           },
         ]}
         showsVerticalScrollIndicator={false}
@@ -239,6 +235,13 @@ export function StaffAttendanceScreen() {
           />
         }
       >
+        <TopUtilityBar
+          noHorizontalPadding
+          title="Presensi Kelas"
+          subtitle="Input dan perbarui kehadiran peserta didik"
+          profileName={user?.name || "Staf"}
+          onPressNotifications={() => router.push("/notifications")}
+        />
         {isTablet ? (
           <View style={styles.statsRowTablet}>
             <PastelStatCard

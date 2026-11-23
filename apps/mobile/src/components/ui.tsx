@@ -5,7 +5,6 @@ import {
   StyleSheet,
   Pressable,
   ScrollView,
-  SafeAreaView,
   TextInput,
   ActivityIndicator,
   Modal,
@@ -17,6 +16,7 @@ import {
   TextStyle,
   TextInputProps,
 } from "react-native";
+import { SafeAreaView, Edge } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import type { Student } from "@neoschola/shared";
 import {
@@ -48,6 +48,7 @@ export interface ScreenProps {
   style?: StyleProp<ViewStyle>;
   contentContainerStyle?: StyleProp<ViewStyle>;
   headerShown?: boolean;
+  safeAreaEdges?: Edge[];
 }
 
 export function Screen({
@@ -59,10 +60,13 @@ export function Screen({
   style,
   contentContainerStyle,
   headerShown = true,
+  safeAreaEdges,
 }: ScreenProps) {
   const { width } = useWindowDimensions();
   const isTablet = width >= breakpoints.tablet;
   const hasHeader = headerShown && (Boolean(title) || Boolean(rightAction));
+  const resolvedEdges: Edge[] =
+    safeAreaEdges ?? (scroll ? ["top", "bottom"] : ["top"]);
 
   const dynamicPadding = {
     paddingHorizontal: isTablet ? layout.tabletPaddingX : layout.mobilePaddingX,
@@ -71,7 +75,7 @@ export function Screen({
   };
 
   return (
-    <SafeAreaView style={[styles.screenSafeArea, style]}>
+    <SafeAreaView edges={resolvedEdges} style={[styles.screenSafeArea, style]}>
       {hasHeader && (
         <View
           style={[
@@ -111,13 +115,7 @@ export function Screen({
           {children}
         </ScrollView>
       ) : (
-        <View
-          style={[
-            styles.screenStaticContainer,
-            dynamicPadding,
-            contentContainerStyle,
-          ]}
-        >
+        <View style={[styles.screenStaticContainer, contentContainerStyle]}>
           {children}
         </View>
       )}

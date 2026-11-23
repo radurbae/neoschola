@@ -119,7 +119,7 @@ export function ChatScreen() {
   };
 
   return (
-    <Screen scroll={false} headerShown={false}>
+    <Screen scroll={false} headerShown={false} safeAreaEdges={["top", "bottom"]}>
       <View
         style={[
           styles.headerBar,
