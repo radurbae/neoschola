@@ -1,50 +1,112 @@
 /**
  * NeoSchola Design System Tokens
- * Sesuai panduan docs/DESIGN.md
+ * Berbasis ui.shadcn.com (Zinc Base / New York Style)
  * Memenuhi rasio kontras WCAG 2.1 AA (minimal 4.5:1) dan tap target minimal 44pt.
  */
 
-export const colors = {
-  // Kanvas & Permukaan
-  canvas: "#F7F9F8",
+export const shadcn = {
+  background: "#FFFFFF",
+  canvas: "#FAFAFA",
+  foreground: "#09090B",
   card: "#FFFFFF",
-  cardSecondary: "#F1F5F9",
-  border: "#E2E8F0",
-  borderFocus: "#166534",
-
-  // Identitas Hijau Sekolah (Forest Green)
-  primary: "#166534", // Kontras 7.4:1 terhadap #FFFFFF
-  primaryPressed: "#14532D",
-  primarySoft: "#ECFDF5",
-
-  // Teks & Hierarki
-  textPrimary: "#0F172A", // Kontras 14.8:1 terhadap #FFFFFF
-  textSecondary: "#475569", // Kontras 5.3:1 terhadap #FFFFFF
-  textMuted: "#64748B", // Kontras 4.76:1 terhadap #FFFFFF, 4.50:1 terhadap #F7F9F8 (WCAG AA)
-  textInverse: "#FFFFFF",
-
-  // Status Badges & Semantic Chips (Teks ke background >= 4.5:1)
-  badge: {
+  cardForeground: "#09090B",
+  popover: "#FFFFFF",
+  popoverForeground: "#09090B",
+  primary: "#18181B",
+  primaryPressed: "#27272A",
+  primaryForeground: "#FAFAFA",
+  secondary: "#F4F4F5",
+  secondaryPressed: "#E4E4E7",
+  secondaryForeground: "#18181B",
+  muted: "#F4F4F5",
+  mutedForeground: "#52525B",
+  accent: "#F4F4F5",
+  accentForeground: "#18181B",
+  destructive: "#DC2626",
+  destructivePressed: "#B91C1C",
+  destructiveForeground: "#FAFAFA",
+  border: "#E4E4E7",
+  input: "#E4E4E7",
+  ring: "#18181B",
+  status: {
     success: {
-      bg: "#DCFCE7",
-      text: "#166534",
+      bg: "#F0FDF4",
+      text: "#15803D",
       border: "#BBF7D0",
     },
     warning: {
-      bg: "#FEF9C3",
-      text: "#854D0E",
-      border: "#FEF08A",
+      bg: "#FFFBEB",
+      text: "#92400E",
+      border: "#FDE68A",
     },
     info: {
-      bg: "#DBEAFE",
-      text: "#1E40AF",
+      bg: "#EFF6FF",
+      text: "#1D4ED8",
       border: "#BFDBFE",
     },
     danger: {
-      bg: "#FEE2E2",
-      text: "#991B1B",
+      bg: "#FEF2F2",
+      text: "#B91C1C",
       border: "#FECACA",
     },
+    neutral: {
+      bg: "#F4F4F5",
+      text: "#3F3F46",
+      border: "#E4E4E7",
+    },
+  },
+} as const;
+
+export const shadows = {
+  none: {
+    shadowColor: "transparent",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0,
+    shadowRadius: 0,
+    elevation: 0,
+  },
+  xs: {
+    shadowColor: "#09090B",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  sm: {
+    shadowColor: "#09090B",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+} as const;
+
+export const colors = {
+  // Kanvas dan Permukaan
+  canvas: shadcn.canvas,
+  card: shadcn.card,
+  cardSecondary: shadcn.secondary,
+  border: shadcn.border,
+  borderFocus: shadcn.primary,
+
+  // Identitas Monokrom Zinc
+  primary: shadcn.primary,
+  primaryPressed: shadcn.primaryPressed,
+  primarySoft: shadcn.secondary,
+
+  // Teks dan Hierarki
+  textPrimary: shadcn.foreground,
+  textSecondary: shadcn.mutedForeground,
+  textMuted: "#71717A",
+  textInverse: shadcn.primaryForeground,
+
+  // Status Badges dan Semantic Chips (Teks ke background >= 4.5:1)
+  badge: {
+    success: shadcn.status.success,
+    warning: shadcn.status.warning,
+    info: shadcn.status.info,
+    danger: shadcn.status.danger,
+    neutral: shadcn.status.neutral,
   },
 } as const;
 
@@ -61,8 +123,8 @@ export const spacing = {
 
 export const radius = {
   sm: 6,
-  md: 10,
-  lg: 14,
+  md: 8,
+  lg: 12,
   full: 9999,
 } as const;
 
@@ -91,6 +153,11 @@ export const typography = {
     semibold: "600" as const,
     bold: "700" as const,
     heavy: "800" as const,
+  },
+  tracking: {
+    tight: -0.4,
+    snug: -0.2,
+    normal: 0,
   },
 } as const;
 

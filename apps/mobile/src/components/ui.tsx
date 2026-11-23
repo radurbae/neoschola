@@ -19,7 +19,11 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import type { Student } from "@neoschola/shared";
-import { colors, spacing, radius, typography, touchTarget } from "../theme/tokens";
+import { colors, spacing, radius, typography, touchTarget, shadcn } from "../theme/tokens";
+import { Avatar } from "./ui/shadcn";
+
+// Re-export seluruh primitif shadcn/ui
+export * from "./ui/shadcn";
 
 // Screen
 
@@ -118,11 +122,25 @@ export function Card({
 
 // Button
 
+export type ButtonVariant =
+  | "default"
+  | "secondary"
+  | "outline"
+  | "ghost"
+  | "destructive"
+  | "link"
+  // Kompatibilitas varian lama
+  | "primary"
+  | "danger";
+
+export type ButtonSize = "sm" | "default" | "md" | "lg" | "icon";
+
 export interface ButtonProps {
-  title: string;
+  title?: string;
+  children?: React.ReactNode;
   onPress?: () => void;
-  variant?: "primary" | "secondary" | "outline" | "danger";
-  size?: "sm" | "md" | "lg";
+  variant?: ButtonVariant;
+  size?: ButtonSize;
   loading?: boolean;
   disabled?: boolean;
   leftIcon?: React.ReactNode;
@@ -135,9 +153,10 @@ export interface ButtonProps {
 
 export function Button({
   title,
+  children,
   onPress,
-  variant = "primary",
-  size = "md",
+  variant = "default",
+  size = "default",
   loading = false,
   disabled = false,
   leftIcon,
@@ -149,64 +168,108 @@ export function Button({
 }: ButtonProps) {
   const isDisabled = disabled || loading;
 
+  // Normalisasi varian lama ke standar shadcn
+  const normalizedVariant: "default" | "secondary" | "outline" | "ghost" | "destructive" | "link" =
+    variant === "primary"
+      ? "default"
+      : variant === "danger"
+      ? "destructive"
+      : variant;
+
   const getVariantStyle = (pressed: boolean) => {
-    switch (variant) {
-      case "primary":
+    switch (normalizedVariant) {
+      case "default":
         return {
-          backgroundColor: pressed ? colors.primaryPressed : colors.primary,
-          borderColor: pressed ? colors.primaryPressed : colors.primary,
+          backgroundColor: pressed ? shadcn.primaryPressed : shadcn.primary,
+          borderColor: pressed ? shadcn.primaryPressed : shadcn.primary,
+          borderWidth: 1,
         };
       case "secondary":
         return {
-          backgroundColor: pressed ? "#D1FAE5" : colors.primarySoft,
-          borderColor: "#BBF7D0",
+          backgroundColor: pressed ? shadcn.secondaryPressed : shadcn.secondary,
+          borderColor: pressed ? shadcn.secondaryPressed : shadcn.secondary,
           borderWidth: 1,
         };
       case "outline":
         return {
-          backgroundColor: pressed ? "#F1F5F9" : "transparent",
-          borderColor: colors.primary,
-          borderWidth: 1.5,
-        };
-      case "danger":
-        return {
-          backgroundColor: pressed ? "#FCA5A5" : colors.badge.danger.bg,
-          borderColor: colors.badge.danger.border,
+          backgroundColor: pressed ? shadcn.secondary : shadcn.background,
+          borderColor: shadcn.border,
           borderWidth: 1,
+        };
+      case "ghost":
+        return {
+          backgroundColor: pressed ? shadcn.secondary : "transparent",
+          borderColor: "transparent",
+          borderWidth: 1,
+        };
+      case "destructive":
+        return {
+          backgroundColor: pressed ? shadcn.destructivePressed : shadcn.destructive,
+          borderColor: pressed ? shadcn.destructivePressed : shadcn.destructive,
+          borderWidth: 1,
+        };
+      case "link":
+        return {
+          backgroundColor: "transparent",
+          borderColor: "transparent",
+          borderWidth: 0,
         };
     }
   };
 
   const getTextColor = () => {
-    switch (variant) {
-      case "primary":
-        return colors.textInverse;
+    switch (normalizedVariant) {
+      case "default":
+        return shadcn.primaryForeground;
       case "secondary":
+        return shadcn.secondaryForeground;
       case "outline":
-        return colors.primary;
-      case "danger":
-        return colors.badge.danger.text;
+      case "ghost":
+      case "link":
+        return shadcn.foreground;
+      case "destructive":
+        return shadcn.destructiveForeground;
     }
   };
 
   const getSizeStyle = () => {
     switch (size) {
       case "sm":
-        return { paddingHorizontal: spacing.md, minHeight: touchTarget.minHeight };
+        return {
+          paddingHorizontal: spacing.md,
+          minHeight: touchTarget.minHeight,
+        };
       case "lg":
-        return { paddingHorizontal: spacing.xxl, minHeight: 48 };
+        return {
+          paddingHorizontal: spacing.xxl,
+          minHeight: 48,
+        };
+      case "icon":
+        return {
+          width: touchTarget.minWidth,
+          minHeight: touchTarget.minHeight,
+          paddingHorizontal: 0,
+          justifyContent: "center" as const,
+          alignItems: "center" as const,
+        };
       case "md":
+      case "default":
       default:
-        return { paddingHorizontal: spacing.lg, minHeight: touchTarget.minHeight };
+        return {
+          paddingHorizontal: spacing.lg,
+          minHeight: touchTarget.minHeight,
+        };
     }
   };
+
+  const displayTitle = title || (typeof children === "string" ? children : "");
 
   return (
     <Pressable
       onPress={onPress}
       disabled={isDisabled}
       accessibilityRole="button"
-      accessibilityLabel={accessibilityLabel || title}
+      accessibilityLabel={accessibilityLabel || displayTitle}
       accessibilityState={{ disabled: isDisabled, busy: loading }}
       testID={testID}
       style={({ pressed }) => [
@@ -220,20 +283,25 @@ export function Button({
       {loading ? (
         <ActivityIndicator
           size="small"
-          color={variant === "primary" ? colors.textInverse : colors.primary}
+          color={getTextColor()}
         />
       ) : (
         <View style={styles.buttonContent}>
           {Boolean(leftIcon) && <View style={styles.buttonIconLeft}>{leftIcon}</View>}
-          <Text
-            style={[
-              styles.buttonText,
-              { color: getTextColor() },
-              textStyle,
-            ]}
-          >
-            {title}
-          </Text>
+          {displayTitle ? (
+            <Text
+              style={[
+                styles.buttonText,
+                { color: getTextColor() },
+                normalizedVariant === "link" && styles.buttonTextLink,
+                textStyle,
+              ]}
+            >
+              {displayTitle}
+            </Text>
+          ) : (
+            children
+          )}
           {Boolean(rightIcon) && <View style={styles.buttonIconRight}>{rightIcon}</View>}
         </View>
       )}
@@ -243,7 +311,17 @@ export function Button({
 
 // Badge
 
-export type BadgeVariant = "success" | "warning" | "danger" | "info" | "neutral";
+export type BadgeVariant =
+  | "default"
+  | "secondary"
+  | "outline"
+  | "destructive"
+  | "success"
+  | "warning"
+  | "info"
+  | "neutral"
+  // Kompatibilitas varian lama
+  | "danger";
 
 export interface BadgeProps {
   label: string;
@@ -260,21 +338,36 @@ export function Badge({
 }: BadgeProps) {
   const getBadgeColors = () => {
     switch (variant) {
-      case "success":
-        return colors.badge.success;
-      case "warning":
-        return colors.badge.warning;
+      case "default":
+        return {
+          bg: shadcn.primary,
+          text: shadcn.primaryForeground,
+          border: shadcn.primary,
+        };
+      case "secondary":
+        return {
+          bg: shadcn.secondary,
+          text: shadcn.secondaryForeground,
+          border: shadcn.border,
+        };
+      case "outline":
+        return {
+          bg: shadcn.background,
+          text: shadcn.foreground,
+          border: shadcn.border,
+        };
+      case "destructive":
       case "danger":
-        return colors.badge.danger;
+        return shadcn.status.danger;
+      case "success":
+        return shadcn.status.success;
+      case "warning":
+        return shadcn.status.warning;
       case "info":
-        return colors.badge.info;
+        return shadcn.status.info;
       case "neutral":
       default:
-        return {
-          bg: "#F1F5F9",
-          text: "#334155",
-          border: "#CBD5E1",
-        };
+        return shadcn.status.neutral;
     }
   };
 
@@ -483,27 +576,24 @@ export function ChildSwitcher({
     return null;
   }
 
-  // Jika hanya ada 1 anak: tampilkan kartu ringkas info anak aktif tanpa tombol ganti yang membingungkan
+  // Jika hanya ada 1 anak: tampilkan kartu ringkas info anak aktif dengan hairline border elegan
   if (students.length === 1) {
     const student = students[0];
+    const studentName = student.nickname || student.full_name;
     return (
       <View style={[styles.childSwitcherSingleCard, style]}>
-        <View style={styles.childAvatarBadge}>
-          <Text style={styles.childAvatarText}>
-            {student.nickname ? student.nickname.slice(0, 1).toUpperCase() : "A"}
-          </Text>
-        </View>
+        <Avatar name={studentName} size="md" style={styles.childSingleAvatar} />
         <View style={styles.childInfoCol}>
           <Text style={styles.childSingleName}>{student.full_name}</Text>
           <Text style={styles.childSingleClass}>
-            {student.class_name || "Peserta Didik"} • NIS {student.nis}
+            {student.class_name || "Peserta Didik"} - NIS {student.nis}
           </Text>
         </View>
       </View>
     );
   }
 
-  // Jika >= 2 anak: pemilih anak interaktif
+  // Jika >= 2 anak: pemilih anak interaktif bergaya shadcn
   return (
     <View style={[styles.childSwitcherContainer, style]}>
       <Text style={styles.childSwitcherLabel}>Pilih Anak Asuh:</Text>
@@ -514,6 +604,7 @@ export function ChildSwitcher({
       >
         {students.map((student) => {
           const isActive = student.id === activeStudentId;
+          const studentName = student.nickname || student.full_name;
           return (
             <TouchableOpacity
               key={student.id}
@@ -524,7 +615,7 @@ export function ChildSwitcher({
               onPress={() => onSelectStudent(student.id)}
               activeOpacity={0.7}
               accessibilityRole="button"
-              accessibilityLabel={`Pilih ${student.nickname || student.full_name}, ${student.class_name || ""}`}
+              accessibilityLabel={`Pilih ${studentName}, ${student.class_name || ""}`}
             >
               <View
                 style={[
@@ -538,7 +629,7 @@ export function ChildSwitcher({
                     isActive ? styles.childTabAvatarTextActive : styles.childTabAvatarTextInactive,
                   ]}
                 >
-                  {student.nickname ? student.nickname.slice(0, 1).toUpperCase() : "A"}
+                  {studentName ? studentName.slice(0, 1).toUpperCase() : "A"}
                 </Text>
               </View>
               <View style={styles.childTabTextCol}>
@@ -549,7 +640,7 @@ export function ChildSwitcher({
                   ]}
                   numberOfLines={1}
                 >
-                  {student.nickname || student.full_name}
+                  {studentName}
                 </Text>
                 <Text
                   style={[
@@ -590,7 +681,7 @@ export function StateView({
   if (type === "loading") {
     return (
       <View style={[styles.stateViewContainer, style]}>
-        <ActivityIndicator size="large" color={colors.primary} />
+        <ActivityIndicator size="large" color={shadcn.primary} />
         <Text style={styles.stateLoadingText}>
           {message || "Memuat data..."}
         </Text>
@@ -602,7 +693,7 @@ export function StateView({
     return (
       <View style={[styles.stateViewContainer, style]}>
         <View style={styles.stateIconCircle}>
-          <Ionicons name="file-tray-outline" size={32} color={colors.textSecondary} />
+          <Ionicons name="file-tray-outline" size={28} color={shadcn.mutedForeground} />
         </View>
         <Text style={styles.stateTitle}>{title || "Belum Ada Data"}</Text>
         <Text style={styles.stateMessage}>
@@ -612,7 +703,7 @@ export function StateView({
           <Button
             title={actionLabel!}
             onPress={onAction}
-            variant="primary"
+            variant="default"
             style={styles.stateActionButton}
           />
         )}
@@ -624,7 +715,7 @@ export function StateView({
   return (
     <View style={[styles.stateViewContainer, style]}>
       <View style={[styles.stateIconCircle, styles.stateErrorIconCircle]}>
-        <Ionicons name="alert-circle-outline" size={32} color={colors.badge.danger.text} />
+        <Ionicons name="alert-circle-outline" size={28} color={shadcn.status.danger.text} />
       </View>
       <Text style={styles.stateTitle}>{title || "Terjadi Kendala"}</Text>
       <Text style={styles.stateMessage}>
@@ -633,7 +724,7 @@ export function StateView({
       <Button
         title={actionLabel || "Coba Lagi"}
         onPress={onAction}
-        variant="primary"
+        variant="default"
         style={styles.stateActionButton}
       />
     </View>
@@ -685,7 +776,7 @@ export function ModalSheet({
               accessibilityRole="button"
               accessibilityLabel="Tutup formulir"
             >
-              <Ionicons name="close" size={24} color={colors.textPrimary} />
+              <Ionicons name="close" size={20} color={shadcn.foreground} />
             </TouchableOpacity>
           </View>
           <ScrollView
@@ -701,6 +792,10 @@ export function ModalSheet({
     </Modal>
   );
 }
+
+// Ekspor alias Sheet untuk kompatibilitas shadcn/ui
+export const Sheet = ModalSheet;
+export type SheetProps = ModalSheetProps;
 
 // ============================================================================
 // Styles
@@ -738,8 +833,9 @@ const styles = StyleSheet.create({
   },
   screenTitle: {
     fontSize: typography.size.xl,
-    fontWeight: typography.weight.bold,
+    fontWeight: typography.weight.semibold,
     color: colors.textPrimary,
+    letterSpacing: typography.tracking.tight,
   },
   screenSubtitle: {
     fontSize: typography.size.xs,
@@ -762,16 +858,16 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
     ...Platform.select({
       ios: {
-        shadowColor: "#0F172A",
+        shadowColor: "#09090B",
         shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.05,
-        shadowRadius: 3,
+        shadowOpacity: 0.03,
+        shadowRadius: 2,
       },
       android: {
         elevation: 1,
       },
       web: {
-        boxShadow: "0 1px 3px rgba(15, 23, 42, 0.06)",
+        boxShadow: "0 1px 2px rgba(9, 9, 11, 0.03)",
       },
     }),
   },
@@ -787,7 +883,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
   },
   buttonDisabled: {
-    opacity: 0.55,
+    opacity: 0.45,
   },
   buttonContent: {
     flexDirection: "row",
@@ -795,9 +891,12 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   buttonText: {
-    fontSize: typography.size.base,
-    fontWeight: typography.weight.semibold,
+    fontSize: typography.size.sm,
+    fontWeight: typography.weight.medium,
     textAlign: "center",
+  },
+  buttonTextLink: {
+    textDecorationLine: "underline",
   },
   buttonIconLeft: {
     marginRight: spacing.sm,
@@ -811,12 +910,12 @@ const styles = StyleSheet.create({
     alignSelf: "flex-start",
     paddingHorizontal: spacing.sm,
     paddingVertical: 3,
-    borderRadius: radius.full,
+    borderRadius: radius.sm,
     borderWidth: 1,
   },
   badgeText: {
     fontSize: typography.size.xs,
-    fontWeight: typography.weight.semibold,
+    fontWeight: typography.weight.medium,
   },
 
   // Chip
@@ -832,8 +931,8 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xs,
   },
   chipSelected: {
-    backgroundColor: colors.primarySoft,
-    borderColor: colors.primary,
+    backgroundColor: shadcn.primary,
+    borderColor: shadcn.primary,
   },
   chipUnselected: {
     backgroundColor: colors.card,
@@ -841,14 +940,14 @@ const styles = StyleSheet.create({
   },
   chipText: {
     fontSize: typography.size.sm,
-    fontWeight: typography.weight.medium,
   },
   chipTextSelected: {
-    color: colors.primary,
-    fontWeight: typography.weight.bold,
+    color: shadcn.primaryForeground,
+    fontWeight: typography.weight.semibold,
   },
   chipTextUnselected: {
     color: colors.textSecondary,
+    fontWeight: typography.weight.medium,
   },
   chipCountBadge: {
     marginLeft: spacing.xs,
@@ -857,17 +956,17 @@ const styles = StyleSheet.create({
     borderRadius: radius.full,
   },
   chipCountBadgeSelected: {
-    backgroundColor: colors.primary,
+    backgroundColor: shadcn.primaryPressed,
   },
   chipCountBadgeUnselected: {
-    backgroundColor: "#E2E8F0",
+    backgroundColor: colors.cardSecondary,
   },
   chipCountText: {
     fontSize: 10,
     fontWeight: typography.weight.bold,
   },
   chipCountTextSelected: {
-    color: colors.textInverse,
+    color: shadcn.primaryForeground,
   },
   chipCountTextUnselected: {
     color: colors.textSecondary,
@@ -879,9 +978,9 @@ const styles = StyleSheet.create({
   },
   inputLabel: {
     fontSize: typography.size.sm,
-    fontWeight: typography.weight.semibold,
+    fontWeight: typography.weight.medium,
     color: colors.textPrimary,
-    marginBottom: spacing.xs,
+    marginBottom: 6,
   },
   inputWrapper: {
     flexDirection: "row",
@@ -899,11 +998,11 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
   },
   inputWrapperFocused: {
-    borderColor: colors.borderFocus,
+    borderColor: shadcn.primary,
     borderWidth: 1.5,
   },
   inputWrapperError: {
-    borderColor: colors.badge.danger.text,
+    borderColor: shadcn.destructive,
   },
   inputField: {
     flex: 1,
@@ -927,7 +1026,7 @@ const styles = StyleSheet.create({
   },
   inputErrorText: {
     fontSize: typography.size.xs,
-    color: colors.badge.danger.text,
+    color: shadcn.status.danger.text,
     marginTop: spacing.xs,
   },
   inputHelperText: {
@@ -949,8 +1048,9 @@ const styles = StyleSheet.create({
   },
   sectionHeaderTitle: {
     fontSize: typography.size.lg,
-    fontWeight: typography.weight.bold,
+    fontWeight: typography.weight.semibold,
     color: colors.textPrimary,
+    letterSpacing: typography.tracking.snug,
   },
   sectionHeaderSubtitle: {
     fontSize: typography.size.xs,
@@ -974,27 +1074,17 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     marginBottom: spacing.md,
   },
-  childAvatarBadge: {
-    width: 40,
-    height: 40,
-    borderRadius: radius.full,
-    backgroundColor: colors.primarySoft,
-    alignItems: "center",
-    justifyContent: "center",
+  childSingleAvatar: {
     marginRight: spacing.md,
-  },
-  childAvatarText: {
-    fontSize: typography.size.lg,
-    fontWeight: typography.weight.bold,
-    color: colors.primary,
   },
   childInfoCol: {
     flex: 1,
   },
   childSingleName: {
     fontSize: typography.size.base,
-    fontWeight: typography.weight.bold,
+    fontWeight: typography.weight.semibold,
     color: colors.textPrimary,
+    letterSpacing: typography.tracking.snug,
   },
   childSingleClass: {
     fontSize: typography.size.xs,
@@ -1006,7 +1096,7 @@ const styles = StyleSheet.create({
   },
   childSwitcherLabel: {
     fontSize: typography.size.xs,
-    fontWeight: typography.weight.semibold,
+    fontWeight: typography.weight.medium,
     color: colors.textSecondary,
     marginBottom: spacing.xs,
   },
@@ -1018,62 +1108,62 @@ const styles = StyleSheet.create({
     alignItems: "center",
     minHeight: touchTarget.minHeight,
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
+    paddingVertical: spacing.xs,
     borderRadius: radius.md,
     borderWidth: 1,
     marginRight: spacing.sm,
   },
   childTabItemActive: {
-    backgroundColor: colors.primarySoft,
-    borderColor: colors.primary,
+    backgroundColor: shadcn.primary,
+    borderColor: shadcn.primary,
   },
   childTabItemInactive: {
     backgroundColor: colors.card,
     borderColor: colors.border,
   },
   childTabAvatar: {
-    width: 28,
-    height: 28,
+    width: 26,
+    height: 26,
     borderRadius: radius.full,
     alignItems: "center",
     justifyContent: "center",
     marginRight: spacing.sm,
   },
   childTabAvatarActive: {
-    backgroundColor: colors.primary,
+    backgroundColor: shadcn.primaryPressed,
   },
   childTabAvatarInactive: {
-    backgroundColor: "#E2E8F0",
+    backgroundColor: shadcn.secondary,
   },
   childTabAvatarText: {
     fontSize: typography.size.xs,
     fontWeight: typography.weight.bold,
   },
   childTabAvatarTextActive: {
-    color: colors.textInverse,
+    color: shadcn.primaryForeground,
   },
   childTabAvatarTextInactive: {
-    color: colors.textSecondary,
+    color: shadcn.secondaryForeground,
   },
   childTabTextCol: {
     justifyContent: "center",
   },
   childTabName: {
     fontSize: typography.size.sm,
-    fontWeight: typography.weight.semibold,
   },
   childTabNameActive: {
-    color: colors.primary,
+    color: shadcn.primaryForeground,
+    fontWeight: typography.weight.semibold,
   },
   childTabNameInactive: {
     color: colors.textPrimary,
+    fontWeight: typography.weight.medium,
   },
   childTabClass: {
     fontSize: 11,
-    color: colors.textSecondary,
   },
   childTabClassActive: {
-    color: colors.primary,
+    color: "#A1A1AA",
   },
   childTabClassInactive: {
     color: colors.textSecondary,
@@ -1092,21 +1182,25 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
   stateIconCircle: {
-    width: 64,
-    height: 64,
+    width: 56,
+    height: 56,
     borderRadius: radius.full,
-    backgroundColor: "#F1F5F9",
+    backgroundColor: colors.cardSecondary,
+    borderWidth: 1,
+    borderColor: colors.border,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: spacing.md,
   },
   stateErrorIconCircle: {
-    backgroundColor: colors.badge.danger.bg,
+    backgroundColor: shadcn.status.danger.bg,
+    borderColor: shadcn.status.danger.border,
   },
   stateTitle: {
     fontSize: typography.size.lg,
-    fontWeight: typography.weight.bold,
+    fontWeight: typography.weight.semibold,
     color: colors.textPrimary,
+    letterSpacing: typography.tracking.snug,
     marginBottom: spacing.xs,
     textAlign: "center",
   },
@@ -1125,7 +1219,7 @@ const styles = StyleSheet.create({
   // ModalSheet
   modalBackdrop: {
     flex: 1,
-    backgroundColor: "rgba(15, 23, 42, 0.4)",
+    backgroundColor: "rgba(9, 9, 11, 0.45)",
     justifyContent: "flex-end",
   },
   modalDismissArea: {
@@ -1133,15 +1227,17 @@ const styles = StyleSheet.create({
   },
   modalSheetCard: {
     backgroundColor: colors.card,
-    borderTopLeftRadius: radius.lg,
-    borderTopRightRadius: radius.lg,
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
     maxHeight: "85%",
     paddingBottom: spacing.xxl,
     ...Platform.select({
       ios: {
-        shadowColor: "#000",
+        shadowColor: "#09090B",
         shadowOffset: { width: 0, height: -2 },
-        shadowOpacity: 0.1,
+        shadowOpacity: 0.08,
         shadowRadius: 6,
       },
       android: {
@@ -1158,7 +1254,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 4,
     borderRadius: radius.full,
-    backgroundColor: "#CBD5E1",
+    backgroundColor: "#D4D4D8",
   },
   modalTitleRow: {
     flexDirection: "row",
@@ -1171,7 +1267,8 @@ const styles = StyleSheet.create({
   },
   modalTitleText: {
     fontSize: typography.size.lg,
-    fontWeight: typography.weight.bold,
+    fontWeight: typography.weight.semibold,
+    letterSpacing: typography.tracking.snug,
     color: colors.textPrimary,
     flex: 1,
   },
