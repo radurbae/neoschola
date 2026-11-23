@@ -17,13 +17,15 @@ import {
   Badge,
   Chip,
   Button,
-  ModalSheet,
+  Sheet,
+  Alert,
+  Separator,
   StateView,
 } from "../../components/ui";
 import type { BadgeVariant } from "../../components/ui";
 import * as api from "../../lib/api";
 import {
-  colors,
+  shadcn,
   spacing,
   radius,
   typography,
@@ -48,7 +50,7 @@ export function AnnouncementsScreen() {
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // Detail Modal Sheet state
+  // Detail Sheet state
   const [activeAnnouncement, setActiveAnnouncement] = useState<Announcement | null>(null);
   const [acknowledging, setAcknowledging] = useState<boolean>(false);
 
@@ -113,7 +115,7 @@ export function AnnouncementsScreen() {
       setActiveAnnouncement((prev) =>
         prev && prev.id === item.id ? { ...prev, is_read: true } : prev
       );
-    } catch (err: any) {
+    } catch {
       // Jika gagal, pertahankan state lama
     } finally {
       setAcknowledging(false);
@@ -125,13 +127,13 @@ export function AnnouncementsScreen() {
   ): { label: string; variant: BadgeVariant } => {
     switch (category) {
       case "DARURAT":
-        return { label: "Darurat", variant: "danger" };
+        return { label: "Darurat", variant: "destructive" };
       case "SEKOLAH":
-        return { label: "Sekolah", variant: "info" };
+        return { label: "Sekolah", variant: "secondary" };
       case "KELAS":
-        return { label: "Kelas", variant: "success" };
+        return { label: "Kelas", variant: "outline" };
       case "KEGIATAN":
-        return { label: "Kegiatan", variant: "warning" };
+        return { label: "Kegiatan", variant: "secondary" };
       default:
         return { label: category, variant: "neutral" };
     }
@@ -151,7 +153,7 @@ export function AnnouncementsScreen() {
           accessibilityRole="button"
           accessibilityLabel="Kembali ke layar sebelumnya"
         >
-          <Ionicons name="arrow-back" size={24} color={colors.textPrimary} />
+          <Ionicons name="arrow-back" size={20} color={shadcn.foreground} />
         </TouchableOpacity>
       }
     >
@@ -210,26 +212,68 @@ export function AnnouncementsScreen() {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={() => fetchAnnouncements(true)}
-              tintColor={colors.primary}
-              colors={[colors.primary]}
+              tintColor={shadcn.primary}
+              colors={[shadcn.primary]}
             />
           }
         >
           {filteredAnnouncements.map((item) => {
+            const isEmergencyPinned = item.category === "DARURAT" && item.is_pinned;
             const catBadge = getCategoryBadge(item.category);
+
+            // Pengumuman DARURAT yang disematkan tampil menonjol dengan Alert variant="destructive"
+            if (isEmergencyPinned) {
+              return (
+                <TouchableOpacity
+                  key={item.id}
+                  style={styles.emergencyTouchable}
+                  onPress={() => setActiveAnnouncement(item)}
+                  activeOpacity={0.7}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Pengumuman darurat disematkan: ${item.title}. Status: ${
+                    item.is_read ? "Sudah Dibaca" : "Belum Dibaca"
+                  }`}
+                >
+                  <Alert
+                    variant="destructive"
+                    title={`PENGUMUMAN DARURAT: ${item.title}`}
+                    description={item.content}
+                    style={styles.emergencyAlert}
+                  />
+                  <View style={styles.emergencyMetaRow}>
+                    <View style={styles.badgeGroup}>
+                      <Badge label="Disematkan" variant="destructive" />
+                      <Badge
+                        label={item.is_read ? "Sudah Dibaca" : "Belum Dibaca"}
+                        variant={item.is_read ? "secondary" : "outline"}
+                      />
+                    </View>
+                    <View style={styles.metaInfoRow}>
+                      <Ionicons
+                        name="time-outline"
+                        size={14}
+                        color={shadcn.status.danger.text}
+                      />
+                      <Text style={styles.emergencyDateText}>
+                        {formatTanggalId(item.created_at, { includeDay: true })}
+                      </Text>
+                    </View>
+                  </View>
+                </TouchableOpacity>
+              );
+            }
+
+            // Pengumuman lain dalam Card hairline rapi
             return (
               <Card
                 key={item.id}
-                style={[
-                  styles.announcementCard,
-                  item.is_pinned && styles.announcementCardPinned,
-                ]}
+                style={styles.announcementCard}
                 onPress={() => setActiveAnnouncement(item)}
                 accessibilityLabel={`Pengumuman: ${item.title}. Kategori ${catBadge.label}. Status: ${
                   item.is_read ? "Sudah Dibaca" : "Belum Dibaca"
                 }`}
               >
-                {/* Header Kartu: Kategori & Pin */}
+                {/* Header Kartu: Kategori, Pin & Status Baca */}
                 <View style={styles.cardHeaderRow}>
                   <View style={styles.badgeGroup}>
                     <Badge
@@ -237,19 +281,14 @@ export function AnnouncementsScreen() {
                       variant={catBadge.variant}
                     />
                     {item.is_pinned && (
-                      <View style={styles.pinnedBadge}>
-                        <Ionicons name="pin" size={14} color={colors.primary} />
-                        <Text style={styles.pinnedText}>Disematkan</Text>
-                      </View>
+                      <Badge label="Disematkan" variant="secondary" />
                     )}
                   </View>
 
-                  {/* Status Baca */}
-                  {item.is_read ? (
-                    <Badge label="Sudah Dibaca" variant="neutral" />
-                  ) : (
-                    <Badge label="Belum Dibaca" variant="warning" />
-                  )}
+                  <Badge
+                    label={item.is_read ? "Sudah Dibaca" : "Belum Dibaca"}
+                    variant={item.is_read ? "secondary" : "outline"}
+                  />
                 </View>
 
                 {/* Judul Pengumuman */}
@@ -262,13 +301,15 @@ export function AnnouncementsScreen() {
                   {item.content}
                 </Text>
 
+                <Separator style={styles.cardSeparator} />
+
                 {/* Footer Kartu: Tanggal & Penerbit */}
                 <View style={styles.cardFooterRow}>
                   <View style={styles.metaInfoRow}>
                     <Ionicons
                       name="time-outline"
                       size={14}
-                      color={colors.textSecondary}
+                      color={shadcn.mutedForeground}
                     />
                     <Text style={styles.metaDateText}>
                       {formatTanggalId(item.created_at, { includeDay: true })}
@@ -286,126 +327,124 @@ export function AnnouncementsScreen() {
         </ScrollView>
       )}
 
-      {/* ModalSheet Detail Lengkap Pengumuman */}
-      <ModalSheet
+      {/* Sheet Detail Lengkap Pengumuman */}
+      <Sheet
         visible={Boolean(activeAnnouncement)}
         onClose={() => setActiveAnnouncement(null)}
         title="Detail Pengumuman"
       >
         {activeAnnouncement && (
-          <View style={styles.modalBody}>
+          <View style={styles.sheetBody}>
             {/* Tag Kategori & Pin */}
-            <View style={styles.modalMetaBar}>
+            <View style={styles.sheetMetaBar}>
               <View style={styles.badgeGroup}>
                 <Badge
                   label={getCategoryBadge(activeAnnouncement.category).label}
                   variant={getCategoryBadge(activeAnnouncement.category).variant}
                 />
                 {activeAnnouncement.is_pinned && (
-                  <View style={styles.pinnedBadge}>
-                    <Ionicons name="pin" size={14} color={colors.primary} />
-                    <Text style={styles.pinnedText}>Disematkan</Text>
-                  </View>
+                  <Badge label="Disematkan" variant="secondary" />
                 )}
               </View>
 
               <Badge
                 label={activeAnnouncement.is_read ? "Sudah Dibaca" : "Belum Dibaca"}
-                variant={activeAnnouncement.is_read ? "neutral" : "warning"}
+                variant={activeAnnouncement.is_read ? "secondary" : "outline"}
               />
             </View>
 
             {/* Judul Lengkap */}
-            <Text style={styles.modalTitle}>{activeAnnouncement.title}</Text>
+            <Text style={styles.sheetTitle}>{activeAnnouncement.title}</Text>
+
+            <Separator style={styles.sheetSeparator} />
 
             {/* Info Tanggal & Pengirim */}
-            <View style={styles.modalInfoBox}>
-              <View style={styles.modalInfoRow}>
+            <View style={styles.sheetInfoBox}>
+              <View style={styles.sheetInfoRow}>
                 <Ionicons
                   name="calendar-outline"
                   size={16}
-                  color={colors.textSecondary}
+                  color={shadcn.mutedForeground}
                 />
-                <Text style={styles.modalInfoText}>
+                <Text style={styles.sheetInfoText}>
                   {formatTanggalId(activeAnnouncement.created_at, {
                     includeDay: true,
                   })}
                 </Text>
               </View>
               {Boolean(activeAnnouncement.created_by_name) && (
-                <View style={styles.modalInfoRow}>
+                <View style={styles.sheetInfoRow}>
                   <Ionicons
                     name="person-outline"
                     size={16}
-                    color={colors.textSecondary}
+                    color={shadcn.mutedForeground}
                   />
-                  <Text style={styles.modalInfoText}>
+                  <Text style={styles.sheetInfoText}>
                     Diterbitkan oleh: {activeAnnouncement.created_by_name}
                   </Text>
                 </View>
               )}
               {Boolean(activeAnnouncement.class_name) && (
-                <View style={styles.modalInfoRow}>
+                <View style={styles.sheetInfoRow}>
                   <Ionicons
                     name="school-outline"
                     size={16}
-                    color={colors.textSecondary}
+                    color={shadcn.mutedForeground}
                   />
-                  <Text style={styles.modalInfoText}>
+                  <Text style={styles.sheetInfoText}>
                     Kelas: {activeAnnouncement.class_name}
                   </Text>
                 </View>
               )}
             </View>
 
+            <Separator style={styles.sheetSeparator} />
+
             {/* Isi Lengkap Pengumuman */}
-            <View style={styles.modalContentCard}>
-              <Text style={styles.modalContentText}>
+            <View style={styles.sheetContentBox}>
+              <Text style={styles.sheetContentText}>
                 {activeAnnouncement.content}
               </Text>
             </View>
 
+            <Separator style={styles.sheetSeparator} />
+
             {/* Aksi Konfirmasi Baca */}
-            <View style={styles.modalActionContainer}>
+            <View style={styles.sheetActionContainer}>
               {!activeAnnouncement.is_read ? (
                 <Button
                   title="Konfirmasi Sudah Dibaca"
-                  variant="primary"
+                  variant="default"
                   loading={acknowledging}
                   onPress={() => handleAcknowledge(activeAnnouncement)}
                   leftIcon={
                     <Ionicons
                       name="checkmark-circle-outline"
                       size={20}
-                      color={colors.textInverse}
+                      color={shadcn.primaryForeground}
                     />
                   }
-                  accessibilityLabel="Tombol konfirmasi bahwa Anda telah membaca pengumuman ini"
+                  accessibilityLabel="Konfirmasi sudah membaca pengumuman"
                 />
               ) : (
-                <View style={styles.alreadyReadNotice}>
-                  <Ionicons
-                    name="checkmark-done"
-                    size={20}
-                    color={colors.primary}
-                  />
-                  <Text style={styles.alreadyReadText}>
-                    Pengumuman ini telah Anda konfirmasi dibaca.
-                  </Text>
-                </View>
+                <Alert
+                  variant="default"
+                  title="Terkonfirmasi"
+                  description="Pengumuman ini telah Anda konfirmasi sudah dibaca."
+                />
               )}
 
               <Button
                 title="Tutup"
-                variant="secondary"
+                variant="outline"
                 onPress={() => setActiveAnnouncement(null)}
                 style={styles.closeSheetButton}
-                accessibilityLabel="Tutup dialog pengumuman"
+                accessibilityLabel="Tutup dialog detail pengumuman"
               />
             </View>
           </View>
         )}
-      </ModalSheet>
+      </Sheet>
     </Screen>
   );
 }
@@ -419,9 +458,9 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
   },
   filterSection: {
-    backgroundColor: colors.card,
+    backgroundColor: shadcn.background,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    borderBottomColor: shadcn.border,
     paddingVertical: spacing.sm,
   },
   filterScroll: {
@@ -435,14 +474,31 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     paddingBottom: spacing.xxxl,
   },
+  emergencyTouchable: {
+    marginBottom: spacing.md,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: shadcn.status.danger.border,
+    backgroundColor: shadcn.status.danger.bg,
+    padding: spacing.md,
+  },
+  emergencyAlert: {
+    marginBottom: spacing.sm,
+  },
+  emergencyMetaRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingTop: spacing.xs,
+  },
+  emergencyDateText: {
+    fontSize: typography.size.xs,
+    color: shadcn.status.danger.text,
+    fontVariant: ["tabular-nums"],
+  },
   announcementCard: {
     padding: spacing.lg,
     marginBottom: spacing.md,
-  },
-  announcementCardPinned: {
-    borderColor: colors.primary,
-    borderWidth: 1.5,
-    backgroundColor: "#F0FDF4",
   },
   cardHeaderRow: {
     flexDirection: "row",
@@ -455,42 +511,27 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: spacing.xs,
   },
-  pinnedBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    backgroundColor: colors.primarySoft,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 3,
-    borderRadius: radius.full,
-    borderWidth: 1,
-    borderColor: "#BBF7D0",
-  },
-  pinnedText: {
-    fontSize: typography.size.xs,
-    fontWeight: typography.weight.semibold,
-    color: colors.primary,
-  },
   announcementTitle: {
     fontSize: typography.size.base,
-    fontWeight: typography.weight.bold,
-    color: colors.textPrimary,
+    fontWeight: typography.weight.semibold,
+    color: shadcn.foreground,
     lineHeight: typography.lineHeight.base,
     marginBottom: spacing.xs,
+    letterSpacing: typography.tracking.snug,
   },
   announcementPreview: {
     fontSize: typography.size.sm,
-    color: colors.textSecondary,
+    color: shadcn.mutedForeground,
     lineHeight: typography.lineHeight.sm,
-    marginBottom: spacing.md,
+    marginBottom: spacing.sm,
+  },
+  cardSeparator: {
+    marginVertical: spacing.sm,
   },
   cardFooterRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-    paddingTop: spacing.sm,
   },
   metaInfoRow: {
     flexDirection: "row",
@@ -499,82 +540,60 @@ const styles = StyleSheet.create({
   },
   metaDateText: {
     fontSize: typography.size.xs,
-    color: colors.textSecondary,
+    color: shadcn.mutedForeground,
     fontVariant: ["tabular-nums"],
   },
   metaAuthorText: {
     fontSize: typography.size.xs,
-    color: colors.textSecondary,
+    color: shadcn.mutedForeground,
     fontWeight: typography.weight.medium,
     maxWidth: 150,
   },
 
-  // Modal Sheet Styles
-  modalBody: {
+  // Sheet Styles
+  sheetBody: {
     paddingBottom: spacing.xxl,
   },
-  modalMetaBar: {
+  sheetMetaBar: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: spacing.md,
+    marginBottom: spacing.sm,
   },
-  modalTitle: {
+  sheetTitle: {
     fontSize: typography.size.xl,
-    fontWeight: typography.weight.bold,
-    color: colors.textPrimary,
+    fontWeight: typography.weight.semibold,
+    color: shadcn.foreground,
     lineHeight: typography.lineHeight.xl,
-    marginBottom: spacing.md,
+    letterSpacing: typography.tracking.tight,
   },
-  modalInfoBox: {
-    backgroundColor: colors.cardSecondary,
-    borderRadius: radius.md,
-    padding: spacing.md,
-    marginBottom: spacing.lg,
+  sheetSeparator: {
+    marginVertical: spacing.md,
+  },
+  sheetInfoBox: {
     gap: spacing.xs,
   },
-  modalInfoRow: {
+  sheetInfoRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.sm,
   },
-  modalInfoText: {
+  sheetInfoText: {
     fontSize: typography.size.sm,
-    color: colors.textSecondary,
+    color: shadcn.mutedForeground,
     fontVariant: ["tabular-nums"],
   },
-  modalContentCard: {
-    backgroundColor: colors.card,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: spacing.lg,
-    marginBottom: spacing.xl,
+  sheetContentBox: {
+    paddingVertical: spacing.xs,
   },
-  modalContentText: {
+  sheetContentText: {
     fontSize: typography.size.base,
-    color: colors.textPrimary,
+    color: shadcn.foreground,
     lineHeight: typography.lineHeight.base + 2,
   },
-  modalActionContainer: {
+  sheetActionContainer: {
     gap: spacing.md,
-  },
-  alreadyReadNotice: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: colors.primarySoft,
-    borderColor: "#BBF7D0",
-    borderWidth: 1,
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.lg,
-    borderRadius: radius.md,
-    gap: spacing.sm,
-  },
-  alreadyReadText: {
-    fontSize: typography.size.sm,
-    fontWeight: typography.weight.semibold,
-    color: colors.primary,
+    marginTop: spacing.xs,
   },
   closeSheetButton: {
     minHeight: touchTarget.minHeight,
