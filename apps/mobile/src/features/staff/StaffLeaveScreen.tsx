@@ -14,10 +14,10 @@ import {
   LeaveType,
   formatTanggalId,
 } from "@neoschola/shared";
+import { useRouter } from "expo-router";
 import {
-  Screen,
+  TopUtilityBar,
   Card,
-  Badge,
   Chip,
   Button,
   Input,
@@ -26,13 +26,24 @@ import {
   Sheet,
   Avatar,
   Separator,
+  DarkIconRow,
 } from "../../components/ui";
+import { useAuth } from "../../store/auth";
 import * as api from "../../lib/api";
-import { shadcn, spacing, radius, typography, touchTarget } from "../../theme/tokens";
+import {
+  radius,
+  shadcn,
+  spacing,
+  touchTarget,
+  typography,
+} from "../../theme/tokens";
 
 type LeaveFilter = "PENDING" | "APPROVED" | "REJECTED" | "ALL";
 
 export function StaffLeaveScreen() {
+  const router = useRouter();
+  const { user } = useAuth();
+
   const [items, setItems] = useState<LeaveRequest[]>([]);
   const [filter, setFilter] = useState<LeaveFilter>("PENDING");
   const [loading, setLoading] = useState<boolean>(true);
@@ -125,12 +136,14 @@ export function StaffLeaveScreen() {
   const rejectedCount = items.filter((i) => i.status === LeaveStatus.REJECTED).length;
 
   return (
-    <Screen
-      scroll={false}
-      headerShown={true}
-      title="Pengajuan Izin"
-      subtitle="Tinjau dan proses permohonan izin sakit dan dispensasi"
-    >
+    <View style={styles.container}>
+      <TopUtilityBar
+        title="Pengajuan Izin"
+        subtitle="Tinjau dan proses permohonan izin sakit dan dispensasi"
+        profileName={user?.name || "Staf"}
+        onPressNotifications={() => router.push("/notifications")}
+      />
+
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
@@ -216,30 +229,37 @@ export function StaffLeaveScreen() {
                   ? tglMulai
                   : `${tglMulai} s.d. ${tglSelesai}`;
 
+              const statusLabel =
+                request.status === LeaveStatus.APPROVED
+                  ? "Disetujui"
+                  : request.status === LeaveStatus.REJECTED
+                  ? "Ditolak"
+                  : "Menunggu";
+
+              const statusTone =
+                request.status === LeaveStatus.APPROVED
+                  ? "success"
+                  : request.status === LeaveStatus.REJECTED
+                  ? "danger"
+                  : "warning";
+
               return (
                 <Card key={request.id} style={styles.requestCard}>
-                  {/* Header Kartu: Avatar + Info Siswa + Status Badge */}
-                  <View style={styles.cardHeaderRow}>
-                    <Avatar
-                      name={request.student_name || "Siswa"}
-                      size="md"
-                      style={styles.studentAvatar}
-                    />
-                    <View style={styles.headerTitleCol}>
-                      <Text style={styles.studentName}>
-                        {request.student_name || "Peserta Didik"}
-                      </Text>
-                      <Text style={styles.classInfo}>
-                        {request.class_name ? `Kelas ${request.class_name}` : "Siswa Sekolah"}
-                      </Text>
-                    </View>
-                    <View style={styles.badgeCol}>
-                      <Badge
-                        label={isSakit ? "Sakit" : "Izin"}
-                        variant={isSakit ? "warning" : "info"}
-                      />
-                    </View>
-                  </View>
+                  {/* Baris Utama dengan DarkIconRow */}
+                  <DarkIconRow
+                    icon={isSakit ? "medkit-outline" : "document-text-outline"}
+                    title={request.student_name || "Peserta Didik"}
+                    subtitle={
+                      request.class_name
+                        ? `Kelas ${request.class_name} • ${isSakit ? "Sakit" : "Izin"}`
+                        : isSakit
+                        ? "Izin Sakit"
+                        : "Dispensasi Izin"
+                    }
+                    rightPrimary={isSakit ? "Sakit" : "Izin"}
+                    rightSecondary={statusLabel}
+                    rightSecondaryTone={statusTone}
+                  />
 
                   <Separator style={styles.cardSeparator} />
 
@@ -400,19 +420,23 @@ export function StaffLeaveScreen() {
                   onPress={handleSubmitReview}
                   variant={reviewAction === "APPROVED" ? "default" : "destructive"}
                   loading={submittingReview}
-                  accessibilityLabel="Kirim hasil peninjauan izin"
-                  style={styles.sheetSubmitButton}
+                  accessibilityLabel="Konfirmasi proses izin"
+                  style={styles.sheetConfirmBtn}
                 />
               </View>
             </View>
           )}
         </Sheet>
       </ScrollView>
-    </Screen>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: shadcn.background,
+  },
   scrollContent: {
     padding: spacing.lg,
     paddingBottom: spacing.max,
@@ -422,37 +446,14 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   requestsList: {
-    marginBottom: spacing.md,
+    gap: spacing.md,
   },
   requestCard: {
+    borderRadius: radius.xl,
     padding: spacing.md,
     backgroundColor: shadcn.card,
+    borderWidth: 1,
     borderColor: shadcn.border,
-    marginBottom: spacing.md,
-  },
-  cardHeaderRow: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  studentAvatar: {
-    marginRight: spacing.sm,
-  },
-  headerTitleCol: {
-    flex: 1,
-    marginRight: spacing.sm,
-  },
-  studentName: {
-    fontSize: typography.size.sm,
-    fontWeight: typography.weight.semibold,
-    color: shadcn.foreground,
-  },
-  classInfo: {
-    fontSize: typography.size.xs,
-    color: shadcn.mutedForeground,
-    marginTop: 2,
-  },
-  badgeCol: {
-    alignItems: "flex-end",
   },
   cardSeparator: {
     marginVertical: spacing.sm,
@@ -460,49 +461,45 @@ const styles = StyleSheet.create({
   infoRow: {
     flexDirection: "row",
     alignItems: "center",
+    gap: spacing.xs,
     marginBottom: spacing.xs,
   },
   infoText: {
     fontSize: typography.size.xs,
-    fontWeight: typography.weight.medium,
     color: shadcn.mutedForeground,
-    marginLeft: spacing.xs,
   },
   reasonBox: {
     backgroundColor: shadcn.secondary,
-    padding: spacing.sm,
     borderRadius: radius.md,
-    marginVertical: spacing.xs,
-    borderWidth: 1,
-    borderColor: shadcn.border,
+    padding: spacing.sm,
+    marginBottom: spacing.xs,
   },
   reasonLabel: {
     fontSize: 11,
-    fontWeight: typography.weight.medium,
+    fontWeight: typography.weight.semibold,
     color: shadcn.mutedForeground,
     marginBottom: 2,
   },
   reasonText: {
-    fontSize: typography.size.sm,
+    fontSize: typography.size.xs,
     color: shadcn.foreground,
-    lineHeight: typography.lineHeight.sm,
+    lineHeight: 18,
   },
   guardianRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginTop: spacing.xs,
-    marginBottom: spacing.xs,
+    gap: spacing.xs,
+    marginTop: 2,
   },
   guardianText: {
     fontSize: 11,
     color: shadcn.mutedForeground,
-    marginLeft: spacing.xs,
   },
   reviewNotesBox: {
-    padding: spacing.sm,
     borderRadius: radius.md,
+    padding: spacing.sm,
+    marginTop: spacing.sm,
     borderWidth: 1,
-    marginTop: spacing.xs,
   },
   reviewNotesBoxApproved: {
     backgroundColor: shadcn.status.success.bg,
@@ -515,52 +512,49 @@ const styles = StyleSheet.create({
   reviewStatusRow: {
     flexDirection: "row",
     alignItems: "center",
+    gap: spacing.xs,
     marginBottom: 2,
   },
   reviewStatusTitle: {
     fontSize: typography.size.xs,
     fontWeight: typography.weight.semibold,
-    marginLeft: spacing.xs,
   },
   reviewNotesText: {
     fontSize: typography.size.xs,
-    color: shadcn.mutedForeground,
+    color: shadcn.foreground,
     fontStyle: "italic",
     marginTop: 2,
   },
   actionsSeparator: {
-    marginTop: spacing.sm,
-    marginBottom: spacing.sm,
+    marginVertical: spacing.md,
   },
   actionsRow: {
     flexDirection: "row",
-    justifyContent: "flex-end",
-    alignItems: "center",
+    gap: spacing.sm,
   },
   actionBtnOutline: {
-    marginRight: spacing.sm,
+    flex: 1,
     minHeight: touchTarget.minHeight,
   },
   actionBtnDefault: {
+    flex: 1,
     minHeight: touchTarget.minHeight,
   },
   sheetContent: {
-    paddingVertical: spacing.xs,
+    paddingTop: spacing.xs,
+    gap: spacing.md,
   },
   sheetSummaryBox: {
     backgroundColor: shadcn.secondary,
-    padding: spacing.md,
     borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: shadcn.border,
-    marginBottom: spacing.md,
+    padding: spacing.md,
   },
   sheetSummaryHeader: {
     flexDirection: "row",
     alignItems: "center",
+    gap: spacing.sm,
   },
   sheetStudentInfo: {
-    marginLeft: spacing.sm,
     flex: 1,
   },
   sheetStudentName: {
@@ -571,21 +565,20 @@ const styles = StyleSheet.create({
   sheetClassText: {
     fontSize: typography.size.xs,
     color: shadcn.mutedForeground,
-    marginTop: 2,
   },
   sheetSummarySeparator: {
     marginVertical: spacing.sm,
   },
   sheetReasonText: {
     fontSize: typography.size.xs,
-    color: shadcn.mutedForeground,
+    color: shadcn.foreground,
     fontStyle: "italic",
+    lineHeight: 18,
   },
   sheetButtonRow: {
-    marginTop: spacing.md,
+    marginTop: spacing.sm,
   },
-  sheetSubmitButton: {
-    width: "100%",
+  sheetConfirmBtn: {
     minHeight: touchTarget.minHeight,
   },
 });
