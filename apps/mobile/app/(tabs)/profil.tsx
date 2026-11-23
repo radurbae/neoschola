@@ -5,6 +5,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
+  useWindowDimensions,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -22,6 +23,8 @@ import { useAuth } from "../../src/store/auth";
 import {
   bento,
   shadcn,
+  breakpoints,
+  layout,
   spacing,
   radius,
   typography,
@@ -30,6 +33,8 @@ import {
 
 export default function ProfileScreen() {
   const router = useRouter();
+  const { width } = useWindowDimensions();
+  const isTablet = width >= breakpoints.tablet;
   const { user, students, logout } = useAuth();
   const [loggingOut, setLoggingOut] = useState(false);
 
@@ -77,8 +82,18 @@ export default function ProfileScreen() {
 
       <ScrollView
         style={styles.scrollBody}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[
+          styles.scrollContent,
+          {
+            paddingHorizontal: isTablet
+              ? layout.tabletPaddingX
+              : layout.mobilePaddingX,
+          },
+        ]}
         showsVerticalScrollIndicator={false}
+        scrollEventThrottle={16}
+        decelerationRate="normal"
+        bounces={true}
       >
         {/* 1. Kartu Profil Soft Ice Blue */}
         <View style={styles.profileCardIceBlue}>
@@ -241,14 +256,14 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    padding: spacing.lg,
-    paddingBottom: spacing.max,
-    gap: spacing.xl,
+    paddingTop: 12,
+    paddingBottom: layout.scrollBottomPad,
+    gap: layout.sectionGap,
   },
   profileCardIceBlue: {
     backgroundColor: bento.iceBlue,
     borderRadius: radius.xxl,
-    padding: spacing.xl,
+    padding: layout.heroPadding,
     borderWidth: 0,
   },
   profileHeaderRow: {
@@ -262,11 +277,13 @@ const styles = StyleSheet.create({
   profileName: {
     fontSize: typography.size.lg,
     fontWeight: typography.weight.bold,
+    fontFamily: typography.family.bold,
     color: shadcn.foreground,
     letterSpacing: typography.tracking.snug,
   },
   profileEmail: {
     fontSize: typography.size.xs,
+    fontFamily: typography.family.regular,
     color: bento.pastelMutedText,
     marginTop: 2,
   },
@@ -286,12 +303,14 @@ const styles = StyleSheet.create({
   },
   metaLabel: {
     fontSize: typography.size.xs,
+    fontFamily: typography.family.regular,
     color: bento.pastelMutedText,
     marginBottom: 2,
   },
   metaValue: {
     fontSize: typography.size.sm,
     fontWeight: typography.weight.semibold,
+    fontFamily: typography.family.semibold,
     color: shadcn.foreground,
     fontVariant: ["tabular-nums"],
   },
@@ -304,11 +323,13 @@ const styles = StyleSheet.create({
   sectionHeading: {
     fontSize: typography.size.base,
     fontWeight: typography.weight.bold,
+    fontFamily: typography.family.bold,
     color: shadcn.foreground,
     letterSpacing: typography.tracking.snug,
   },
   sectionSubheading: {
     fontSize: typography.size.xs,
+    fontFamily: typography.family.regular,
     color: bento.pastelMutedText,
     marginTop: 2,
   },
@@ -329,6 +350,7 @@ const styles = StyleSheet.create({
   },
   emptyInlineText: {
     fontSize: typography.size.xs,
+    fontFamily: typography.family.regular,
     color: bento.pastelMutedText,
     textAlign: "center",
   },

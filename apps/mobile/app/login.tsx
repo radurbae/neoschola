@@ -7,6 +7,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  useWindowDimensions,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -23,6 +24,8 @@ import { useAuth } from "../src/store/auth";
 import {
   bento,
   shadcn,
+  breakpoints,
+  layout,
   spacing,
   radius,
   typography,
@@ -72,6 +75,8 @@ const DEFAULT_DEMO_PASSWORD = "neoschola123";
 
 export default function LoginScreen() {
   const router = useRouter();
+  const { width } = useWindowDimensions();
+  const isTablet = width >= breakpoints.tablet;
   const { login, isLoading } = useAuth();
 
   const [email, setEmail] = useState("");
@@ -117,135 +122,148 @@ export default function LoginScreen() {
         style={styles.keyboardContainer}
       >
         <ScrollView
-          contentContainerStyle={styles.scrollContent}
+          contentContainerStyle={[
+            styles.scrollContent,
+            {
+              paddingHorizontal: isTablet
+                ? layout.tabletPaddingX
+                : layout.mobilePaddingX,
+              paddingVertical: 32,
+            },
+          ]}
           showsVerticalScrollIndicator={false}
+          scrollEventThrottle={16}
+          decelerationRate="normal"
+          bounces={true}
           keyboardShouldPersistTaps="handled"
         >
-          {/* Header Monogram Krem & Identitas Sekolah */}
-          <View style={styles.brandHeader}>
-            <View style={styles.monogramBox}>
-              <Text style={styles.monogramText}>NS</Text>
-            </View>
-            <Text style={styles.brandTitle}>NeoSchola</Text>
-            <Text style={styles.brandSubtitle}>SDN Nusantara Harapan</Text>
-          </View>
-
-          {/* Form Masuk Utama */}
-          <View style={styles.formCard}>
-            <View style={styles.formHeader}>
-              <Text style={styles.formTitle}>Masuk ke Akun Anda</Text>
-              <Text style={styles.formDescription}>
-                Gunakan email terdaftar dan kata sandi Anda untuk melanjutkan.
-              </Text>
+          <View style={styles.loginCardWrapper}>
+            {/* Header Monogram Krem & Identitas Sekolah */}
+            <View style={styles.brandHeader}>
+              <View style={styles.monogramBox}>
+                <Text style={styles.monogramText}>NS</Text>
+              </View>
+              <Text style={styles.brandTitle}>NeoSchola</Text>
+              <Text style={styles.brandSubtitle}>SDN Nusantara Harapan</Text>
             </View>
 
-            {Boolean(errorMessage) && (
-              <Alert
-                variant="destructive"
-                description={errorMessage!}
-                style={styles.alertSpacing}
-              />
-            )}
+            {/* Form Masuk Utama */}
+            <View style={styles.formCard}>
+              <View style={styles.formHeader}>
+                <Text style={styles.formTitle}>Masuk ke Akun Anda</Text>
+                <Text style={styles.formDescription}>
+                  Gunakan email terdaftar dan kata sandi Anda untuk melanjutkan.
+                </Text>
+              </View>
 
-            <View style={styles.fieldGroup}>
-              <Label required>Alamat Email</Label>
-              <Input
-                placeholder="nama@contoh.id"
-                value={email}
-                onChangeText={(text) => {
-                  setEmail(text);
-                  if (errorMessage) setErrorMessage(null);
-                }}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoCorrect={false}
-                leftAddon={
-                  <Ionicons
-                    name="mail-outline"
-                    size={18}
-                    color={shadcn.mutedForeground}
-                  />
-                }
-                accessibilityLabel="Kolom input alamat email"
-              />
-            </View>
+              {Boolean(errorMessage) && (
+                <Alert
+                  variant="destructive"
+                  description={errorMessage!}
+                  style={styles.alertSpacing}
+                />
+              )}
 
-            <View style={styles.fieldGroup}>
-              <Label required>Kata Sandi</Label>
-              <Input
-                placeholder="Masukkan kata sandi"
-                value={password}
-                onChangeText={(text) => {
-                  setPassword(text);
-                  if (errorMessage) setErrorMessage(null);
-                }}
-                secureTextEntry={!showPassword}
-                autoCapitalize="none"
-                leftAddon={
-                  <Ionicons
-                    name="lock-closed-outline"
-                    size={18}
-                    color={shadcn.mutedForeground}
-                  />
-                }
-                rightAddon={
-                  <TouchableOpacity
-                    style={styles.showPasswordBtn}
-                    onPress={() => setShowPassword((prev) => !prev)}
-                    activeOpacity={0.7}
-                    accessibilityRole="button"
-                    accessibilityLabel={
-                      showPassword
-                        ? "Sembunyikan kata sandi"
-                        : "Tampilkan kata sandi"
-                    }
-                  >
+              <View style={styles.fieldGroup}>
+                <Label required>Alamat Email</Label>
+                <Input
+                  placeholder="nama@contoh.id"
+                  value={email}
+                  onChangeText={(text) => {
+                    setEmail(text);
+                    if (errorMessage) setErrorMessage(null);
+                  }}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  leftAddon={
                     <Ionicons
-                      name={showPassword ? "eye-off-outline" : "eye-outline"}
+                      name="mail-outline"
                       size={18}
                       color={shadcn.mutedForeground}
                     />
-                  </TouchableOpacity>
-                }
-                accessibilityLabel="Kolom input kata sandi"
+                  }
+                  accessibilityLabel="Kolom input alamat email"
+                />
+              </View>
+
+              <View style={styles.fieldGroup}>
+                <Label required>Kata Sandi</Label>
+                <Input
+                  placeholder="Masukkan kata sandi"
+                  value={password}
+                  onChangeText={(text) => {
+                    setPassword(text);
+                    if (errorMessage) setErrorMessage(null);
+                  }}
+                  secureTextEntry={!showPassword}
+                  autoCapitalize="none"
+                  leftAddon={
+                    <Ionicons
+                      name="lock-closed-outline"
+                      size={18}
+                      color={shadcn.mutedForeground}
+                    />
+                  }
+                  rightAddon={
+                    <TouchableOpacity
+                      style={styles.showPasswordBtn}
+                      onPress={() => setShowPassword((prev) => !prev)}
+                      activeOpacity={0.7}
+                      accessibilityRole="button"
+                      accessibilityLabel={
+                        showPassword
+                          ? "Sembunyikan kata sandi"
+                          : "Tampilkan kata sandi"
+                      }
+                    >
+                      <Ionicons
+                        name={showPassword ? "eye-off-outline" : "eye-outline"}
+                        size={18}
+                        color={shadcn.mutedForeground}
+                      />
+                    </TouchableOpacity>
+                  }
+                  accessibilityLabel="Kolom input kata sandi"
+                />
+              </View>
+
+              <Button
+                title="Masuk Sekarang"
+                onPress={() => handleLogin()}
+                loading={isLoading}
+                variant="default"
+                size="lg"
+                style={styles.loginBtn}
+                accessibilityLabel="Tombol Masuk Sekarang"
               />
             </View>
 
-            <Button
-              title="Masuk Sekarang"
-              onPress={() => handleLogin()}
-              loading={isLoading}
-              variant="default"
-              size="lg"
-              style={styles.loginBtn}
-              accessibilityLabel="Tombol Masuk Sekarang"
-            />
-          </View>
+            {/* Pemisah Masuk Cepat Akun Demo */}
+            <View style={styles.separatorRow}>
+              <Separator style={styles.separatorFlex} />
+              <Text style={styles.separatorText}>Masuk Cepat Akun Demo</Text>
+              <Separator style={styles.separatorFlex} />
+            </View>
 
-          {/* Pemisah Masuk Cepat Akun Demo */}
-          <View style={styles.separatorRow}>
-            <Separator style={styles.separatorFlex} />
-            <Text style={styles.separatorText}>Masuk Cepat Akun Demo</Text>
-            <Separator style={styles.separatorFlex} />
-          </View>
-
-          {/* Daftar Akun Demo memakai DarkIconRow dipisah Separator */}
-          <View style={styles.demoListCard}>
-            {DEMO_ACCOUNTS.map((account, index) => (
-              <React.Fragment key={account.email}>
-                {index > 0 && <Separator />}
-                <DarkIconRow
-                  icon="person-outline"
-                  title={account.name}
-                  subtitle={`${account.roleBadge} • ${account.description}`}
-                  rightPrimary="Masuk"
-                  rightSecondary={account.email}
-                  rightSecondaryTone="neutral"
-                  onPress={() => handleQuickLogin(account.email)}
-                  accessibilityLabel={`Masuk cepat sebagai ${account.name}, ${account.roleTitle}`}
-                />
-              </React.Fragment>
-            ))}
+            {/* Daftar Akun Demo memakai DarkIconRow dipisah Separator */}
+            <View style={styles.demoListCard}>
+              {DEMO_ACCOUNTS.map((account, index) => (
+                <React.Fragment key={account.email}>
+                  {index > 0 && <Separator />}
+                  <DarkIconRow
+                    icon="person-outline"
+                    title={account.name}
+                    subtitle={`${account.roleBadge} • ${account.description}`}
+                    rightPrimary="Masuk"
+                    rightSecondary={account.email}
+                    rightSecondaryTone="neutral"
+                    onPress={() => handleQuickLogin(account.email)}
+                    accessibilityLabel={`Masuk cepat sebagai ${account.name}, ${account.roleTitle}`}
+                  />
+                </React.Fragment>
+              ))}
+            </View>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -261,13 +279,16 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.xxl,
-    paddingBottom: spacing.max,
+    paddingBottom: layout.scrollBottomPad,
+    alignItems: "center",
+  },
+  loginCardWrapper: {
+    width: "100%",
+    maxWidth: 480,
+    gap: 20,
   },
   brandHeader: {
     alignItems: "center",
-    marginBottom: spacing.xl,
   },
   monogramBox: {
     width: 52,
@@ -282,16 +303,19 @@ const styles = StyleSheet.create({
     color: bento.obsidian,
     fontSize: typography.size.xl,
     fontWeight: typography.weight.bold,
+    fontFamily: typography.family.bold,
     letterSpacing: typography.tracking.snug,
   },
   brandTitle: {
     fontSize: typography.size.xxl,
     fontWeight: typography.weight.bold,
+    fontFamily: typography.family.bold,
     color: shadcn.foreground,
     letterSpacing: typography.tracking.tight,
   },
   brandSubtitle: {
     fontSize: typography.size.sm,
+    fontFamily: typography.family.regular,
     color: bento.pastelMutedText,
     marginTop: 2,
   },
@@ -301,7 +325,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: shadcn.border,
     padding: spacing.xl,
-    marginBottom: spacing.xl,
   },
   formHeader: {
     marginBottom: spacing.lg,
@@ -309,11 +332,13 @@ const styles = StyleSheet.create({
   formTitle: {
     fontSize: typography.size.lg,
     fontWeight: typography.weight.bold,
+    fontFamily: typography.family.bold,
     color: shadcn.foreground,
     letterSpacing: typography.tracking.snug,
   },
   formDescription: {
     fontSize: typography.size.sm,
+    fontFamily: typography.family.regular,
     color: bento.pastelMutedText,
     marginTop: 4,
   },
@@ -336,7 +361,6 @@ const styles = StyleSheet.create({
   separatorRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: spacing.md,
     paddingHorizontal: spacing.xs,
   },
   separatorFlex: {
@@ -345,6 +369,7 @@ const styles = StyleSheet.create({
   separatorText: {
     fontSize: typography.size.xs,
     fontWeight: typography.weight.medium,
+    fontFamily: typography.family.medium,
     color: bento.pastelMutedText,
     marginHorizontal: spacing.sm,
   },

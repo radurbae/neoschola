@@ -34,6 +34,7 @@ import {
   bento,
   shadcn,
   breakpoints,
+  layout,
   spacing,
   radius,
   typography,
@@ -158,7 +159,16 @@ export default function HomeScreen() {
       />
 
       {students.length > 0 && (
-        <View style={styles.childSwitcherWrapper}>
+        <View
+          style={[
+            styles.childSwitcherWrapper,
+            {
+              paddingHorizontal: isTablet
+                ? layout.tabletPaddingX
+                : layout.mobilePaddingX,
+            },
+          ]}
+        >
           <ChildSwitcher
             students={students}
             activeStudentId={activeStudentId}
@@ -191,8 +201,18 @@ export default function HomeScreen() {
       ) : (
         <ScrollView
           style={styles.scrollBody}
-          contentContainerStyle={styles.scrollContent}
+          contentContainerStyle={[
+            styles.scrollContent,
+            {
+              paddingHorizontal: isTablet
+                ? layout.tabletPaddingX
+                : layout.mobilePaddingX,
+            },
+          ]}
           showsVerticalScrollIndicator={false}
+          scrollEventThrottle={16}
+          decelerationRate="normal"
+          bounces={true}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
@@ -209,7 +229,7 @@ export default function HomeScreen() {
           >
             <View
               style={
-                isTablet ? styles.bentoHalfColumn : styles.bentoFullColumn
+                isTablet ? styles.bentoRow1LeftColumn : styles.bentoFullColumn
               }
             >
               <MiniTrendChart
@@ -220,12 +240,13 @@ export default function HomeScreen() {
                 periods={PERIODS}
                 activePeriod={activePeriod}
                 onPeriodChange={(key) => setActivePeriod(key)}
+                style={isTablet ? styles.trendChartFill : undefined}
               />
             </View>
 
             <View
               style={
-                isTablet ? styles.bentoHalfColumn : styles.bentoFullColumn
+                isTablet ? styles.bentoRow1RightColumn : styles.bentoFullColumn
               }
             >
               <View style={styles.sectionHeaderRow}>
@@ -273,6 +294,9 @@ export default function HomeScreen() {
                 <ScrollView
                   horizontal
                   showsHorizontalScrollIndicator={false}
+                  snapToInterval={188}
+                  decelerationRate="fast"
+                  snapToAlignment="start"
                   contentContainerStyle={styles.statCardsScrollMobile}
                 >
                   <PastelStatCard
@@ -324,7 +348,7 @@ export default function HomeScreen() {
             {/* Kiri: Aktivitas Hari Ini dengan Filter Chip */}
             <View
               style={
-                isTablet ? styles.bentoHalfColumn : styles.bentoFullColumn
+                isTablet ? styles.bentoRow2LeftColumn : styles.bentoFullColumn
               }
             >
               <View style={styles.sectionHeaderRow}>
@@ -464,7 +488,7 @@ export default function HomeScreen() {
             {/* Kanan: DarkActionCard */}
             <View
               style={
-                isTablet ? styles.bentoHalfColumn : styles.bentoFullColumn
+                isTablet ? styles.bentoRow2RightColumn : styles.bentoFullColumn
               }
             >
               <View style={styles.sectionHeaderRow}>
@@ -478,6 +502,7 @@ export default function HomeScreen() {
                   description={daruratAnnouncement.content}
                   ctaLabel="Baca Info"
                   onPress={() => router.push("/pengumuman")}
+                  style={isTablet ? styles.actionCardFill : undefined}
                 />
               ) : (
                 <DarkActionCard
@@ -486,6 +511,7 @@ export default function HomeScreen() {
                   description="Beritahukan ketidakhadiran atau kondisi kesehatan ananda langsung kepada wali kelas melalui formulir digital."
                   ctaLabel="Ajukan Izin"
                   onPress={() => router.push("/(tabs)/presensi")}
+                  style={isTablet ? styles.actionCardFill : undefined}
                 />
               )}
             </View>
@@ -502,32 +528,52 @@ const styles = StyleSheet.create({
   },
   childSwitcherWrapper: {
     backgroundColor: bento.surface,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.xs,
+    paddingTop: 12,
+    paddingBottom: 4,
   },
   scrollBody: {
     flex: 1,
   },
   scrollContent: {
-    padding: spacing.lg,
-    paddingBottom: spacing.max,
-    gap: spacing.xl,
+    paddingTop: 12,
+    paddingBottom: layout.scrollBottomPad,
+    gap: layout.sectionGap,
   },
   bentoRow: {
     gap: spacing.lg,
   },
   bentoRowHorizontal: {
     flexDirection: "row",
-    alignItems: "flex-start",
+    alignItems: "stretch",
+    gap: 20,
   },
   bentoRowVertical: {
     flexDirection: "column",
   },
-  bentoHalfColumn: {
+  bentoRow1LeftColumn: {
+    flex: 1.05,
+    alignSelf: "stretch",
+  },
+  bentoRow1RightColumn: {
+    flex: 1.35,
+    alignSelf: "stretch",
+  },
+  bentoRow2LeftColumn: {
+    flex: 1.55,
+  },
+  bentoRow2RightColumn: {
     flex: 1,
+    alignSelf: "stretch",
   },
   bentoFullColumn: {
     width: "100%",
+  },
+  trendChartFill: {
+    flex: 1,
+    alignSelf: "stretch",
+  },
+  actionCardFill: {
+    alignItems: "stretch",
   },
   sectionHeaderRow: {
     marginBottom: spacing.sm,
@@ -535,23 +581,28 @@ const styles = StyleSheet.create({
   sectionHeading: {
     fontSize: typography.size.base,
     fontWeight: typography.weight.bold,
+    fontFamily: typography.family.bold,
     color: shadcn.foreground,
     letterSpacing: typography.tracking.snug,
   },
   statCardsGridTablet: {
-    flexDirection: "column",
-    gap: spacing.sm,
+    flexDirection: "row",
+    alignItems: "stretch",
+    gap: 14,
+    flex: 1,
   },
   statCardItemTablet: {
-    width: "100%",
+    flex: 1,
+    alignSelf: "stretch",
   },
   statCardsScrollMobile: {
     flexDirection: "row",
-    gap: spacing.md,
+    gap: 12,
     paddingVertical: spacing.xs,
   },
   statCardItemMobile: {
-    width: 220,
+    width: 176,
+    minHeight: 164,
   },
   filterChipRow: {
     flexDirection: "row",
@@ -563,8 +614,8 @@ const styles = StyleSheet.create({
     borderRadius: radius.xxl,
     borderWidth: 1,
     borderColor: shadcn.border,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
+    paddingHorizontal: 20,
+    paddingVertical: 8,
     overflow: "hidden",
   },
   emptyInlineRow: {
@@ -575,6 +626,7 @@ const styles = StyleSheet.create({
   },
   emptyInlineText: {
     fontSize: typography.size.xs,
+    fontFamily: typography.family.regular,
     color: bento.pastelMutedText,
     textAlign: "center",
   },

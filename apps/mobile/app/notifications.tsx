@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   RefreshControl,
   ScrollView,
+  useWindowDimensions,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -23,6 +24,8 @@ import * as api from "../src/lib/api";
 import {
   bento,
   shadcn,
+  breakpoints,
+  layout,
   spacing,
   radius,
   typography,
@@ -31,6 +34,9 @@ import {
 
 export default function NotificationsScreen() {
   const router = useRouter();
+  const { width } = useWindowDimensions();
+  const isTablet = width >= breakpoints.tablet;
+
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(true);
@@ -182,8 +188,18 @@ export default function NotificationsScreen() {
       ) : (
         <ScrollView
           style={styles.listContainer}
-          contentContainerStyle={styles.listContent}
+          contentContainerStyle={[
+            styles.listContent,
+            {
+              paddingHorizontal: isTablet
+                ? layout.tabletPaddingX
+                : layout.mobilePaddingX,
+            },
+          ]}
           showsVerticalScrollIndicator={false}
+          scrollEventThrottle={16}
+          decelerationRate="normal"
+          bounces={true}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
@@ -246,15 +262,15 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   listContent: {
-    padding: spacing.lg,
-    paddingBottom: spacing.max,
+    paddingTop: 12,
+    paddingBottom: layout.scrollBottomPad,
   },
   notificationsCard: {
     backgroundColor: bento.surface,
     borderRadius: radius.xxl,
     borderWidth: 1,
     borderColor: shadcn.border,
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: 20,
     paddingVertical: spacing.sm,
     overflow: "hidden",
   },

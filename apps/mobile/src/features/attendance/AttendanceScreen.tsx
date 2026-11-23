@@ -38,6 +38,7 @@ import {
   bento,
   shadcn,
   breakpoints,
+  layout,
   spacing,
   radius,
   typography,
@@ -213,7 +214,16 @@ export default function AttendanceScreen() {
       />
 
       {students.length > 0 && (
-        <View style={styles.childSwitcherWrapper}>
+        <View
+          style={[
+            styles.childSwitcherWrapper,
+            {
+              paddingHorizontal: isTablet
+                ? layout.tabletPaddingX
+                : layout.mobilePaddingX,
+            },
+          ]}
+        >
           <ChildSwitcher
             students={students}
             activeStudentId={activeStudentId}
@@ -253,8 +263,18 @@ export default function AttendanceScreen() {
       ) : (
         <ScrollView
           style={styles.scrollBody}
-          contentContainerStyle={styles.scrollContent}
+          contentContainerStyle={[
+            styles.scrollContent,
+            {
+              paddingHorizontal: isTablet
+                ? layout.tabletPaddingX
+                : layout.mobilePaddingX,
+            },
+          ]}
           showsVerticalScrollIndicator={false}
+          scrollEventThrottle={16}
+          decelerationRate="normal"
+          bounces={true}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
@@ -298,6 +318,9 @@ export default function AttendanceScreen() {
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
+              snapToInterval={180}
+              decelerationRate="fast"
+              snapToAlignment="start"
               contentContainerStyle={styles.statCardsScrollMobile}
             >
               <PastelStatCard
@@ -589,8 +612,8 @@ const styles = StyleSheet.create({
   },
   childSwitcherWrapper: {
     backgroundColor: bento.surface,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.xs,
+    paddingTop: 12,
+    paddingBottom: 4,
   },
   successBannerContainer: {
     backgroundColor: shadcn.status.success.bg,
@@ -602,15 +625,16 @@ const styles = StyleSheet.create({
   successBannerText: {
     fontSize: typography.size.sm,
     fontWeight: typography.weight.medium,
+    fontFamily: typography.family.medium,
     color: shadcn.status.success.text,
   },
   scrollBody: {
     flex: 1,
   },
   scrollContent: {
-    padding: spacing.lg,
-    paddingBottom: spacing.max,
-    gap: spacing.xl,
+    paddingTop: 12,
+    paddingBottom: layout.scrollBottomPad,
+    gap: layout.sectionGap,
   },
   sectionHeaderRow: {
     marginBottom: spacing.xs,
@@ -618,28 +642,33 @@ const styles = StyleSheet.create({
   sectionHeading: {
     fontSize: typography.size.base,
     fontWeight: typography.weight.bold,
+    fontFamily: typography.family.bold,
     color: shadcn.foreground,
     letterSpacing: typography.tracking.snug,
   },
   sectionSubheading: {
     fontSize: typography.size.xs,
+    fontFamily: typography.family.regular,
     color: bento.pastelMutedText,
     marginTop: 2,
   },
   statCardsRowTablet: {
     flexDirection: "row",
-    gap: spacing.md,
+    alignItems: "stretch",
+    gap: 14,
   },
   statCardItemTablet: {
     flex: 1,
+    alignSelf: "stretch",
   },
   statCardsScrollMobile: {
     flexDirection: "row",
-    gap: spacing.md,
+    gap: 12,
     paddingVertical: spacing.xs,
   },
   statCardItemMobile: {
-    width: 220,
+    width: 168,
+    minHeight: 164,
   },
   sectionContainer: {
     gap: spacing.sm,
@@ -661,6 +690,7 @@ const styles = StyleSheet.create({
   },
   emptyInlineText: {
     fontSize: typography.size.xs,
+    fontFamily: typography.family.regular,
     color: bento.pastelMutedText,
     textAlign: "center",
   },
@@ -675,11 +705,13 @@ const styles = StyleSheet.create({
   },
   studentTargetLabel: {
     fontSize: 11,
+    fontFamily: typography.family.regular,
     color: bento.pastelMutedText,
   },
   studentTargetName: {
     fontSize: typography.size.sm,
     fontWeight: typography.weight.bold,
+    fontFamily: typography.family.bold,
     color: shadcn.foreground,
     marginTop: 2,
   },
