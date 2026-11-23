@@ -11,10 +11,17 @@ import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { formatTanggalId } from "@neoschola/shared";
 import type { Notification, NotificationType } from "@neoschola/shared";
-import { Screen, Card, Badge, Button, StateView } from "../src/components/ui";
+import {
+  Screen,
+  Card,
+  Badge,
+  Button,
+  StateView,
+  Separator,
+} from "../src/components/ui";
 import type { BadgeVariant } from "../src/components/ui";
 import * as api from "../src/lib/api";
-import { colors, spacing, radius, typography, touchTarget } from "../src/theme/tokens";
+import { shadcn, spacing, radius, typography, touchTarget } from "../src/theme/tokens";
 
 export default function NotificationsScreen() {
   const router = useRouter();
@@ -100,7 +107,7 @@ export default function NotificationsScreen() {
       case "PESAN":
         return { label: "Pesan", variant: "info" };
       case "TAGIHAN":
-        return { label: "Tagihan", variant: "danger" };
+        return { label: "Tagihan", variant: "destructive" };
       case "AKADEMIK":
         return { label: "Akademik", variant: "neutral" };
       default:
@@ -109,16 +116,9 @@ export default function NotificationsScreen() {
   };
 
   return (
-    <Screen
-      scroll={false}
-      headerShown={true}
-      title="Pusat Notifikasi"
-      subtitle={
-        unreadCount > 0
-          ? `${unreadCount} notifikasi belum dibaca`
-          : "Semua notifikasi sudah dibaca"
-      }
-      rightAction={
+    <Screen scroll={false} headerShown={false} style={styles.screen}>
+      {/* Hairline Header Bar */}
+      <View style={styles.header}>
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => router.back()}
@@ -126,31 +126,34 @@ export default function NotificationsScreen() {
           accessibilityRole="button"
           accessibilityLabel="Kembali ke layar sebelumnya"
         >
-          <Ionicons name="arrow-back" size={24} color={colors.textPrimary} />
+          <Ionicons name="arrow-back" size={22} color={shadcn.foreground} />
         </TouchableOpacity>
-      }
-    >
-      {unreadCount > 0 && (
-        <View style={styles.actionBar}>
+
+        <View style={styles.headerTitleCol}>
+          <Text style={styles.headerTitle}>Pusat Notifikasi</Text>
+          <Text style={styles.headerSubtitle}>
+            {unreadCount > 0
+              ? `${unreadCount} notifikasi belum dibaca`
+              : "Semua notifikasi sudah dibaca"}
+          </Text>
+        </View>
+
+        {unreadCount > 0 ? (
           <Button
-            title="Tandai Semua Dibaca"
+            title="Tandai Semua"
             onPress={handleMarkAllRead}
-            variant="secondary"
+            variant="ghost"
             size="sm"
             loading={markingAll}
-            leftIcon={
-              <Ionicons
-                name="checkmark-done-outline"
-                size={18}
-                color={colors.primary}
-              />
-            }
             style={styles.markAllButton}
             accessibilityLabel="Tandai semua notifikasi sudah dibaca"
           />
-        </View>
-      )}
+        ) : (
+          <View style={styles.headerSpacer} />
+        )}
+      </View>
 
+      {/* Main Content Body */}
       {loading ? (
         <StateView
           type="loading"
@@ -181,51 +184,59 @@ export default function NotificationsScreen() {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={() => fetchNotifications(true)}
-              tintColor={colors.primary}
+              tintColor={shadcn.primary}
             />
           }
         >
-          {notifications.map((item) => {
-            const badgeInfo = getCategoryBadge(item.type);
-            const isUnread = !item.is_read;
-            const formattedTime = formatTanggalId(item.created_at, {
-              includeDay: true,
-              shortMonth: true,
-            });
+          <Card style={styles.notificationsCard}>
+            {notifications.map((item, index) => {
+              const badgeInfo = getCategoryBadge(item.type);
+              const isUnread = !item.is_read;
+              const formattedTime = formatTanggalId(item.created_at, {
+                includeDay: true,
+                shortMonth: true,
+              });
 
-            return (
-              <Card
-                key={item.id}
-                onPress={() => handleMarkAsRead(item)}
-                style={[
-                  styles.notificationCard,
-                  isUnread && styles.notificationCardUnread,
-                ]}
-                accessibilityLabel={`${item.title}. ${item.body}. ${isUnread ? "Belum dibaca." : "Sudah dibaca."}`}
-              >
-                <View style={styles.cardHeaderRow}>
-                  <View style={styles.badgeWrapper}>
-                    <Badge
-                      label={badgeInfo.label}
-                      variant={badgeInfo.variant}
-                    />
-                    {isUnread && <View style={styles.unreadDot} />}
-                  </View>
-                  <Text style={styles.timestampText}>{formattedTime}</Text>
-                </View>
+              return (
+                <React.Fragment key={item.id}>
+                  {index > 0 && <Separator />}
+                  <TouchableOpacity
+                    onPress={() => handleMarkAsRead(item)}
+                    style={[
+                      styles.notificationItem,
+                      isUnread && styles.notificationItemUnread,
+                    ]}
+                    activeOpacity={0.7}
+                    accessibilityRole="button"
+                    accessibilityLabel={`${item.title}. ${item.body}. ${
+                      isUnread ? "Belum dibaca." : "Sudah dibaca."
+                    }`}
+                  >
+                    <View style={styles.itemHeaderRow}>
+                      <View style={styles.badgeRow}>
+                        {isUnread && <View style={styles.unreadDot} />}
+                        <Badge
+                          label={badgeInfo.label}
+                          variant={badgeInfo.variant}
+                        />
+                      </View>
+                      <Text style={styles.timestampText}>{formattedTime}</Text>
+                    </View>
 
-                <Text
-                  style={[
-                    styles.notificationTitle,
-                    isUnread && styles.notificationTitleUnread,
-                  ]}
-                >
-                  {item.title}
-                </Text>
-                <Text style={styles.notificationBody}>{item.body}</Text>
-              </Card>
-            );
-          })}
+                    <Text
+                      style={[
+                        styles.notificationTitle,
+                        isUnread && styles.notificationTitleUnread,
+                      ]}
+                    >
+                      {item.title}
+                    </Text>
+                    <Text style={styles.notificationBody}>{item.body}</Text>
+                  </TouchableOpacity>
+                </React.Fragment>
+              );
+            })}
+          </Card>
         </ScrollView>
       )}
     </Screen>
@@ -233,23 +244,48 @@ export default function NotificationsScreen() {
 }
 
 const styles = StyleSheet.create({
+  screen: {
+    backgroundColor: shadcn.canvas,
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+    backgroundColor: shadcn.background,
+    borderBottomWidth: 1,
+    borderBottomColor: shadcn.border,
+    minHeight: 56,
+  },
   backButton: {
     width: touchTarget.minWidth,
     height: touchTarget.minHeight,
     alignItems: "center",
     justifyContent: "center",
   },
-  actionBar: {
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
-    backgroundColor: colors.card,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-    alignItems: "flex-end",
+  headerTitleCol: {
+    flex: 1,
+    marginLeft: spacing.xs,
+    marginRight: spacing.sm,
+  },
+  headerTitle: {
+    fontSize: typography.size.base,
+    fontWeight: typography.weight.semibold,
+    color: shadcn.foreground,
+    letterSpacing: typography.tracking.snug,
+  },
+  headerSubtitle: {
+    fontSize: typography.size.xs,
+    color: shadcn.mutedForeground,
+    marginTop: 1,
   },
   markAllButton: {
-    minHeight: 38,
-    paddingHorizontal: spacing.md,
+    paddingHorizontal: spacing.sm,
+    minHeight: touchTarget.minHeight,
+  },
+  headerSpacer: {
+    width: touchTarget.minWidth,
   },
   listContainer: {
     flex: 1,
@@ -258,23 +294,24 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     paddingBottom: spacing.max,
   },
-  notificationCard: {
-    marginBottom: spacing.md,
+  notificationsCard: {
+    padding: 0,
+    overflow: "hidden",
+  },
+  notificationItem: {
     padding: spacing.md,
-    backgroundColor: colors.card,
+    minHeight: touchTarget.minHeight,
   },
-  notificationCardUnread: {
-    backgroundColor: "#F0FDF4",
-    borderColor: "#BBF7D0",
-    borderWidth: 1.5,
+  notificationItemUnread: {
+    backgroundColor: shadcn.accent,
   },
-  cardHeaderRow: {
+  itemHeaderRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     marginBottom: spacing.xs,
   },
-  badgeWrapper: {
+  badgeRow: {
     flexDirection: "row",
     alignItems: "center",
   },
@@ -282,27 +319,28 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: radius.full,
-    backgroundColor: colors.primary,
-    marginLeft: spacing.xs,
+    backgroundColor: shadcn.primary,
+    marginRight: spacing.xs,
   },
   timestampText: {
     fontSize: typography.size.xs,
-    color: colors.textSecondary,
+    color: shadcn.mutedForeground,
+    fontVariant: ["tabular-nums"],
   },
   notificationTitle: {
-    fontSize: typography.size.base,
+    fontSize: typography.size.sm,
     fontWeight: typography.weight.semibold,
-    color: colors.textPrimary,
-    marginTop: spacing.xs,
+    color: shadcn.foreground,
+    marginTop: 2,
     marginBottom: 4,
   },
   notificationTitleUnread: {
     fontWeight: typography.weight.bold,
-    color: colors.primary,
+    color: shadcn.foreground,
   },
   notificationBody: {
     fontSize: typography.size.sm,
-    color: colors.textSecondary,
+    color: shadcn.mutedForeground,
     lineHeight: typography.lineHeight.sm,
   },
 });

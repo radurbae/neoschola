@@ -21,17 +21,20 @@ import {
   Card,
   Badge,
   Button,
-  Chip,
   Input,
+  Label,
+  Tabs,
+  Alert,
   SectionHeader,
   ChildSwitcher,
   StateView,
   ModalSheet,
+  Separator,
 } from "../../components/ui";
 import type { BadgeVariant } from "../../components/ui";
 import { useAuth } from "../../store/auth";
 import * as api from "../../lib/api";
-import { colors, spacing, radius, typography, touchTarget } from "../../theme/tokens";
+import { shadcn, spacing, radius, typography, touchTarget } from "../../theme/tokens";
 
 export default function AttendanceScreen() {
   const { students, activeStudent, activeStudentId, setActiveStudentId } = useAuth();
@@ -179,7 +182,7 @@ export default function AttendanceScreen() {
       case AttendanceStatus.IZIN:
         return { label: "Izin", variant: "info" };
       case AttendanceStatus.ALPA:
-        return { label: "Alpa", variant: "danger" };
+        return { label: "Alpa", variant: "destructive" };
       default:
         return { label: status, variant: "neutral" };
     }
@@ -192,14 +195,14 @@ export default function AttendanceScreen() {
       case "APPROVED":
         return { label: "Disetujui", variant: "success" };
       case "REJECTED":
-        return { label: "Ditolak", variant: "danger" };
+        return { label: "Ditolak", variant: "destructive" };
       case "PENDING":
       default:
         return { label: "Menunggu Verifikasi", variant: "warning" };
     }
   };
 
-  // Ringkasan kehadiran (dari dashboard API atau hitung langsung dari data list)
+  // Ringkasan kehadiran
   const summary = dashboardData?.attendance_summary || {
     hadir: attendanceList.filter((a) => a.status === AttendanceStatus.HADIR).length,
     sakit: attendanceList.filter((a) => a.status === AttendanceStatus.SAKIT).length,
@@ -216,7 +219,7 @@ export default function AttendanceScreen() {
   };
 
   return (
-    <Screen scroll={false} headerShown={false}>
+    <Screen scroll={false} headerShown={false} style={styles.screen}>
       {/* Top Child Switcher */}
       {students.length > 0 && (
         <View style={styles.childSwitcherWrapper}>
@@ -231,7 +234,7 @@ export default function AttendanceScreen() {
       {/* Success Notification Banner */}
       {Boolean(successBanner) && (
         <View style={styles.successBannerContainer}>
-          <Ionicons name="checkmark-circle" size={20} color={colors.primary} />
+          <Ionicons name="checkmark-circle-outline" size={18} color={shadcn.status.success.text} />
           <Text style={styles.successBannerText}>{successBanner}</Text>
           <TouchableOpacity
             onPress={() => setSuccessBanner(null)}
@@ -239,7 +242,7 @@ export default function AttendanceScreen() {
             accessibilityRole="button"
             accessibilityLabel="Tutup pemberitahuan"
           >
-            <Ionicons name="close" size={18} color={colors.primary} />
+            <Ionicons name="close" size={18} color={shadcn.status.success.text} />
           </TouchableOpacity>
         </View>
       )}
@@ -275,11 +278,11 @@ export default function AttendanceScreen() {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={() => fetchData(true)}
-              tintColor={colors.primary}
+              tintColor={shadcn.primary}
             />
           }
         >
-          {/* 1. Kartu Ringkasan Statistik Kehadiran */}
+          {/* 1. Kartu Ringkasan Statistik Kehadiran 4 Kolom + Separator */}
           <Card style={styles.summaryCard}>
             <View style={styles.summaryHeaderRow}>
               <View>
@@ -292,32 +295,32 @@ export default function AttendanceScreen() {
               </View>
             </View>
 
-            <View style={styles.summaryDivider} />
+            <Separator style={styles.summarySeparator} />
 
             <View style={styles.statsGrid}>
               <View style={styles.statBox}>
-                <Text style={[styles.statValue, { color: colors.badge.success.text }]}>
+                <Text style={[styles.statValue, { color: shadcn.status.success.text }]}>
                   {summary.hadir}
                 </Text>
                 <Text style={styles.statLabel}>Hadir</Text>
               </View>
 
               <View style={styles.statBox}>
-                <Text style={[styles.statValue, { color: colors.badge.warning.text }]}>
+                <Text style={[styles.statValue, { color: shadcn.status.warning.text }]}>
                   {summary.sakit}
                 </Text>
                 <Text style={styles.statLabel}>Sakit</Text>
               </View>
 
               <View style={styles.statBox}>
-                <Text style={[styles.statValue, { color: colors.badge.info.text }]}>
+                <Text style={[styles.statValue, { color: shadcn.status.info.text }]}>
                   {summary.izin}
                 </Text>
                 <Text style={styles.statLabel}>Izin</Text>
               </View>
 
               <View style={styles.statBox}>
-                <Text style={[styles.statValue, { color: colors.badge.danger.text }]}>
+                <Text style={[styles.statValue, { color: shadcn.status.danger.text }]}>
                   {summary.alpa}
                 </Text>
                 <Text style={styles.statLabel}>Alpa</Text>
@@ -330,234 +333,231 @@ export default function AttendanceScreen() {
             <Button
               title="Ajukan Izin / Sakit"
               onPress={handleOpenModal}
-              variant="primary"
-              leftIcon={<Ionicons name="add-circle-outline" size={20} color={colors.textInverse} />}
+              variant="default"
+              leftIcon={<Ionicons name="add" size={18} color={shadcn.primaryForeground} />}
+              style={styles.mainActionButton}
               accessibilityLabel="Buka formulir untuk mengajukan izin atau sakit siswa"
             />
           </View>
 
-          {/* 3. Daftar Status Pengajuan Izin */}
+          {/* 3. Daftar Status Pengajuan Izin (1 Card + Separator) */}
           <View style={styles.sectionContainer}>
             <SectionHeader
               title="Status Pengajuan Izin"
               subtitle={`${leaveRequests.length} permohonan diajukan`}
             />
 
-            {leaveRequests.length === 0 ? (
-              <Card style={styles.emptyCard}>
-                <Ionicons name="document-text-outline" size={28} color={colors.textSecondary} />
-                <Text style={styles.emptyTitle}>Belum Ada Pengajuan Izin</Text>
-                <Text style={styles.emptyMessage}>
-                  Permohonan izin atau sakit yang Anda ajukan akan tercatat di sini beserta status persetujuan dari wali kelas.
-                </Text>
-              </Card>
-            ) : (
-              leaveRequests.map((item) => {
-                const badgeInfo = getLeaveStatusBadge(item.status);
-                const isSakit = item.leave_type === LeaveType.SAKIT;
-                const dateRange =
-                  item.start_date === item.end_date
-                    ? formatTanggalId(item.start_date, { includeDay: true, shortMonth: true })
-                    : `${formatTanggalId(item.start_date, { shortMonth: true })} s/d ${formatTanggalId(item.end_date, { includeDay: true, shortMonth: true })}`;
+            <Card style={styles.listCard}>
+              {leaveRequests.length === 0 ? (
+                <View style={styles.emptyInlineRow}>
+                  <Text style={styles.emptyInlineText}>
+                    Belum ada pengajuan izin atau sakit yang diajukan.
+                  </Text>
+                </View>
+              ) : (
+                leaveRequests.map((item, idx) => {
+                  const badgeInfo = getLeaveStatusBadge(item.status);
+                  const isSakit = item.leave_type === LeaveType.SAKIT;
+                  const dateRange =
+                    item.start_date === item.end_date
+                      ? formatTanggalId(item.start_date, { includeDay: true, shortMonth: true })
+                      : `${formatTanggalId(item.start_date, { shortMonth: true })} s/d ${formatTanggalId(item.end_date, { includeDay: true, shortMonth: true })}`;
 
-                return (
-                  <Card key={item.id} style={styles.leaveCard}>
-                    <View style={styles.leaveHeaderRow}>
-                      <View style={styles.leaveTypeTag}>
-                        <Ionicons
-                          name={isSakit ? "medkit-outline" : "calendar-outline"}
-                          size={16}
-                          color={isSakit ? colors.badge.warning.text : colors.badge.info.text}
-                        />
-                        <Text
-                          style={[
-                            styles.leaveTypeText,
-                            {
-                              color: isSakit
-                                ? colors.badge.warning.text
-                                : colors.badge.info.text,
-                            },
-                          ]}
-                        >
-                          {isSakit ? "Izin Sakit" : "Izin Keperluan"}
-                        </Text>
-                      </View>
-                      <Badge label={badgeInfo.label} variant={badgeInfo.variant} />
-                    </View>
-
-                    <Text style={styles.leaveDateRange}>{dateRange}</Text>
-
-                    <Text style={styles.leaveReasonLabel}>Alasan:</Text>
-                    <Text style={styles.leaveReasonText}>{item.reason}</Text>
-
-                    {Boolean(item.attachment_url) && (
-                      <View style={styles.attachmentRow}>
-                        <Ionicons name="attach-outline" size={16} color={colors.primary} />
-                        <Text style={styles.attachmentText} numberOfLines={1}>
-                          Lampiran: {item.attachment_url}
-                        </Text>
-                      </View>
-                    )}
-
-                    {Boolean(item.review_notes) && (
-                      <View style={styles.reviewNotesBox}>
-                        <View style={styles.reviewNotesHeader}>
-                          <Ionicons
-                            name="chatbox-ellipses-outline"
-                            size={16}
-                            color={colors.textPrimary}
-                          />
-                          <Text style={styles.reviewNotesTitle}>Catatan Wali Kelas:</Text>
+                  return (
+                    <React.Fragment key={item.id}>
+                      {idx > 0 && <Separator />}
+                      <View style={styles.leaveRow}>
+                        <View style={styles.leaveHeaderRow}>
+                          <View style={styles.leaveTypeLine}>
+                            <Ionicons
+                              name={isSakit ? "medkit-outline" : "calendar-outline"}
+                              size={15}
+                              color={shadcn.foreground}
+                            />
+                            <Text style={styles.leaveTypeText}>
+                              {isSakit ? "Izin Sakit" : "Izin Keperluan"}
+                            </Text>
+                          </View>
+                          <Badge label={badgeInfo.label} variant={badgeInfo.variant} />
                         </View>
-                        <Text style={styles.reviewNotesBody}>{item.review_notes}</Text>
+
+                        <Text style={styles.leaveDateRange}>{dateRange}</Text>
+
+                        <Text style={styles.leaveReasonText}>
+                          <Text style={styles.leaveReasonPrefix}>Alasan: </Text>
+                          {item.reason}
+                        </Text>
+
+                        {Boolean(item.attachment_url) && (
+                          <View style={styles.attachmentRow}>
+                            <Ionicons name="attach-outline" size={14} color={shadcn.mutedForeground} />
+                            <Text style={styles.attachmentText} numberOfLines={1}>
+                              Lampiran: {item.attachment_url}
+                            </Text>
+                          </View>
+                        )}
+
+                        {Boolean(item.review_notes) && (
+                          <View style={styles.reviewNotesBox}>
+                            <Text style={styles.reviewNotesTitle}>Catatan Wali Kelas:</Text>
+                            <Text style={styles.reviewNotesBody}>{item.review_notes}</Text>
+                          </View>
+                        )}
                       </View>
-                    )}
-                  </Card>
-                );
-              })
-            )}
+                    </React.Fragment>
+                  );
+                })
+              )}
+            </Card>
           </View>
 
-          {/* 4. Daftar Riwayat Presensi Harian */}
+          {/* 4. Daftar Riwayat Presensi Harian (1 Card + Separator) */}
           <View style={styles.sectionContainer}>
             <SectionHeader
               title="Riwayat Presensi Harian"
               subtitle="Catatan kehadiran dari sistem absensi kelas"
             />
 
-            {attendanceList.length === 0 ? (
-              <Card style={styles.emptyCard}>
-                <Ionicons name="calendar-outline" size={28} color={colors.textSecondary} />
-                <Text style={styles.emptyTitle}>Belum Ada Data Presensi</Text>
-                <Text style={styles.emptyMessage}>
-                  Catatan absensi harian peserta didik untuk bulan ini belum terekam.
-                </Text>
-              </Card>
-            ) : (
-              attendanceList.map((att) => {
-                const badgeInfo = getAttendanceBadge(att.status);
-                const formattedDate = formatTanggalId(att.date, { includeDay: true });
+            <Card style={styles.listCard}>
+              {attendanceList.length === 0 ? (
+                <View style={styles.emptyInlineRow}>
+                  <Text style={styles.emptyInlineText}>
+                    Catatan absensi harian peserta didik untuk bulan ini belum terekam.
+                  </Text>
+                </View>
+              ) : (
+                attendanceList.map((att, idx) => {
+                  const badgeInfo = getAttendanceBadge(att.status);
+                  const formattedDate = formatTanggalId(att.date, { includeDay: true });
 
-                return (
-                  <Card key={att.id} style={styles.historyCard}>
-                    <View style={styles.historyHeaderRow}>
-                      <Text style={styles.historyDateText}>{formattedDate}</Text>
-                      <Badge label={badgeInfo.label} variant={badgeInfo.variant} />
-                    </View>
+                  return (
+                    <React.Fragment key={att.id}>
+                      {idx > 0 && <Separator />}
+                      <View style={styles.historyRow}>
+                        <View style={styles.historyHeaderRow}>
+                          <Text style={styles.historyDateText}>{formattedDate}</Text>
+                          <Badge label={badgeInfo.label} variant={badgeInfo.variant} />
+                        </View>
 
-                    <View style={styles.historyDivider} />
+                        <View style={styles.historyTimeRow}>
+                          <View style={styles.historyTimeCol}>
+                            <Text style={styles.historyTimeLabel}>Jam Masuk</Text>
+                            <Text style={styles.historyTimeValue}>
+                              {att.check_in_time ? `${att.check_in_time} WIB` : "-"}
+                            </Text>
+                          </View>
 
-                    <View style={styles.historyTimeRow}>
-                      <View style={styles.historyTimeCol}>
-                        <Text style={styles.historyTimeLabel}>Jam Masuk</Text>
-                        <Text style={styles.historyTimeValue}>
-                          {att.check_in_time ? `${att.check_in_time} WIB` : "-"}
-                        </Text>
+                          <View style={styles.historyTimeCol}>
+                            <Text style={styles.historyTimeLabel}>Jam Pulang</Text>
+                            <Text style={styles.historyTimeValue}>
+                              {att.check_out_time ? `${att.check_out_time} WIB` : "-"}
+                            </Text>
+                          </View>
+
+                          <View style={styles.historyTimeCol}>
+                            <Text style={styles.historyTimeLabel}>Keterangan</Text>
+                            <Text style={styles.historyNotesValue} numberOfLines={1}>
+                              {att.notes || "Sesuai jadwal"}
+                            </Text>
+                          </View>
+                        </View>
                       </View>
-
-                      <View style={styles.historyTimeCol}>
-                        <Text style={styles.historyTimeLabel}>Jam Pulang</Text>
-                        <Text style={styles.historyTimeValue}>
-                          {att.check_out_time ? `${att.check_out_time} WIB` : "-"}
-                        </Text>
-                      </View>
-
-                      <View style={styles.historyTimeCol}>
-                        <Text style={styles.historyTimeLabel}>Keterangan</Text>
-                        <Text style={styles.historyNotesValue} numberOfLines={1}>
-                          {att.notes || "Sesuai jadwal"}
-                        </Text>
-                      </View>
-                    </View>
-                  </Card>
-                );
-              })
-            )}
+                    </React.Fragment>
+                  );
+                })
+              )}
+            </Card>
           </View>
         </ScrollView>
       )}
 
-      {/* Modal Form Pengajuan Izin / Sakit */}
+      {/* Modal Sheet Formulir Pengajuan Izin / Sakit Bersih */}
       <ModalSheet
         visible={modalVisible}
         onClose={() => setModalVisible(false)}
         title="Formulir Izin / Sakit"
       >
         <View style={styles.modalBody}>
-          <Text style={styles.formSectionLabel}>Nama Peserta Didik:</Text>
-          <Text style={styles.studentTargetName}>
-            {activeStudent?.full_name} ({activeStudent?.class_name || "Kelas"})
-          </Text>
+          <View style={styles.studentTargetBox}>
+            <Text style={styles.studentTargetLabel}>Nama Peserta Didik:</Text>
+            <Text style={styles.studentTargetName}>
+              {activeStudent?.full_name} ({activeStudent?.class_name || "Kelas"})
+            </Text>
+          </View>
 
-          {/* Jenis Izin (Chips) */}
-          <Text style={styles.formLabel}>Pilih Jenis Pengajuan:</Text>
-          <View style={styles.chipRow}>
-            <Chip
-              label="Sakit"
-              selected={leaveType === LeaveType.SAKIT}
-              onPress={() => setLeaveType(LeaveType.SAKIT)}
-              style={styles.formChip}
-              accessibilityLabel="Pilih jenis izin sakit"
-            />
-            <Chip
-              label="Izin Keperluan"
-              selected={leaveType === LeaveType.IZIN}
-              onPress={() => setLeaveType(LeaveType.IZIN)}
-              style={styles.formChip}
-              accessibilityLabel="Pilih jenis izin keperluan keluarga"
+          {/* Opsi Jenis Izin menggunakan Komponen Tabs */}
+          <View style={styles.formGroup}>
+            <Label required>Jenis Pengajuan</Label>
+            <Tabs
+              value={leaveType}
+              onValueChange={(val) => setLeaveType(val as "SAKIT" | "IZIN")}
+              items={[
+                { value: LeaveType.SAKIT, label: "Sakit" },
+                { value: LeaveType.IZIN, label: "Izin Keperluan" },
+              ]}
             />
           </View>
 
-          {/* Tanggal Mulai & Selesai */}
-          <Input
-            label="Tanggal Mulai"
-            value={startDate}
-            onChangeText={setStartDate}
-            placeholder="YYYY-MM-DD"
-            error={formErrors.startDate}
-            helperText="Format tanggal: YYYY-MM-DD (contoh: 2026-11-22)"
-          />
+          {/* Tanggal Mulai */}
+          <View style={styles.formGroup}>
+            <Label required>Tanggal Mulai</Label>
+            <Input
+              value={startDate}
+              onChangeText={setStartDate}
+              placeholder="YYYY-MM-DD"
+              error={formErrors.startDate}
+              helperText="Format tanggal: YYYY-MM-DD (contoh: 2026-11-22)"
+              accessibilityLabel="Input tanggal mulai izin"
+            />
+          </View>
 
-          <Input
-            label="Tanggal Selesai"
-            value={endDate}
-            onChangeText={setEndDate}
-            placeholder="YYYY-MM-DD"
-            error={formErrors.endDate}
-            helperText="Bisa disamakan dengan tanggal mulai jika izin 1 hari"
-          />
+          {/* Tanggal Selesai */}
+          <View style={styles.formGroup}>
+            <Label required>Tanggal Selesai</Label>
+            <Input
+              value={endDate}
+              onChangeText={setEndDate}
+              placeholder="YYYY-MM-DD"
+              error={formErrors.endDate}
+              helperText="Bisa disamakan dengan tanggal mulai jika izin 1 hari"
+              accessibilityLabel="Input tanggal selesai izin"
+            />
+          </View>
 
           {/* Alasan */}
-          <Input
-            label="Alasan Lengkap"
-            value={reason}
-            onChangeText={setReason}
-            placeholder="Jelaskan alasan izin atau gejala sakit anak..."
-            multiline
-            numberOfLines={3}
-            error={formErrors.reason}
-            helperText="Minimal 3 karakter agar wali kelas memahami kondisi anak."
-          />
+          <View style={styles.formGroup}>
+            <Label required>Alasan Lengkap</Label>
+            <Input
+              value={reason}
+              onChangeText={setReason}
+              placeholder="Jelaskan alasan izin atau gejala sakit anak..."
+              multiline
+              numberOfLines={3}
+              error={formErrors.reason}
+              helperText="Minimal 3 karakter agar wali kelas memahami kondisi anak."
+              accessibilityLabel="Input alasan izin lengkap"
+            />
+          </View>
 
-          {/* Lampiran / Surat Dokter (Opsional) */}
-          <Input
-            label="Keterangan Surat / Tautan Dokumen (Opsional)"
-            value={attachmentUrl}
-            onChangeText={setAttachmentUrl}
-            placeholder="Tautan foto surat dokter atau nomor rujukan..."
-            helperText="Opsional. Cantumkan keterangan surat dokter jika sakit > 2 hari."
-          />
+          {/* Lampiran */}
+          <View style={styles.formGroup}>
+            <Label>Keterangan Surat / Tautan Dokumen (Opsional)</Label>
+            <Input
+              value={attachmentUrl}
+              onChangeText={setAttachmentUrl}
+              placeholder="Tautan foto surat dokter atau nomor rujukan..."
+              helperText="Opsional. Cantumkan keterangan surat dokter jika sakit lebih dari 2 hari."
+              accessibilityLabel="Input tautan dokumen atau surat dokter"
+            />
+          </View>
 
           {/* General Error Banner */}
           {Boolean(formErrors.general) && (
-            <View style={styles.formGeneralError}>
-              <Ionicons
-                name="alert-circle-outline"
-                size={18}
-                color={colors.badge.danger.text}
-              />
-              <Text style={styles.formGeneralErrorText}>{formErrors.general}</Text>
-            </View>
+            <Alert
+              variant="destructive"
+              description={formErrors.general}
+              style={styles.modalAlert}
+            />
           )}
 
           {/* Submit Button */}
@@ -566,8 +566,9 @@ export default function AttendanceScreen() {
               title="Kirim Pengajuan Izin"
               onPress={handleSubmitLeave}
               loading={submitting}
-              variant="primary"
+              variant="default"
               size="lg"
+              style={styles.submitBtn}
               accessibilityLabel="Kirimkan permohonan izin ke wali kelas"
             />
           </View>
@@ -578,27 +579,30 @@ export default function AttendanceScreen() {
 }
 
 const styles = StyleSheet.create({
+  screen: {
+    backgroundColor: shadcn.canvas,
+  },
   childSwitcherWrapper: {
-    backgroundColor: colors.card,
+    backgroundColor: shadcn.background,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    borderBottomColor: shadcn.border,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.sm,
   },
   successBannerContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: colors.badge.success.bg,
-    borderColor: colors.badge.success.border,
+    backgroundColor: shadcn.status.success.bg,
     borderBottomWidth: 1,
+    borderBottomColor: shadcn.status.success.border,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
   },
   successBannerText: {
     flex: 1,
     fontSize: typography.size.sm,
-    fontWeight: typography.weight.semibold,
-    color: colors.badge.success.text,
+    fontWeight: typography.weight.medium,
+    color: shadcn.status.success.text,
     marginLeft: spacing.sm,
   },
   successBannerClose: {
@@ -609,7 +613,6 @@ const styles = StyleSheet.create({
   },
   scrollBody: {
     flex: 1,
-    backgroundColor: colors.canvas,
   },
   scrollContent: {
     padding: spacing.lg,
@@ -617,7 +620,7 @@ const styles = StyleSheet.create({
   },
   // Summary Card
   summaryCard: {
-    padding: spacing.lg,
+    padding: spacing.md,
     marginBottom: spacing.md,
   },
   summaryHeaderRow: {
@@ -626,31 +629,30 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   summaryCardTitle: {
-    fontSize: typography.size.lg,
-    fontWeight: typography.weight.bold,
-    color: colors.textPrimary,
+    fontSize: typography.size.base,
+    fontWeight: typography.weight.semibold,
+    color: shadcn.foreground,
+    letterSpacing: typography.tracking.snug,
   },
   summaryCardSubtitle: {
     fontSize: typography.size.xs,
-    color: colors.textSecondary,
-    marginTop: 2,
+    color: shadcn.mutedForeground,
+    marginTop: 1,
   },
   percentageBadge: {
     alignItems: "flex-end",
   },
   percentageValue: {
     fontSize: typography.size.xxl,
-    fontWeight: typography.weight.heavy,
-    color: colors.primary,
+    fontWeight: typography.weight.bold,
+    color: shadcn.foreground,
     fontVariant: ["tabular-nums"],
   },
   percentageLabel: {
     fontSize: 11,
-    color: colors.textSecondary,
+    color: shadcn.mutedForeground,
   },
-  summaryDivider: {
-    height: 1,
-    backgroundColor: colors.border,
+  summarySeparator: {
     marginVertical: spacing.md,
   },
   statsGrid: {
@@ -668,37 +670,35 @@ const styles = StyleSheet.create({
   },
   statLabel: {
     fontSize: typography.size.xs,
-    color: colors.textSecondary,
+    color: shadcn.mutedForeground,
     marginTop: 2,
   },
   actionButtonContainer: {
     marginBottom: spacing.lg,
   },
+  mainActionButton: {
+    width: "100%",
+  },
   sectionContainer: {
     marginBottom: spacing.lg,
   },
-  emptyCard: {
-    padding: spacing.xl,
+  listCard: {
+    padding: 0,
+    overflow: "hidden",
+  },
+  emptyInlineRow: {
+    padding: spacing.lg,
     alignItems: "center",
     justifyContent: "center",
   },
-  emptyTitle: {
-    fontSize: typography.size.base,
-    fontWeight: typography.weight.bold,
-    color: colors.textPrimary,
-    marginTop: spacing.sm,
-  },
-  emptyMessage: {
+  emptyInlineText: {
     fontSize: typography.size.xs,
-    color: colors.textSecondary,
+    color: shadcn.mutedForeground,
     textAlign: "center",
-    marginTop: 4,
-    lineHeight: typography.lineHeight.xs,
   },
-  // Leave Cards
-  leaveCard: {
+  // Leave Rows
+  leaveRow: {
     padding: spacing.md,
-    marginBottom: spacing.md,
   },
   leaveHeaderRow: {
     flexDirection: "row",
@@ -706,158 +706,133 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     marginBottom: spacing.xs,
   },
-  leaveTypeTag: {
+  leaveTypeLine: {
     flexDirection: "row",
     alignItems: "center",
+    gap: spacing.xs,
   },
   leaveTypeText: {
     fontSize: typography.size.sm,
-    fontWeight: typography.weight.bold,
-    marginLeft: spacing.xs,
+    fontWeight: typography.weight.semibold,
+    color: shadcn.foreground,
   },
   leaveDateRange: {
     fontSize: typography.size.sm,
-    fontWeight: typography.weight.semibold,
-    color: colors.textPrimary,
-    marginBottom: spacing.xs,
+    fontWeight: typography.weight.medium,
+    color: shadcn.foreground,
+    marginBottom: 4,
   },
-  leaveReasonLabel: {
+  leaveReasonPrefix: {
     fontSize: 11,
-    color: colors.textSecondary,
+    color: shadcn.mutedForeground,
   },
   leaveReasonText: {
     fontSize: typography.size.sm,
-    color: colors.textPrimary,
-    marginTop: 1,
-    lineHeight: typography.lineHeight.sm,
+    color: shadcn.foreground,
+    lineHeight: 18,
   },
   attachmentRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginTop: spacing.sm,
-    paddingTop: spacing.xs,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
+    marginTop: spacing.xs,
+    gap: 4,
   },
   attachmentText: {
     fontSize: typography.size.xs,
-    color: colors.primary,
-    marginLeft: 4,
+    color: shadcn.mutedForeground,
     flex: 1,
   },
   reviewNotesBox: {
     marginTop: spacing.sm,
-    backgroundColor: "#F8FAFC",
+    backgroundColor: shadcn.secondary,
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: shadcn.border,
     padding: spacing.sm,
-  },
-  reviewNotesHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 2,
   },
   reviewNotesTitle: {
     fontSize: 11,
-    fontWeight: typography.weight.bold,
-    color: colors.textPrimary,
-    marginLeft: 4,
+    fontWeight: typography.weight.semibold,
+    color: shadcn.foreground,
+    marginBottom: 2,
   },
   reviewNotesBody: {
     fontSize: typography.size.xs,
-    color: colors.textSecondary,
-    lineHeight: typography.lineHeight.xs,
+    color: shadcn.mutedForeground,
+    lineHeight: 16,
   },
-  // Attendance History Cards
-  historyCard: {
+  // Attendance History Rows
+  historyRow: {
     padding: spacing.md,
-    marginBottom: spacing.sm,
   },
   historyHeaderRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    marginBottom: spacing.xs,
   },
   historyDateText: {
     fontSize: typography.size.sm,
-    fontWeight: typography.weight.bold,
-    color: colors.textPrimary,
-  },
-  historyDivider: {
-    height: 1,
-    backgroundColor: colors.border,
-    marginVertical: spacing.sm,
+    fontWeight: typography.weight.semibold,
+    color: shadcn.foreground,
   },
   historyTimeRow: {
     flexDirection: "row",
     justifyContent: "space-between",
+    marginTop: spacing.xs,
   },
   historyTimeCol: {
     flex: 1,
   },
   historyTimeLabel: {
     fontSize: 11,
-    color: colors.textSecondary,
+    color: shadcn.mutedForeground,
   },
   historyTimeValue: {
-    fontSize: typography.size.xs,
-    fontWeight: typography.weight.bold,
-    color: colors.textPrimary,
+    fontSize: typography.size.sm,
+    fontWeight: typography.weight.medium,
+    color: shadcn.foreground,
     fontVariant: ["tabular-nums"],
-    marginTop: 2,
+    marginTop: 1,
   },
   historyNotesValue: {
     fontSize: typography.size.xs,
-    color: colors.textSecondary,
+    color: shadcn.mutedForeground,
     marginTop: 2,
   },
-  // Modal Sheet Styles
+  // Modal Sheet Body
   modalBody: {
-    paddingBottom: spacing.xxl,
+    paddingVertical: spacing.xs,
   },
-  formSectionLabel: {
-    fontSize: typography.size.xs,
-    color: colors.textSecondary,
+  studentTargetBox: {
+    backgroundColor: shadcn.secondary,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: shadcn.border,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+  },
+  studentTargetLabel: {
+    fontSize: 11,
+    color: shadcn.mutedForeground,
   },
   studentTargetName: {
-    fontSize: typography.size.base,
-    fontWeight: typography.weight.bold,
-    color: colors.textPrimary,
-    marginBottom: spacing.md,
+    fontSize: typography.size.sm,
+    fontWeight: typography.weight.semibold,
+    color: shadcn.foreground,
     marginTop: 2,
   },
-  formLabel: {
-    fontSize: typography.size.xs,
-    fontWeight: typography.weight.semibold,
-    color: colors.textPrimary,
-    marginBottom: spacing.xs,
-  },
-  chipRow: {
-    flexDirection: "row",
-    gap: spacing.sm,
+  formGroup: {
     marginBottom: spacing.md,
   },
-  formChip: {
-    flex: 1,
-  },
-  formGeneralError: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: colors.badge.danger.bg,
-    borderColor: colors.badge.danger.border,
-    borderWidth: 1,
-    padding: spacing.sm,
-    borderRadius: radius.md,
+  modalAlert: {
     marginBottom: spacing.md,
-  },
-  formGeneralErrorText: {
-    fontSize: typography.size.xs,
-    color: colors.badge.danger.text,
-    marginLeft: spacing.xs,
-    flex: 1,
   },
   modalSubmitWrapper: {
-    marginTop: spacing.md,
+    marginTop: spacing.sm,
+    marginBottom: spacing.md,
+  },
+  submitBtn: {
+    width: "100%",
   },
 });
