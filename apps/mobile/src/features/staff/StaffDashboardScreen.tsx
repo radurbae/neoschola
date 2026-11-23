@@ -139,7 +139,6 @@ export function StaffDashboardScreen() {
           />
         ) : (
           <View style={styles.bentoContent}>
-            {/* Bento Row 1: MiniTrendChart + 3 PastelStatCard */}
             <View style={isTablet ? styles.rowTablet : styles.rowMobile}>
               <View style={isTablet ? styles.colChartTablet : styles.colMobile}>
                 <MiniTrendChart
@@ -206,7 +205,6 @@ export function StaffDashboardScreen() {
               </View>
             </View>
 
-            {/* Bento Row 2: Daftar Aksi Cepat (DarkIconRow) + DarkActionCard */}
             <View style={isTablet ? styles.rowTablet : styles.rowMobile}>
               <View style={isTablet ? styles.colFlexTablet : styles.colMobile}>
                 <View style={styles.actionsBox}>

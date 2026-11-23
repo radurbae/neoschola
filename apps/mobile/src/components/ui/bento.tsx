@@ -21,8 +21,6 @@ import {
 } from "../../theme/tokens";
 import { Avatar } from "./shadcn";
 
-// 1. ResponsiveShell
-
 export interface ShellNavItem {
   key: string;
   label: string;
@@ -54,12 +52,10 @@ export function ResponsiveShell({
     return (
       <View style={styles.tabletOuterFrame}>
         <View style={styles.tabletRail}>
-          {/* Logo Badge Krem Atas */}
           <View style={styles.tabletBadgeContainer}>
             <Text style={styles.tabletBadgeText}>NS</Text>
           </View>
 
-          {/* Navigasi Ikon Vertikal Tengah */}
           <View style={styles.tabletNavList}>
             {navItems.map((item) => {
               const isActive = item.key === activeKey;
@@ -90,7 +86,6 @@ export function ResponsiveShell({
             })}
           </View>
 
-          {/* Tombol Logout Bawah */}
           <TouchableOpacity
             onPress={onLogout}
             style={styles.tabletLogoutButton}
@@ -106,20 +101,17 @@ export function ResponsiveShell({
           </TouchableOpacity>
         </View>
 
-        {/* Kanvas Putih Konten Kanan */}
         <View style={styles.tabletContentArea}>{children}</View>
       </View>
     );
   }
 
-  // Tampilan Layar Ponsel (< 768px)
   const mobileNavItems = navItems.slice(0, 5);
 
   return (
     <View style={styles.mobileContainer}>
       <View style={styles.mobileContentArea}>{children}</View>
 
-      {/* Floating Dark Bottom Dock */}
       <View style={styles.mobileDock}>
         {mobileNavItems.map((item) => {
           const isActive = item.key === activeKey;
@@ -155,8 +147,6 @@ export function ResponsiveShell({
     </View>
   );
 }
-
-// 2. TopUtilityBar
 
 export interface TopUtilityBarProps {
   title: string;
@@ -258,8 +248,6 @@ export function TopUtilityBar({
   );
 }
 
-// 3. PastelStatCard
-
 export interface PastelStatCardProps {
   tone: "iceBlue" | "lavender" | "mint" | "butter";
   value: string;
@@ -353,8 +341,6 @@ export function PastelStatCard({
   return content;
 }
 
-// 4. MiniTrendChart
-
 export interface TrendPoint {
   label: string;
   value: number;
@@ -390,7 +376,6 @@ export function MiniTrendChart({
 
   return (
     <View style={[styles.trendCard, style]}>
-      {/* Header Nilai Hero & Callout */}
       <View style={styles.trendHeader}>
         <View style={styles.trendHeroGroup}>
           <Text style={styles.trendHeroValue}>{heroValue}</Text>
@@ -404,7 +389,6 @@ export function MiniTrendChart({
         )}
       </View>
 
-      {/* Area Sparkline Bar Pure React Native View */}
       <View style={styles.sparklineContainer}>
         {points.map((point, index) => {
           const isLast = index === points.length - 1;
@@ -429,7 +413,6 @@ export function MiniTrendChart({
         })}
       </View>
 
-      {/* Baris Period Switcher */}
       {Boolean(periods && periods.length > 0) && (
         <View style={styles.periodSwitcherRow}>
           {periods?.map((period) => {
@@ -438,7 +421,7 @@ export function MiniTrendChart({
               <TouchableOpacity
                 key={period.key}
                 onPress={() => onPeriodChange?.(period.key)}
-                hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+                hitSlop={{ top: 4, bottom: 4, left: 4, right: 4 }}
                 style={[
                   styles.periodButton,
                   isActive
@@ -469,8 +452,6 @@ export function MiniTrendChart({
   );
 }
 
-// 5. DarkActionCard
-
 export interface DarkActionCardProps {
   eyebrow?: string;
   title: string;
@@ -490,22 +471,18 @@ export function DarkActionCard({
 }: DarkActionCardProps) {
   return (
     <View style={[styles.darkActionCard, style]}>
-      {/* Aksen 2 Garis Geometris Sudut Kanan Bawah */}
       <View pointerEvents="none" style={styles.darkActionAccentOne} />
       <View pointerEvents="none" style={styles.darkActionAccentTwo} />
 
-      {/* Opsional Pill Outline Eyebrow */}
       {Boolean(eyebrow) && (
         <View style={styles.darkActionEyebrowContainer}>
           <Text style={styles.darkActionEyebrowText}>{eyebrow}</Text>
         </View>
       )}
 
-      {/* Judul & Deskripsi */}
       <Text style={styles.darkActionTitle}>{title}</Text>
       <Text style={styles.darkActionDescription}>{description}</Text>
 
-      {/* Tombol Pill CTA */}
       <TouchableOpacity
         onPress={onPress}
         style={styles.darkActionCtaButton}
@@ -518,8 +495,6 @@ export function DarkActionCard({
     </View>
   );
 }
-
-// 6. DarkIconRow
 
 export interface DarkIconRowProps {
   icon: keyof typeof Ionicons.glyphMap;
@@ -560,12 +535,10 @@ export function DarkIconRow({
 
   const rowContent = (
     <View style={styles.iconRowContent}>
-      {/* Kotak Ikon Gelap Kiri */}
       <View style={styles.iconRowBox}>
         <Ionicons name={icon} size={20} color={bento.obsidianForeground} />
       </View>
 
-      {/* Judul dan Subjudul Tengah */}
       <View style={styles.iconRowMiddle}>
         <Text style={styles.iconRowTitle} numberOfLines={1}>
           {title}
@@ -577,7 +550,6 @@ export function DarkIconRow({
         )}
       </View>
 
-      {/* Informasi Kanan */}
       {(Boolean(rightPrimary) || Boolean(rightSecondary)) && (
         <View style={styles.iconRowRight}>
           {Boolean(rightPrimary) && (
@@ -615,10 +587,7 @@ export function DarkIconRow({
   return <View style={styles.iconRowContainer}>{rowContent}</View>;
 }
 
-// Stylesheet
-
 const styles = StyleSheet.create({
-  // ResponsiveShell Tablet
   tabletOuterFrame: {
     flex: 1,
     flexDirection: "row",
@@ -678,7 +647,6 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
 
-  // ResponsiveShell Mobile
   mobileContainer: {
     flex: 1,
     backgroundColor: bento.surface,
@@ -897,7 +865,8 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   periodButton: {
-    minHeight: 36,
+    minHeight: touchTarget.minHeight,
+    minWidth: touchTarget.minWidth,
     paddingHorizontal: spacing.md,
     borderRadius: radius.full,
     justifyContent: "center",
@@ -920,8 +889,6 @@ const styles = StyleSheet.create({
     color: bento.pastelMutedText,
     fontWeight: typography.weight.medium,
   },
-
-  // DarkActionCard
   darkActionCard: {
     backgroundColor: bento.obsidian,
     borderRadius: radius.xxl,

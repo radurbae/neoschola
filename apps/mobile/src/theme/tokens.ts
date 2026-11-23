@@ -25,7 +25,7 @@ export const bento = {
   lavender: "#EDE7FA",
   lavenderText: "#5B21B6",
   mint: "#E2F5E9",
-  mintText: "#15803D",
+  mintText: "#166534",
   butter: "#FCF4DC",
   butterText: "#92400E",
   pastelMutedText: "#3F3F46",

@@ -26,8 +26,6 @@ import { Avatar } from "./ui/shadcn";
 export * from "./ui/shadcn";
 export * from "./ui/bento";
 
-// Screen
-
 export interface ScreenProps {
   children: React.ReactNode;
   scroll?: boolean;
@@ -82,8 +80,6 @@ export function Screen({
   );
 }
 
-// Card
-
 export interface CardProps {
   children: React.ReactNode;
   style?: StyleProp<ViewStyle>;
@@ -120,8 +116,6 @@ export function Card({
     </View>
   );
 }
-
-// Button
 
 export type ButtonVariant =
   | "default"
@@ -310,8 +304,6 @@ export function Button({
   );
 }
 
-// Badge
-
 export type BadgeVariant =
   | "default"
   | "secondary"
@@ -398,8 +390,6 @@ export function Badge({
   );
 }
 
-// Chip
-
 export interface ChipProps {
   label: string;
   selected?: boolean;
@@ -457,8 +447,6 @@ export function Chip({
     </TouchableOpacity>
   );
 }
-
-// Input
 
 export interface InputProps extends TextInputProps {
   label?: string;

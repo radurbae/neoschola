@@ -57,17 +57,14 @@ export function StaffFinanceOrAcademicScreen() {
   const { user, classes } = useAuth();
   const isAdmin = user?.role === Role.ADMIN;
 
-  // State bersama siswa dan kelas
   const [students, setStudents] = useState<Student[]>([]);
 
-  // State admin (Keuangan / Tagihan)
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [invoiceFilter, setInvoiceFilter] = useState<InvoiceFilter>("WAITING");
   const [invoicesLoading, setInvoicesLoading] = useState<boolean>(true);
   const [invoicesRefreshing, setInvoicesRefreshing] = useState<boolean>(false);
   const [invoicesError, setInvoicesError] = useState<string | null>(null);
 
-  // Modal Verifikasi / Sukses Kuitansi
   const [verifiedReceipt, setVerifiedReceipt] = useState<{
     receiptNo: string;
     studentName: string;
@@ -75,7 +72,6 @@ export function StaffFinanceOrAcademicScreen() {
   } | null>(null);
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
 
-  // Modal Buat Tagihan Baru (Admin)
   const [invoiceModalVisible, setInvoiceModalVisible] = useState<boolean>(false);
   const [selectedStudentForInvoice, setSelectedStudentForInvoice] = useState<string>("");
   const [invoiceTitle, setInvoiceTitle] = useState<string>("");
@@ -85,14 +81,12 @@ export function StaffFinanceOrAcademicScreen() {
   const [invoiceFormError, setInvoiceFormError] = useState<string | null>(null);
   const [creatingInvoice, setCreatingInvoice] = useState<boolean>(false);
 
-  // State guru (Akademik / Tugas & Nilai)
   const [teacherMode, setTeacherMode] = useState<TeacherAcademicMode>("ASSIGNMENTS");
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [assignmentsLoading, setAssignmentsLoading] = useState<boolean>(true);
   const [assignmentsRefreshing, setAssignmentsRefreshing] = useState<boolean>(false);
   const [assignmentsError, setAssignmentsError] = useState<string | null>(null);
 
-  // Modal Buat Tugas (Teacher)
   const [assignmentModalVisible, setAssignmentModalVisible] = useState<boolean>(false);
   const [assignmentTitle, setAssignmentTitle] = useState<string>("");
   const [assignmentSubject, setAssignmentSubject] = useState<string>("");
@@ -102,7 +96,6 @@ export function StaffFinanceOrAcademicScreen() {
   const [assignmentFormError, setAssignmentFormError] = useState<string | null>(null);
   const [creatingAssignment, setCreatingAssignment] = useState<boolean>(false);
 
-  // Nilai & Catatan (Teacher)
   const [selectedStudentForGrade, setSelectedStudentForGrade] = useState<string>("");
   const [grades, setGrades] = useState<GradeNote[]>([]);
   const [gradesLoading, setGradesLoading] = useState<boolean>(false);
@@ -115,7 +108,6 @@ export function StaffFinanceOrAcademicScreen() {
   const [gradeFormError, setGradeFormError] = useState<string | null>(null);
   const [creatingGrade, setCreatingGrade] = useState<boolean>(false);
 
-  // Pengambilan data
   const loadStudents = useCallback(async () => {
     try {
       const res = await api.getStudents();
@@ -1207,6 +1199,7 @@ const styles = StyleSheet.create({
     fontSize: typography.size.xs,
     fontWeight: typography.weight.semibold,
     color: shadcn.status.warning.text,
+    flexShrink: 1,
   },
   proofField: {
     fontSize: typography.size.xs,

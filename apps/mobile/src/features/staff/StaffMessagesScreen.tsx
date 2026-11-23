@@ -109,7 +109,6 @@ export function StaffMessagesScreen() {
           />
         }
       >
-        {/* Banner Informasi Jam Layanan Sekolah (0 em-dash / en-dash) */}
         <Alert
           variant="default"
           title="Jam Layanan Komunikasi"
@@ -118,7 +117,6 @@ export function StaffMessagesScreen() {
           style={styles.serviceAlert}
         />
 
-        {/* State Loading / Error / Empty */}
         {loading && !refreshing ? (
           <StateView type="loading" message="Memuat percakapan wali murid..." />
         ) : errorMessage ? (

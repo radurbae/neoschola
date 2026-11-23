@@ -12,8 +12,6 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { shadcn, shadows, radius, spacing, typography, touchTarget } from "../../theme/tokens";
 
-// Card Parts
-
 export interface CardHeaderProps {
   children: React.ReactNode;
   style?: StyleProp<ViewStyle>;
@@ -59,8 +57,6 @@ export function CardFooter({ children, style }: CardFooterProps) {
   return <View style={[styles.cardFooter, style]}>{children}</View>;
 }
 
-// Label
-
 export interface LabelProps {
   children: React.ReactNode;
   required?: boolean;
@@ -75,8 +71,6 @@ export function Label({ children, required = false, style }: LabelProps) {
     </View>
   );
 }
-
-// Separator
 
 export interface SeparatorProps {
   orientation?: "horizontal" | "vertical";
@@ -98,8 +92,6 @@ export function Separator({
     />
   );
 }
-
-// Avatar
 
 export interface AvatarProps {
   name: string;
@@ -158,8 +150,6 @@ export function Avatar({
     </View>
   );
 }
-
-// Alert
 
 export type AlertVariant = "default" | "destructive" | "info" | "warning";
 
@@ -231,8 +221,6 @@ export function Alert({
   );
 }
 
-// Tabs (Segmented Control)
-
 export interface TabItem {
   value: string;
   label: string;
@@ -302,8 +290,6 @@ export function Tabs({
   );
 }
 
-// Skeleton
-
 export interface SkeletonProps {
   width?: number | `${number}%` | "auto";
   height?: number;
@@ -333,7 +319,6 @@ export function Skeleton({
 }
 
 const styles = StyleSheet.create({
-  // Card Parts
   cardHeader: {
     marginBottom: spacing.sm,
   },
@@ -359,7 +344,6 @@ const styles = StyleSheet.create({
     paddingTop: spacing.xs,
   },
 
-  // Label
   labelContainer: {
     flexDirection: "row",
     alignItems: "center",
@@ -377,7 +361,6 @@ const styles = StyleSheet.create({
     marginLeft: 3,
   },
 
-  // Separator
   separatorHorizontal: {
     height: 1,
     backgroundColor: shadcn.border,
@@ -389,7 +372,6 @@ const styles = StyleSheet.create({
     height: "100%",
   },
 
-  // Avatar
   avatarBase: {
     backgroundColor: shadcn.secondary,
     borderWidth: 1,
@@ -424,7 +406,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
 
-  // Alert
   alertBase: {
     flexDirection: "row",
     borderRadius: radius.md,
@@ -489,7 +470,6 @@ const styles = StyleSheet.create({
     color: shadcn.status.warning.text,
   },
 
-  // Tabs
   tabsRail: {
     flexDirection: "row",
     backgroundColor: shadcn.secondary,

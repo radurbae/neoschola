@@ -204,7 +204,6 @@ export default function AttendanceScreen() {
 
   return (
     <Screen scroll={false} headerShown={false} style={styles.screen}>
-      {/* Top Utility Bar */}
       <TopUtilityBar
         title="Presensi"
         subtitle={activeStudent ? activeStudent.full_name : undefined}
@@ -213,7 +212,6 @@ export default function AttendanceScreen() {
         onPressProfile={() => router.push("/(tabs)/profil")}
       />
 
-      {/* Child Switcher Component */}
       {students.length > 0 && (
         <View style={styles.childSwitcherWrapper}>
           <ChildSwitcher
@@ -224,7 +222,6 @@ export default function AttendanceScreen() {
         </View>
       )}
 
-      {/* Success Notification Banner */}
       {Boolean(successBanner) && (
         <View style={styles.successBannerContainer}>
           <Text style={styles.successBannerText}>{successBanner}</Text>
@@ -266,7 +263,6 @@ export default function AttendanceScreen() {
             />
           }
         >
-          {/* 1. Strip 3 PastelStatCard (Hadir, Sakit, Izin) */}
           <View style={styles.sectionHeaderRow}>
             <Text style={styles.sectionHeading}>Ringkasan Kehadiran</Text>
           </View>

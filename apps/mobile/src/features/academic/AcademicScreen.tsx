@@ -134,7 +134,6 @@ export default function AcademicScreen() {
 
   return (
     <Screen scroll={false} headerShown={false} style={styles.screen}>
-      {/* Top Utility Bar */}
       <TopUtilityBar
         title="Akademik"
         subtitle={activeStudent ? activeStudent.full_name : undefined}
@@ -143,7 +142,6 @@ export default function AcademicScreen() {
         onPressProfile={() => router.push("/(tabs)/profil")}
       />
 
-      {/* Child Switcher Component */}
       {students.length > 0 && (
         <View style={styles.childSwitcherWrapper}>
           <ChildSwitcher
@@ -154,7 +152,6 @@ export default function AcademicScreen() {
         </View>
       )}
 
-      {/* Body Content */}
       {loading ? (
         <StateView
           type="loading"
@@ -189,7 +186,6 @@ export default function AcademicScreen() {
             />
           }
         >
-          {/* Strip 3 PastelStatCard (Jadwal, Tugas, Nilai) */}
           <View style={styles.sectionHeaderRow}>
             <Text style={styles.sectionHeading}>Ringkasan Akademik</Text>
           </View>

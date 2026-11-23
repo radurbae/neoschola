@@ -739,7 +739,6 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
 
-  // Bento Row Atas
   bentoRow: {
     marginBottom: spacing.lg,
     gap: spacing.md,
@@ -749,7 +748,6 @@ const styles = StyleSheet.create({
     alignItems: "stretch",
   },
 
-  // Hero Card Soft Ice Blue (radius 24pt, padding 20pt)
   heroCard: {
     backgroundColor: bento.iceBlue,
     borderRadius: radius.xxl,
@@ -798,9 +796,9 @@ const styles = StyleSheet.create({
   heroFooterText: {
     fontSize: typography.size.xs,
     color: bento.pastelMutedText,
+    flexShrink: 1,
   },
 
-  // Stats Group
   statsGroup: {
     gap: spacing.md,
   },
@@ -812,7 +810,6 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 
-  // Filter Kategori Chips
   filterSection: {
     marginBottom: spacing.md,
   },
@@ -822,7 +819,6 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.xs,
   },
 
-  // Daftar Tagihan
   invoiceList: {
     gap: spacing.md,
   },

@@ -49,7 +49,7 @@ Panduan desain visual, interaksi, dan sistem token untuk aplikasi mobile dan web
 | `lavender` | `#EDE7FA` | Latar kartu modul akademik, tugas, dan nilai | Pastel Lembut |
 | `lavenderText` | `#5B21B6` | Teks keterangan dan sorotan tren pada kartu Lavender | 8.5:1 terhadap `#EDE7FA` |
 | `mint` | `#E2F5E9` | Latar kartu status kehadiran prima dan pembayaran lunas | Pastel Segar |
-| `mintText` | `#15803D` | Teks status sukses dan persentase kehadiran tepat waktu | 4.6:1 terhadap `#E2F5E9` |
+| `mintText` | `#166534` | Teks status sukses dan persentase kehadiran tepat waktu | 5.9:1 terhadap `#E2F5E9` |
 | `butter` | `#FCF4DC` | Latar kartu pengingat tagihan dan perizinan pending | Pastel Hangat |
 | `butterText` | `#92400E` | Teks peringatan dan catatan penting pada kartu Butter | 6.6:1 terhadap `#FCF4DC` |
 | `pastelMutedText` | `#3F3F46` | Teks label keterangan umum di atas semua kartu pastel | >= 8.5:1 di seluruh pastel |

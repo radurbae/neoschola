@@ -50,7 +50,6 @@ export function StaffLeaveScreen() {
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // State Modal Peninjauan
   const [selectedRequest, setSelectedRequest] = useState<LeaveRequest | null>(null);
   const [reviewAction, setReviewAction] = useState<"APPROVED" | "REJECTED">("APPROVED");
   const [reviewNotes, setReviewNotes] = useState<string>("");
@@ -124,13 +123,11 @@ export function StaffLeaveScreen() {
     }
   };
 
-  // Filtered List
   const filteredItems = items.filter((item) => {
     if (filter === "ALL") return true;
     return item.status === filter;
   });
 
-  // Hitung jumlah per status
   const pendingCount = items.filter((i) => i.status === LeaveStatus.PENDING).length;
   const approvedCount = items.filter((i) => i.status === LeaveStatus.APPROVED).length;
   const rejectedCount = items.filter((i) => i.status === LeaveStatus.REJECTED).length;
@@ -156,7 +153,6 @@ export function StaffLeaveScreen() {
           />
         }
       >
-        {/* Filter Chip Status */}
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -192,7 +188,6 @@ export function StaffLeaveScreen() {
           />
         </ScrollView>
 
-        {/* State Loading / Error / Empty */}
         {loading && !refreshing ? (
           <StateView type="loading" message="Memuat daftar pengajuan izin..." />
         ) : errorMessage ? (
@@ -245,7 +240,6 @@ export function StaffLeaveScreen() {
 
               return (
                 <Card key={request.id} style={styles.requestCard}>
-                  {/* Baris Utama dengan DarkIconRow */}
                   <DarkIconRow
                     icon={isSakit ? "medkit-outline" : "document-text-outline"}
                     title={request.student_name || "Peserta Didik"}
@@ -263,7 +257,6 @@ export function StaffLeaveScreen() {
 
                   <Separator style={styles.cardSeparator} />
 
-                  {/* Info Rentang Waktu & Alasan */}
                   <View style={styles.infoRow}>
                     <Ionicons name="calendar-outline" size={16} color={shadcn.mutedForeground} />
                     <Text style={styles.infoText}>Periode: {periodeText}</Text>
@@ -281,7 +274,6 @@ export function StaffLeaveScreen() {
                     </Text>
                   </View>
 
-                  {/* Catatan Peninjauan Jika Sudah Diproses */}
                   {!isPending && (
                     <View
                       style={[
@@ -327,7 +319,6 @@ export function StaffLeaveScreen() {
                     </View>
                   )}
 
-                  {/* Tombol Aksi Untuk Status PENDING (Min 44pt) */}
                   {isPending && (
                     <>
                       <Separator style={styles.actionsSeparator} />
@@ -467,6 +458,7 @@ const styles = StyleSheet.create({
   infoText: {
     fontSize: typography.size.xs,
     color: shadcn.mutedForeground,
+    flexShrink: 1,
   },
   reasonBox: {
     backgroundColor: shadcn.secondary,
@@ -494,6 +486,7 @@ const styles = StyleSheet.create({
   guardianText: {
     fontSize: 11,
     color: shadcn.mutedForeground,
+    flexShrink: 1,
   },
   reviewNotesBox: {
     borderRadius: radius.md,

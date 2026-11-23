@@ -295,11 +295,10 @@ export function AnnouncementsScreen() {
         </ScrollView>
       )}
 
-      {/* Sheet Detail Lengkap Pengumuman */}
       <Sheet
         visible={Boolean(activeAnnouncement)}
         onClose={() => setActiveAnnouncement(null)}
-        title="Detail Pengumuman"
+        title="Rincian Pengumuman"
       >
         {activeAnnouncement && (
           <View style={styles.sheetBody}>
@@ -495,6 +494,7 @@ const styles = StyleSheet.create({
     fontSize: typography.size.sm,
     color: shadcn.mutedForeground,
     fontVariant: ["tabular-nums"],
+    flexShrink: 1,
   },
   sheetContentBox: {
     paddingVertical: spacing.xs,

@@ -51,13 +51,9 @@ export function StaffAnnouncementsScreen() {
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // Filter Kategori
   const [selectedCategory, setSelectedCategory] = useState<string>("ALL");
-
-  // Detail Modal
   const [selectedAnnouncement, setSelectedAnnouncement] = useState<Announcement | null>(null);
 
-  // Modal Buat Pengumuman
   const [modalVisible, setModalVisible] = useState<boolean>(false);
   const [title, setTitle] = useState<string>("");
   const [content, setContent] = useState<string>("");
@@ -67,7 +63,6 @@ export function StaffAnnouncementsScreen() {
   const [formError, setFormError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState<boolean>(false);
 
-  // Kategori yang tersedia untuk dipilih
   const availableCategories: AnnouncementCategory[] = isAdmin
     ? [
         AnnouncementCategory.SEKOLAH,
@@ -275,7 +270,6 @@ export function StaffAnnouncementsScreen() {
           )}
         </ScrollView>
 
-        {/* State Loading / Error / Empty */}
         {loading && !refreshing ? (
           <StateView type="loading" message="Memuat daftar pengumuman..." />
         ) : errorMessage ? (

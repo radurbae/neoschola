@@ -157,7 +157,6 @@ export default function HomeScreen() {
         onPressProfile={() => router.push("/(tabs)/profil")}
       />
 
-      {/* Child Switcher Component */}
       {students.length > 0 && (
         <View style={styles.childSwitcherWrapper}>
           <ChildSwitcher
@@ -168,7 +167,6 @@ export default function HomeScreen() {
         </View>
       )}
 
-      {/* Main Content Body */}
       {loading ? (
         <StateView
           type="loading"
@@ -203,14 +201,12 @@ export default function HomeScreen() {
             />
           }
         >
-          {/* BENTO ROW 1: MiniTrendChart Kiri & 3 PastelStatCard Kanan */}
           <View
             style={[
               styles.bentoRow,
               isTablet ? styles.bentoRowHorizontal : styles.bentoRowVertical,
             ]}
           >
-            {/* Kiri: MiniTrendChart */}
             <View
               style={
                 isTablet ? styles.bentoHalfColumn : styles.bentoFullColumn
@@ -227,7 +223,6 @@ export default function HomeScreen() {
               />
             </View>
 
-            {/* Kanan: Ringkasan Anak (3 PastelStatCard) */}
             <View
               style={
                 isTablet ? styles.bentoHalfColumn : styles.bentoFullColumn

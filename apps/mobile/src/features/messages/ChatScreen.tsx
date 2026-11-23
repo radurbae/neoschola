@@ -111,7 +111,6 @@ export function ChatScreen() {
 
   return (
     <Screen scroll={false} headerShown={false}>
-      {/* Header Percakapan Putih Bersih Hairline Bawah dengan Tombol Kembali 44x44 + Avatar sm + Subjek */}
       <View style={styles.headerBar}>
         <TouchableOpacity
           style={styles.backButton}
@@ -217,7 +216,6 @@ export function ChatScreen() {
                         </Text>
                       )}
 
-                      {/* Teks Pesan */}
                       <Text
                         style={[
                           styles.messageText,
@@ -229,7 +227,6 @@ export function ChatScreen() {
                         {msg.content}
                       </Text>
 
-                      {/* Waktu Pesan & Tanda Terkirim */}
                       <View style={styles.bubbleFooter}>
                         <Text
                           style={[

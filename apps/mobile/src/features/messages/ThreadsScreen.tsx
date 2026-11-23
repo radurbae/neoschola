@@ -234,7 +234,6 @@ export function ThreadsScreen() {
                     <Avatar name={teacherName} size="md" />
 
                     <View style={styles.threadContentCol}>
-                      {/* Baris Atas: Nama Lawan Bicara & Waktu */}
                       <View style={styles.threadTopRow}>
                         <Text style={styles.threadTeacherName} numberOfLines={1}>
                           {teacherName}
@@ -246,7 +245,6 @@ export function ThreadsScreen() {
                         </Text>
                       </View>
 
-                      {/* Baris Tengah: Badge Siswa & Subjek */}
                       <View style={styles.threadSubjectRow}>
                         <Badge
                           label={studentName}
@@ -258,7 +256,6 @@ export function ThreadsScreen() {
                         </Text>
                       </View>
 
-                      {/* Baris Bawah: Cuplikan Pesan & Counter Unread Pill Obsidian */}
                       <View style={styles.threadBottomRow}>
                         <Text
                           style={[

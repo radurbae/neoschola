@@ -225,7 +225,6 @@ export function StaffAttendanceScreen() {
           />
         }
       >
-        {/* Strip 3 PastelStatCard Ringkas */}
         <View style={isTablet ? styles.statsRowTablet : styles.statsRowMobile}>
           <PastelStatCard
             tone="mint"
@@ -256,7 +255,6 @@ export function StaffAttendanceScreen() {
           />
         </View>
 
-        {/* Kontrol Kelas & Tanggal */}
         <Card style={styles.controlCard}>
           <Text style={styles.controlLabel}>Pilih Rombel / Kelas:</Text>
           <ScrollView
