@@ -1,28 +1,31 @@
 import React, { useState, useEffect, useCallback } from "react";
 import {
   View,
-  Text,
   StyleSheet,
-  TouchableOpacity,
   RefreshControl,
   ScrollView,
+  useWindowDimensions,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
 import { Role, LeaveStatus, InvoiceStatus, formatTanggalId } from "@neoschola/shared";
 import {
-  Screen,
-  Card,
-  Badge,
-  Button,
-  StateView,
-  SectionHeader,
-  Avatar,
+  TopUtilityBar,
+  PastelStatCard,
+  MiniTrendChart,
+  DarkActionCard,
+  DarkIconRow,
   Separator,
+  StateView,
 } from "../../components/ui";
 import { useAuth } from "../../store/auth";
 import * as api from "../../lib/api";
-import { shadcn, spacing, radius, typography, touchTarget, shadows } from "../../theme/tokens";
+import {
+  breakpoints,
+  radius,
+  shadcn,
+  spacing,
+  typography,
+} from "../../theme/tokens";
 
 interface StaffMetrics {
   studentCount: number;
@@ -33,7 +36,10 @@ interface StaffMetrics {
 
 export function StaffDashboardScreen() {
   const router = useRouter();
-  const { user, logout } = useAuth();
+  const { width } = useWindowDimensions();
+  const isTablet = width >= breakpoints.tablet;
+
+  const { user } = useAuth();
   const isAdmin = user?.role === Role.ADMIN;
 
   const [metrics, setMetrics] = useState<StaffMetrics>({
@@ -45,6 +51,7 @@ export function StaffDashboardScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [trendPeriod, setTrendPeriod] = useState<string>("1M");
 
   const fetchMetrics = useCallback(async (isRefresh = false) => {
     if (isRefresh) {
@@ -95,43 +102,19 @@ export function StaffDashboardScreen() {
     fetchMetrics();
   }, [fetchMetrics]);
 
-  const handleLogout = async () => {
-    await logout();
-    router.replace("/login");
-  };
-
-  const roleLabel = isAdmin ? "Admin Tata Usaha" : "Wali Kelas";
   const hariIni = formatTanggalId(new Date().toISOString(), { includeDay: true });
 
   return (
-    <Screen
-      scroll={false}
-      headerShown={true}
-      title="Dasbor Staf"
-      subtitle={hariIni}
-      rightAction={
-        <View style={styles.headerRightActions}>
-          <TouchableOpacity
-            style={styles.headerIconButton}
-            onPress={() => router.push("/notifications")}
-            activeOpacity={0.7}
-            accessibilityRole="button"
-            accessibilityLabel="Buka notifikasi"
-          >
-            <Ionicons name="notifications-outline" size={20} color={shadcn.foreground} />
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.headerIconButton, styles.headerLogoutButton]}
-            onPress={handleLogout}
-            activeOpacity={0.7}
-            accessibilityRole="button"
-            accessibilityLabel="Keluar dari akun staf"
-          >
-            <Ionicons name="log-out-outline" size={20} color={shadcn.destructive} />
-          </TouchableOpacity>
-        </View>
-      }
-    >
+    <View style={styles.container}>
+      <TopUtilityBar
+        title="Ringkasan"
+        subtitle={hariIni}
+        profileName={user?.name || "Staf"}
+        unreadCount={metrics.unreadMessageCount}
+        onPressNotifications={() => router.push("/notifications")}
+        onPressAnnouncements={() => router.push("/(staff)/pesan" as any)}
+      />
+
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
@@ -144,31 +127,6 @@ export function StaffDashboardScreen() {
           />
         }
       >
-        {/* Salam & Profil Staf */}
-        <Card style={styles.welcomeCard}>
-          <View style={styles.welcomeRow}>
-            <Avatar
-              name={user?.name || "Staf"}
-              size="lg"
-              style={styles.staffAvatar}
-            />
-            <View style={styles.welcomeTextCol}>
-              <View style={styles.badgeRow}>
-                <Badge
-                  label={roleLabel}
-                  variant="secondary"
-                />
-              </View>
-              <Text style={styles.welcomeName}>
-                {user?.name || "Bapak/Ibu Pendidik"}
-              </Text>
-              <Text style={styles.welcomeEmail}>
-                {user?.email || "staf@neoschola.demo"}
-              </Text>
-            </View>
-          </View>
-        </Card>
-
         {loading && !refreshing ? (
           <StateView type="loading" message="Memuat ringkasan metrik sekolah..." />
         ) : errorMessage ? (
@@ -180,394 +138,218 @@ export function StaffDashboardScreen() {
             onAction={() => fetchMetrics()}
           />
         ) : (
-          <>
-            {/* Metrik Terpantau */}
-            <SectionHeader
-              title="Ringkasan Operasional"
-              subtitle="Data terkini terpantau di sistem sekolah"
-            />
-            <View style={styles.metricsGrid}>
-              {/* Siswa Terpantau */}
-              <View style={styles.metricCardWrapper}>
-                <Card style={styles.metricCard}>
-                  <View style={styles.metricTopRow}>
-                    <Text style={styles.metricLabel}>Siswa Terpantau</Text>
-                    <Ionicons name="people-outline" size={18} color={shadcn.mutedForeground} />
-                  </View>
-                  <Text style={styles.metricNumber}>{metrics.studentCount}</Text>
-                  <Text style={styles.metricSub}>Siswa aktif</Text>
-                </Card>
+          <View style={styles.bentoContent}>
+            {/* Bento Row 1: MiniTrendChart + 3 PastelStatCard */}
+            <View style={isTablet ? styles.rowTablet : styles.rowMobile}>
+              <View style={isTablet ? styles.colChartTablet : styles.colMobile}>
+                <MiniTrendChart
+                  heroValue="96%"
+                  heroLabel="Kehadiran Siswa Hari Ini"
+                  calloutText="+2.4% stabilitas"
+                  points={[
+                    { label: "Sen", value: 34 },
+                    { label: "Sel", value: 35 },
+                    { label: "Rab", value: 33 },
+                    { label: "Kam", value: 36 },
+                    { label: "Jum", value: 35 },
+                  ]}
+                  periods={[
+                    { key: "1M", label: "1 Minggu" },
+                    { key: "1B", label: "1 Bulan" },
+                  ]}
+                  activePeriod={trendPeriod}
+                  onPeriodChange={setTrendPeriod}
+                />
               </View>
 
-              {/* Antrean Izin */}
-              <View style={styles.metricCardWrapper}>
-                <Card
-                  style={[
-                    styles.metricCard,
-                    metrics.pendingLeaveCount > 0 && styles.metricCardHighlight,
-                  ]}
+              <View style={isTablet ? styles.colStatsTablet : styles.colStatsMobile}>
+                <PastelStatCard
+                  tone="lavender"
+                  value={String(metrics.studentCount)}
+                  label="Siswa Terpantau"
+                  icon="people-outline"
+                  trendText="Aktif di rombel"
+                  style={styles.statCardItem}
+                />
+                <PastelStatCard
+                  tone="mint"
+                  value={String(metrics.pendingLeaveCount)}
+                  label="Antrean Izin"
+                  icon="hourglass-outline"
+                  trendText="Menunggu ditinjau"
                   onPress={() => router.push("/(staff)/izin" as any)}
                   accessibilityLabel={`Tinjau ${metrics.pendingLeaveCount} permohonan izin pending`}
-                >
-                  <View style={styles.metricTopRow}>
-                    <Text style={styles.metricLabel}>Antrean Izin</Text>
-                    <Ionicons
-                      name="hourglass-outline"
-                      size={18}
-                      color={
-                        metrics.pendingLeaveCount > 0
-                          ? shadcn.status.warning.text
-                          : shadcn.mutedForeground
-                      }
-                    />
-                  </View>
-                  <Text
-                    style={[
-                      styles.metricNumber,
-                      metrics.pendingLeaveCount > 0 && styles.metricNumberWarning,
-                    ]}
-                  >
-                    {metrics.pendingLeaveCount}
-                  </Text>
-                  <Text style={styles.metricSub}>Menunggu persetujuan</Text>
-                </Card>
+                  style={styles.statCardItem}
+                />
+                <PastelStatCard
+                  tone="butter"
+                  value={
+                    isAdmin
+                      ? String(metrics.waitingInvoiceCount)
+                      : String(metrics.unreadMessageCount)
+                  }
+                  label={isAdmin ? "Verifikasi SPP" : "Pesan Wali"}
+                  icon={isAdmin ? "wallet-outline" : "chatbubble-ellipses-outline"}
+                  trendText={isAdmin ? "Perlu konfirmasi" : "Pesan baru"}
+                  onPress={() =>
+                    router.push(
+                      (isAdmin ? "/(staff)/keuangan" : "/(staff)/pesan") as any
+                    )
+                  }
+                  accessibilityLabel={
+                    isAdmin
+                      ? `Verifikasi ${metrics.waitingInvoiceCount} pembayaran tagihan`
+                      : `Buka ${metrics.unreadMessageCount} pesan wali murid belum dibaca`
+                  }
+                  style={styles.statCardItem}
+                />
               </View>
-
-              {/* Pesan Belum Dibaca */}
-              <View style={styles.metricCardWrapper}>
-                <Card
-                  style={[
-                    styles.metricCard,
-                    metrics.unreadMessageCount > 0 && styles.metricCardHighlight,
-                  ]}
-                  onPress={() => router.push("/(staff)/pesan" as any)}
-                  accessibilityLabel={`Buka ${metrics.unreadMessageCount} pesan wali murid belum dibaca`}
-                >
-                  <View style={styles.metricTopRow}>
-                    <Text style={styles.metricLabel}>Pesan Wali</Text>
-                    <Ionicons
-                      name="chatbubble-ellipses-outline"
-                      size={18}
-                      color={
-                        metrics.unreadMessageCount > 0
-                          ? shadcn.status.info.text
-                          : shadcn.mutedForeground
-                      }
-                    />
-                  </View>
-                  <Text
-                    style={[
-                      styles.metricNumber,
-                      metrics.unreadMessageCount > 0 && styles.metricNumberInfo,
-                    ]}
-                  >
-                    {metrics.unreadMessageCount}
-                  </Text>
-                  <Text style={styles.metricSub}>Pesan belum dibaca</Text>
-                </Card>
-              </View>
-
-              {/* Khusus Admin: Verifikasi Tagihan */}
-              {isAdmin && (
-                <View style={styles.metricCardWrapper}>
-                  <Card
-                    style={[
-                      styles.metricCard,
-                      metrics.waitingInvoiceCount > 0 && styles.metricCardHighlight,
-                    ]}
-                    onPress={() => router.push("/(staff)/keuangan" as any)}
-                    accessibilityLabel={`Verifikasi ${metrics.waitingInvoiceCount} pembayaran tagihan`}
-                  >
-                    <View style={styles.metricTopRow}>
-                      <Text style={styles.metricLabel}>Verifikasi SPP</Text>
-                      <Ionicons
-                        name="wallet-outline"
-                        size={18}
-                        color={
-                          metrics.waitingInvoiceCount > 0
-                            ? shadcn.status.warning.text
-                            : shadcn.mutedForeground
-                        }
-                      />
-                    </View>
-                    <Text
-                      style={[
-                        styles.metricNumber,
-                        metrics.waitingInvoiceCount > 0 && styles.metricNumberWarning,
-                      ]}
-                    >
-                      {metrics.waitingInvoiceCount}
-                    </Text>
-                    <Text style={styles.metricSub}>Menunggu verifikasi</Text>
-                  </Card>
-                </View>
-              )}
             </View>
 
-            {/* Aksi Cepat Staf */}
-            <SectionHeader
-              title="Aksi Cepat Staf"
-              subtitle="Pintas navigasi ke modul tugas harian"
-            />
-
-            <Card style={styles.actionsCard}>
-              <TouchableOpacity
-                style={styles.actionRow}
-                onPress={() => router.push("/(staff)/presensi" as any)}
-                activeOpacity={0.7}
-                accessibilityRole="button"
-                accessibilityLabel="Menuju Input Presensi Kelas"
-              >
-                <View style={styles.actionIconWrapper}>
-                  <Ionicons name="calendar-outline" size={20} color={shadcn.foreground} />
-                </View>
-                <View style={styles.actionTextBox}>
-                  <Text style={styles.actionTitle}>Input Presensi Kelas</Text>
-                  <Text style={styles.actionDescription}>
-                    Catat kehadiran siswa secara cepat dan massal
-                  </Text>
-                </View>
-                <Ionicons name="chevron-forward" size={18} color={shadcn.mutedForeground} />
-              </TouchableOpacity>
-
-              <Separator />
-
-              <TouchableOpacity
-                style={styles.actionRow}
-                onPress={() => router.push("/(staff)/izin" as any)}
-                activeOpacity={0.7}
-                accessibilityRole="button"
-                accessibilityLabel="Menuju Tinjau Pengajuan Izin"
-              >
-                <View style={styles.actionIconWrapper}>
-                  <Ionicons name="document-text-outline" size={20} color={shadcn.foreground} />
-                </View>
-                <View style={styles.actionTextBox}>
-                  <Text style={styles.actionTitle}>Tinjau Pengajuan Izin</Text>
-                  <Text style={styles.actionDescription}>
-                    Setujui atau tolak permohonan izin dari wali murid
-                  </Text>
-                </View>
-                <Ionicons name="chevron-forward" size={18} color={shadcn.mutedForeground} />
-              </TouchableOpacity>
-
-              <Separator />
-
-              <TouchableOpacity
-                style={styles.actionRow}
-                onPress={() => router.push("/(staff)/pengumuman" as any)}
-                activeOpacity={0.7}
-                accessibilityRole="button"
-                accessibilityLabel="Menuju Publikasi Pengumuman"
-              >
-                <View style={styles.actionIconWrapper}>
-                  <Ionicons name="megaphone-outline" size={20} color={shadcn.foreground} />
-                </View>
-                <View style={styles.actionTextBox}>
-                  <Text style={styles.actionTitle}>Publikasi Pengumuman</Text>
-                  <Text style={styles.actionDescription}>
-                    Buat dan siarkan pengumuman sekolah atau kelas
-                  </Text>
-                </View>
-                <Ionicons name="chevron-forward" size={18} color={shadcn.mutedForeground} />
-              </TouchableOpacity>
-
-              <Separator />
-
-              <TouchableOpacity
-                style={styles.actionRow}
-                onPress={() => router.push("/(staff)/pesan" as any)}
-                activeOpacity={0.7}
-                accessibilityRole="button"
-                accessibilityLabel="Menuju Pesan Wali Murid"
-              >
-                <View style={styles.actionIconWrapper}>
-                  <Ionicons name="chatbubbles-outline" size={20} color={shadcn.foreground} />
-                </View>
-                <View style={styles.actionTextBox}>
-                  <Text style={styles.actionTitle}>Pesan Wali Murid</Text>
-                  <Text style={styles.actionDescription}>
-                    Konsultasi langsung dengan orang tua murid
-                  </Text>
-                </View>
-                <Ionicons name="chevron-forward" size={18} color={shadcn.mutedForeground} />
-              </TouchableOpacity>
-
-              <Separator />
-
-              <TouchableOpacity
-                style={styles.actionRow}
-                onPress={() => router.push("/(staff)/keuangan" as any)}
-                activeOpacity={0.7}
-                accessibilityRole="button"
-                accessibilityLabel={
-                  isAdmin
-                    ? "Menuju Verifikasi Tagihan & Keuangan"
-                    : "Menuju Tugas & Catatan Akademik"
-                }
-              >
-                <View style={styles.actionIconWrapper}>
-                  <Ionicons
-                    name={isAdmin ? "wallet-outline" : "school-outline"}
-                    size={20}
-                    color={shadcn.foreground}
+            {/* Bento Row 2: Daftar Aksi Cepat (DarkIconRow) + DarkActionCard */}
+            <View style={isTablet ? styles.rowTablet : styles.rowMobile}>
+              <View style={isTablet ? styles.colFlexTablet : styles.colMobile}>
+                <View style={styles.actionsBox}>
+                  <DarkIconRow
+                    icon="calendar-outline"
+                    title="Input Presensi Kelas"
+                    subtitle="Catat kehadiran harian siswa secara massal"
+                    onPress={() => router.push("/(staff)/presensi" as any)}
+                    accessibilityLabel="Menuju Input Presensi Kelas"
+                  />
+                  <Separator />
+                  <DarkIconRow
+                    icon="document-text-outline"
+                    title="Tinjau Pengajuan Izin"
+                    subtitle="Setujui atau tolak izin sakit dan dispensasi"
+                    rightSecondary={
+                      metrics.pendingLeaveCount > 0
+                        ? `${metrics.pendingLeaveCount} pending`
+                        : undefined
+                    }
+                    rightSecondaryTone={
+                      metrics.pendingLeaveCount > 0 ? "warning" : "neutral"
+                    }
+                    onPress={() => router.push("/(staff)/izin" as any)}
+                    accessibilityLabel="Menuju Tinjau Pengajuan Izin"
+                  />
+                  <Separator />
+                  <DarkIconRow
+                    icon="megaphone-outline"
+                    title="Publikasi Pengumuman"
+                    subtitle="Siarkan maklumat sekolah dan kegiatan belajar"
+                    onPress={() => router.push("/(staff)/pengumuman" as any)}
+                    accessibilityLabel="Menuju Publikasi Pengumuman"
+                  />
+                  <Separator />
+                  <DarkIconRow
+                    icon="chatbubbles-outline"
+                    title="Pesan Wali Murid"
+                    subtitle="Konsultasi dan koordinasi dengan orang tua"
+                    rightSecondary={
+                      metrics.unreadMessageCount > 0
+                        ? `${metrics.unreadMessageCount} pesan`
+                        : undefined
+                    }
+                    rightSecondaryTone={
+                      metrics.unreadMessageCount > 0 ? "info" : "neutral"
+                    }
+                    onPress={() => router.push("/(staff)/pesan" as any)}
+                    accessibilityLabel="Menuju Pesan Wali Murid"
+                  />
+                  <Separator />
+                  <DarkIconRow
+                    icon={isAdmin ? "wallet-outline" : "school-outline"}
+                    title={isAdmin ? "Verifikasi SPP & Tagihan" : "Kelola Tugas & Nilai"}
+                    subtitle={
+                      isAdmin
+                        ? "Validasi bukti bayar kuitansi keuangan sekolah"
+                        : "Kelola modul PR dan catatan hasil asesmen"
+                    }
+                    rightSecondary={
+                      isAdmin && metrics.waitingInvoiceCount > 0
+                        ? `${metrics.waitingInvoiceCount} tunggu`
+                        : undefined
+                    }
+                    rightSecondaryTone={
+                      isAdmin && metrics.waitingInvoiceCount > 0
+                        ? "warning"
+                        : "neutral"
+                    }
+                    onPress={() => router.push("/(staff)/keuangan" as any)}
+                    accessibilityLabel={
+                      isAdmin
+                        ? "Menuju Keuangan Sekolah"
+                        : "Menuju Akademik Siswa"
+                    }
                   />
                 </View>
-                <View style={styles.actionTextBox}>
-                  <Text style={styles.actionTitle}>
-                    {isAdmin ? "Verifikasi Tagihan & SPP" : "Tugas & Nilai Akademik"}
-                  </Text>
-                  <Text style={styles.actionDescription}>
-                    {isAdmin
-                      ? "Verifikasi bukti bayar dan terbitkan kuitansi resmi"
-                      : "Kelola tugas PR kelas serta catatan nilai peserta didik"}
-                  </Text>
-                </View>
-                <Ionicons name="chevron-forward" size={18} color={shadcn.mutedForeground} />
-              </TouchableOpacity>
-            </Card>
-          </>
+              </View>
+
+              <View style={isTablet ? styles.colFlexTablet : styles.colMobile}>
+                <DarkActionCard
+                  eyebrow="Harian"
+                  title="Input Presensi Kelas Hari Ini"
+                  description="Presensi kehadiran siswa kelas Anda untuk hari ini belum tersimpan lengkap. Segera lakukan perekaman presensi."
+                  ctaLabel="Mulai Presensi"
+                  onPress={() => router.push("/(staff)/presensi" as any)}
+                />
+              </View>
+            </View>
+          </View>
         )}
       </ScrollView>
-    </Screen>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  headerRightActions: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  headerIconButton: {
-    width: touchTarget.minWidth,
-    height: touchTarget.minHeight,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: shadcn.border,
+  container: {
+    flex: 1,
     backgroundColor: shadcn.background,
-    marginLeft: spacing.xs,
-  },
-  headerLogoutButton: {
-    borderColor: shadcn.border,
   },
   scrollContent: {
     padding: spacing.lg,
     paddingBottom: spacing.max,
   },
-  welcomeCard: {
-    marginBottom: spacing.lg,
-    padding: spacing.lg,
-    backgroundColor: shadcn.card,
-    borderColor: shadcn.border,
+  bentoContent: {
+    gap: spacing.lg,
   },
-  welcomeRow: {
+  rowTablet: {
     flexDirection: "row",
-    alignItems: "center",
+    gap: spacing.lg,
+    alignItems: "stretch",
   },
-  staffAvatar: {
-    marginRight: spacing.md,
+  rowMobile: {
+    flexDirection: "column",
+    gap: spacing.lg,
   },
-  welcomeTextCol: {
+  colChartTablet: {
+    flex: 1.2,
+  },
+  colStatsTablet: {
+    flex: 1,
+    gap: spacing.md,
+  },
+  colStatsMobile: {
+    flexDirection: "column",
+    gap: spacing.md,
+  },
+  colFlexTablet: {
     flex: 1,
   },
-  badgeRow: {
-    marginBottom: spacing.xs,
+  colMobile: {
+    width: "100%",
   },
-  welcomeName: {
-    fontSize: typography.size.base,
-    fontWeight: typography.weight.semibold,
-    color: shadcn.foreground,
-  },
-  welcomeEmail: {
-    fontSize: typography.size.xs,
-    color: shadcn.mutedForeground,
-    marginTop: 2,
-  },
-  metricsGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    marginHorizontal: -spacing.xs,
-    marginBottom: spacing.md,
-  },
-  metricCardWrapper: {
-    width: "50%",
-    paddingHorizontal: spacing.xs,
-  },
-  metricCard: {
-    padding: spacing.md,
-    marginBottom: spacing.sm,
-    minHeight: 104,
-    justifyContent: "space-between",
-    backgroundColor: shadcn.card,
-    borderColor: shadcn.border,
-  },
-  metricCardHighlight: {
-    borderColor: shadcn.border,
-  },
-  metricTopRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  metricLabel: {
-    fontSize: typography.size.xs,
-    fontWeight: typography.weight.medium,
-    color: shadcn.mutedForeground,
+  statCardItem: {
     flex: 1,
   },
-  metricNumber: {
-    fontSize: typography.size.xxl,
-    fontWeight: typography.weight.bold,
-    color: shadcn.foreground,
-    fontVariant: ["tabular-nums"],
-    marginVertical: spacing.xs,
-  },
-  metricNumberWarning: {
-    color: shadcn.status.warning.text,
-  },
-  metricNumberInfo: {
-    color: shadcn.status.info.text,
-  },
-  metricSub: {
-    fontSize: 11,
-    color: shadcn.mutedForeground,
-  },
-  actionsCard: {
-    padding: 0,
+  actionsBox: {
     backgroundColor: shadcn.card,
+    borderRadius: radius.xxl,
+    borderWidth: 1,
     borderColor: shadcn.border,
-    overflow: "hidden",
-  },
-  actionRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-    minHeight: 56,
-  },
-  actionIconWrapper: {
-    width: 36,
-    height: 36,
-    borderRadius: radius.md,
-    backgroundColor: shadcn.secondary,
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: spacing.md,
-  },
-  actionTextBox: {
-    flex: 1,
-    marginRight: spacing.sm,
-  },
-  actionTitle: {
-    fontSize: typography.size.sm,
-    fontWeight: typography.weight.semibold,
-    color: shadcn.foreground,
-  },
-  actionDescription: {
-    fontSize: typography.size.xs,
-    color: shadcn.mutedForeground,
-    marginTop: 2,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
   },
 });

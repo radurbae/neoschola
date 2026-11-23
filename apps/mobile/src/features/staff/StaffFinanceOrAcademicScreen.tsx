@@ -7,6 +7,7 @@ import {
   ScrollView,
   RefreshControl,
   Alert as NativeAlert,
+  useWindowDimensions,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import {
@@ -19,10 +20,12 @@ import {
   formatRupiah,
   formatTanggalId,
 } from "@neoschola/shared";
+import { useRouter } from "expo-router";
 import {
-  Screen,
+  TopUtilityBar,
+  PastelStatCard,
+  DarkIconRow,
   Card,
-  Badge,
   Chip,
   Button,
   Input,
@@ -31,16 +34,26 @@ import {
   Sheet,
   Tabs,
   Separator,
-  Avatar,
 } from "../../components/ui";
 import { useAuth } from "../../store/auth";
 import * as api from "../../lib/api";
-import { shadcn, spacing, radius, typography, touchTarget } from "../../theme/tokens";
+import {
+  breakpoints,
+  radius,
+  shadcn,
+  spacing,
+  touchTarget,
+  typography,
+} from "../../theme/tokens";
 
 type InvoiceFilter = "WAITING" | "UNPAID" | "PAID" | "ALL";
 type TeacherAcademicMode = "ASSIGNMENTS" | "GRADES";
 
 export function StaffFinanceOrAcademicScreen() {
+  const router = useRouter();
+  const { width } = useWindowDimensions();
+  const isTablet = width >= breakpoints.tablet;
+
   const { user, classes } = useAuth();
   const isAdmin = user?.role === Role.ADMIN;
 
@@ -401,23 +414,14 @@ export function StaffFinanceOrAcademicScreen() {
     });
 
     return (
-      <Screen
-        scroll={false}
-        headerShown={true}
-        title="Keuangan & SPP"
-        subtitle="Verifikasi pembayaran dan kelola tagihan siswa"
-        rightAction={
-          <TouchableOpacity
-            style={styles.headerActionButton}
-            onPress={handleOpenCreateInvoice}
-            activeOpacity={0.7}
-            accessibilityRole="button"
-            accessibilityLabel="Buat tagihan baru"
-          >
-            <Ionicons name="add" size={20} color={shadcn.foreground} />
-          </TouchableOpacity>
-        }
-      >
+      <View style={styles.container}>
+        <TopUtilityBar
+          title="Keuangan Sekolah"
+          subtitle="Verifikasi pembayaran dan kelola tagihan siswa"
+          profileName={user?.name || "Staf"}
+          onPressNotifications={() => router.push("/notifications")}
+        />
+
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
@@ -430,6 +434,28 @@ export function StaffFinanceOrAcademicScreen() {
             />
           }
         >
+          {/* 2 PastelStatCard: butter "Menunggu" & mint "Lunas" */}
+          <View style={isTablet ? styles.statsRowTablet : styles.statsRowMobile}>
+            <PastelStatCard
+              tone="butter"
+              value={String(waitingInvoices.length)}
+              label="Menunggu Verifikasi"
+              icon="hourglass-outline"
+              trendText="Perlu verifikasi"
+              onPress={() => setInvoiceFilter("WAITING")}
+              style={styles.statCardItem}
+            />
+            <PastelStatCard
+              tone="mint"
+              value={String(paidInvoices.length)}
+              label="Pembayaran Lunas"
+              icon="checkmark-circle-outline"
+              trendText="Tervalidasi"
+              onPress={() => setInvoiceFilter("PAID")}
+              style={styles.statCardItem}
+            />
+          </View>
+
           {/* Tombol Buat Tagihan Baru */}
           <Button
             title="Buat Tagihan Baru"
@@ -508,51 +534,56 @@ export function StaffFinanceOrAcademicScreen() {
                 const isPaid = inv.status === InvoiceStatus.PAID;
                 const isActionBusy = actionLoadingId === inv.id;
 
-                const getStatusBadge = () => {
+                const getStatusText = () => {
                   switch (inv.status) {
                     case InvoiceStatus.PAID:
-                      return <Badge label="Lunas" variant="success" />;
+                      return "Lunas";
                     case InvoiceStatus.WAITING_VERIFICATION:
-                      return <Badge label="Verifikasi" variant="warning" />;
+                      return "Verifikasi";
                     case InvoiceStatus.OVERDUE:
-                      return <Badge label="Terlambat" variant="destructive" />;
+                      return "Terlambat";
                     case InvoiceStatus.REJECTED:
-                      return <Badge label="Ditolak" variant="destructive" />;
+                      return "Ditolak";
                     case InvoiceStatus.UNPAID:
                     default:
-                      return <Badge label="Belum Lunas" variant="neutral" />;
+                      return "Belum Lunas";
                   }
                 };
 
+                const getStatusTone = (): "success" | "danger" | "warning" | "info" | "neutral" => {
+                  switch (inv.status) {
+                    case InvoiceStatus.PAID:
+                      return "success";
+                    case InvoiceStatus.WAITING_VERIFICATION:
+                      return "warning";
+                    case InvoiceStatus.OVERDUE:
+                    case InvoiceStatus.REJECTED:
+                      return "danger";
+                    case InvoiceStatus.UNPAID:
+                    default:
+                      return "neutral";
+                  }
+                };
+
+                const subtext = `${inv.student_name || "Siswa"}${
+                  inv.class_name ? ` • Kelas ${inv.class_name}` : ""
+                } • Tempo: ${formatTanggalId(inv.due_date, { shortMonth: true })}`;
+
                 return (
                   <Card key={inv.id} style={styles.invoiceCard}>
-                    <View style={styles.invHeaderRow}>
-                      <View style={styles.invTitleCol}>
-                        <Text style={styles.invTitle}>{inv.title}</Text>
-                        <Text style={styles.invStudentName}>
-                          {inv.student_name || "Siswa"}
-                          {inv.class_name ? ` • Kelas ${inv.class_name}` : ""}
-                        </Text>
-                      </View>
-                      <View style={styles.invBadgeCol}>{getStatusBadge()}</View>
-                    </View>
-
-                    <View style={styles.invAmountRow}>
-                      <View>
-                        <Text style={styles.invAmountLabel}>Nominal:</Text>
-                        <Text style={styles.invAmountValue}>{formatRupiah(inv.amount)}</Text>
-                      </View>
-                      <View style={styles.invDueCol}>
-                        <Text style={styles.invDueLabel}>Jatuh Tempo:</Text>
-                        <Text style={styles.invDueValue}>
-                          {formatTanggalId(inv.due_date, { shortMonth: true })}
-                        </Text>
-                      </View>
-                    </View>
+                    <DarkIconRow
+                      icon="wallet-outline"
+                      title={inv.title}
+                      subtitle={subtext}
+                      rightPrimary={formatRupiah(inv.amount)}
+                      rightSecondary={getStatusText()}
+                      rightSecondaryTone={getStatusTone()}
+                    />
 
                     {/* Informasi Bukti Pembayaran Khusus WAITING_VERIFICATION */}
                     {isWaiting && (
                       <View style={styles.verificationBox}>
+                        <Separator style={styles.verifySeparator} />
                         <View style={styles.verificationTitleRow}>
                           <Ionicons
                             name="receipt-outline"
@@ -581,8 +612,6 @@ export function StaffFinanceOrAcademicScreen() {
                             <Text style={styles.proofValue}>"{inv.proof_note}"</Text>
                           </Text>
                         )}
-
-                        <Separator style={styles.verifySeparator} />
 
                         {/* Tombol Aksi Verifikasi & Tolak */}
                         <View style={styles.verifyActionsRow}>
@@ -776,18 +805,20 @@ export function StaffFinanceOrAcademicScreen() {
             )}
           </Sheet>
         </ScrollView>
-      </Screen>
+      </View>
     );
   }
 
   // Tampilan Guru (Akademik)
   return (
-    <Screen
-      scroll={false}
-      headerShown={true}
-      title="Akademik Siswa"
-      subtitle="Kelola tugas PR kelas serta catatan nilai evaluasi"
-    >
+    <View style={styles.container}>
+      <TopUtilityBar
+        title="Akademik Siswa"
+        subtitle="Kelola tugas PR kelas serta catatan nilai evaluasi"
+        profileName={user?.name || "Staf"}
+        onPressNotifications={() => router.push("/notifications")}
+      />
+
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
@@ -844,31 +875,26 @@ export function StaffFinanceOrAcademicScreen() {
               />
             ) : (
               <Card style={styles.groupedCard}>
-                {assignments.map((item, index) => (
-                  <View key={item.id}>
-                    {index > 0 && <Separator />}
-                    <View style={styles.assignmentRow}>
-                      <View style={styles.assignHeaderRow}>
-                        <Badge label={item.subject} variant="info" />
-                        <Text style={styles.assignDueDate}>
-                          Tenggat: {formatTanggalId(item.due_date, { shortMonth: true })}
-                        </Text>
-                      </View>
-                      <Text style={styles.assignTitle}>{item.title}</Text>
-                      <Text style={styles.assignDesc}>{item.description}</Text>
-                      <View style={styles.assignFooter}>
-                        <Ionicons
-                          name="person-outline"
-                          size={14}
-                          color={shadcn.mutedForeground}
-                        />
-                        <Text style={styles.assignAuthor}>
-                          Diberikan oleh: {item.assigned_by_name || "Wali Kelas"}
-                        </Text>
-                      </View>
+                {assignments.map((item, index) => {
+                  const subtext = `${item.subject} • Tenggat: ${formatTanggalId(
+                    item.due_date,
+                    { shortMonth: true }
+                  )} • ${item.description}`;
+
+                  return (
+                    <View key={item.id}>
+                      {index > 0 && <Separator />}
+                      <DarkIconRow
+                        icon="book-outline"
+                        title={item.title}
+                        subtitle={subtext}
+                        rightPrimary={item.subject}
+                        rightSecondary="Tugas"
+                        rightSecondaryTone="info"
+                      />
                     </View>
-                  </View>
-                ))}
+                  );
+                })}
               </Card>
             )}
           </View>
@@ -931,32 +957,25 @@ export function StaffFinanceOrAcademicScreen() {
               />
             ) : (
               <Card style={styles.groupedCard}>
-                {grades.map((gr, index) => (
-                  <View key={gr.id}>
-                    {index > 0 && <Separator />}
-                    <View style={styles.gradeRow}>
-                      <View style={styles.gradeHeaderRow}>
-                        <View style={styles.gradeSubjectCol}>
-                          <Text style={styles.gradeSubject}>{gr.subject}</Text>
-                          <Text style={styles.gradeMeta}>
-                            Semester {gr.semester} • TA {gr.academic_year}
-                          </Text>
-                        </View>
-                        <View style={styles.gradeScoreBadge}>
-                          <Text style={styles.gradeScoreNumber}>{gr.score}</Text>
-                          <Text style={styles.gradeScoreLabel}>Skor</Text>
-                        </View>
-                      </View>
+                {grades.map((gr, index) => {
+                  const subtext = `Semester ${gr.semester} • TA ${gr.academic_year}${
+                    gr.notes ? ` • ${gr.notes}` : ""
+                  }`;
 
-                      {Boolean(gr.notes) && (
-                        <View style={styles.gradeNotesBox}>
-                          <Text style={styles.gradeNotesLabel}>Catatan Evaluasi:</Text>
-                          <Text style={styles.gradeNotesText}>"{gr.notes}"</Text>
-                        </View>
-                      )}
+                  return (
+                    <View key={gr.id}>
+                      {index > 0 && <Separator />}
+                      <DarkIconRow
+                        icon="ribbon-outline"
+                        title={gr.subject}
+                        subtitle={subtext}
+                        rightPrimary={String(gr.score)}
+                        rightSecondary="Skor"
+                        rightSecondaryTone="success"
+                      />
                     </View>
-                  </View>
-                ))}
+                  );
+                })}
               </Card>
             )}
           </View>
@@ -1094,27 +1113,35 @@ export function StaffFinanceOrAcademicScreen() {
           </View>
         </Sheet>
       </ScrollView>
-    </Screen>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  headerActionButton: {
-    width: touchTarget.minWidth,
-    height: touchTarget.minHeight,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: shadcn.border,
+  container: {
+    flex: 1,
     backgroundColor: shadcn.background,
   },
   scrollContent: {
     padding: spacing.lg,
     paddingBottom: spacing.max,
   },
+  statsRowTablet: {
+    flexDirection: "row",
+    gap: spacing.md,
+    marginBottom: spacing.md,
+  },
+  statsRowMobile: {
+    flexDirection: "column",
+    gap: spacing.sm,
+    marginBottom: spacing.md,
+  },
+  statCardItem: {
+    flex: 1,
+  },
   actionBtnTop: {
     marginBottom: spacing.md,
+    minHeight: touchTarget.minHeight,
   },
   filterChipsRow: {
     paddingVertical: spacing.xs,
@@ -1150,320 +1177,149 @@ const styles = StyleSheet.create({
   },
   choiceChipTextSelected: {
     color: shadcn.primaryForeground,
-    fontWeight: typography.weight.semibold,
   },
   choiceChipTextUnselected: {
     color: shadcn.foreground,
   },
   invoicesList: {
-    marginBottom: spacing.md,
+    gap: spacing.md,
   },
   invoiceCard: {
-    padding: spacing.md,
     backgroundColor: shadcn.card,
-    borderColor: shadcn.border,
-    marginBottom: spacing.md,
-  },
-  invHeaderRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    marginBottom: spacing.sm,
-  },
-  invTitleCol: {
-    flex: 1,
-    marginRight: spacing.sm,
-  },
-  invTitle: {
-    fontSize: typography.size.sm,
-    fontWeight: typography.weight.semibold,
-    color: shadcn.foreground,
-  },
-  invStudentName: {
-    fontSize: typography.size.xs,
-    color: shadcn.mutedForeground,
-    marginTop: 2,
-  },
-  invBadgeCol: {
-    alignItems: "flex-end",
-  },
-  invAmountRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-end",
-    backgroundColor: shadcn.secondary,
+    borderRadius: radius.xl,
     padding: spacing.md,
-    borderRadius: radius.md,
     borderWidth: 1,
     borderColor: shadcn.border,
-    marginBottom: spacing.sm,
-  },
-  invAmountLabel: {
-    fontSize: 11,
-    color: shadcn.mutedForeground,
-    marginBottom: 2,
-  },
-  invAmountValue: {
-    fontSize: typography.size.base,
-    fontWeight: typography.weight.bold,
-    color: shadcn.foreground,
-    fontVariant: ["tabular-nums"],
-  },
-  invDueCol: {
-    alignItems: "flex-end",
-  },
-  invDueLabel: {
-    fontSize: 11,
-    color: shadcn.mutedForeground,
-    marginBottom: 2,
-  },
-  invDueValue: {
-    fontSize: typography.size.xs,
-    fontWeight: typography.weight.medium,
-    color: shadcn.foreground,
-    fontVariant: ["tabular-nums"],
   },
   verificationBox: {
-    backgroundColor: shadcn.secondary,
-    borderColor: shadcn.border,
-    borderWidth: 1,
-    padding: spacing.md,
-    borderRadius: radius.md,
     marginTop: spacing.xs,
+  },
+  verifySeparator: {
+    marginBottom: spacing.sm,
   },
   verificationTitleRow: {
     flexDirection: "row",
     alignItems: "center",
+    gap: spacing.xs,
     marginBottom: spacing.xs,
   },
   verificationBoxTitle: {
     fontSize: typography.size.xs,
     fontWeight: typography.weight.semibold,
     color: shadcn.status.warning.text,
-    marginLeft: spacing.xs,
   },
   proofField: {
     fontSize: typography.size.xs,
     color: shadcn.mutedForeground,
-    marginTop: 2,
+    marginBottom: 2,
   },
   proofValue: {
-    fontWeight: typography.weight.medium,
     color: shadcn.foreground,
-  },
-  verifySeparator: {
-    marginVertical: spacing.sm,
+    fontWeight: typography.weight.medium,
   },
   verifyActionsRow: {
     flexDirection: "row",
-    justifyContent: "flex-end",
-    alignItems: "center",
+    gap: spacing.sm,
+    marginTop: spacing.sm,
   },
   rejectBtn: {
-    marginRight: spacing.sm,
+    flex: 1,
     minHeight: touchTarget.minHeight,
   },
   approveBtn: {
+    flex: 1,
     minHeight: touchTarget.minHeight,
   },
   receiptBox: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: shadcn.status.success.bg,
-    borderWidth: 1,
-    borderColor: shadcn.status.success.border,
-    padding: spacing.sm,
-    borderRadius: radius.md,
-    marginTop: spacing.xs,
+    gap: spacing.xs,
+    marginTop: spacing.sm,
+    paddingTop: spacing.xs,
+    borderTopWidth: 1,
+    borderTopColor: shadcn.border,
   },
   receiptNoText: {
     fontSize: typography.size.xs,
-    fontWeight: typography.weight.semibold,
     color: shadcn.status.success.text,
-    marginLeft: spacing.xs,
+    fontWeight: typography.weight.medium,
     fontVariant: ["tabular-nums"],
   },
   groupedCard: {
-    padding: 0,
     backgroundColor: shadcn.card,
+    borderRadius: radius.xxl,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    borderWidth: 1,
     borderColor: shadcn.border,
-    overflow: "hidden",
-    marginBottom: spacing.md,
   },
-  assignmentRow: {
-    padding: spacing.md,
-  },
-  assignHeaderRow: {
+  inputDoubleRow: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: spacing.xs,
+    gap: spacing.sm,
   },
-  assignDueDate: {
-    fontSize: 11,
-    color: shadcn.mutedForeground,
-    fontVariant: ["tabular-nums"],
-  },
-  assignTitle: {
-    fontSize: typography.size.sm,
-    fontWeight: typography.weight.semibold,
-    color: shadcn.foreground,
-    marginBottom: spacing.xs,
-  },
-  assignDesc: {
-    fontSize: typography.size.xs,
-    color: shadcn.mutedForeground,
-    lineHeight: typography.lineHeight.sm,
-    marginBottom: spacing.sm,
-  },
-  assignFooter: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  assignAuthor: {
-    fontSize: 11,
-    color: shadcn.mutedForeground,
-    marginLeft: spacing.xs,
-  },
-  gradeRow: {
-    padding: spacing.md,
-  },
-  gradeHeaderRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  gradeSubjectCol: {
+  inputDoubleCol: {
     flex: 1,
   },
-  gradeSubject: {
-    fontSize: typography.size.sm,
-    fontWeight: typography.weight.semibold,
-    color: shadcn.foreground,
-  },
-  gradeMeta: {
-    fontSize: typography.size.xs,
-    color: shadcn.mutedForeground,
-    marginTop: 2,
-    fontVariant: ["tabular-nums"],
-  },
-  gradeScoreBadge: {
-    alignItems: "center",
-    justifyContent: "center",
-    width: 48,
-    height: 48,
-    borderRadius: radius.md,
-    backgroundColor: shadcn.secondary,
-    borderWidth: 1,
-    borderColor: shadcn.border,
-  },
-  gradeScoreNumber: {
-    fontSize: typography.size.lg,
-    fontWeight: typography.weight.bold,
-    color: shadcn.foreground,
-    fontVariant: ["tabular-nums"],
-  },
-  gradeScoreLabel: {
-    fontSize: 9,
-    fontWeight: typography.weight.medium,
-    color: shadcn.mutedForeground,
-  },
-  gradeNotesBox: {
-    backgroundColor: shadcn.secondary,
-    padding: spacing.sm,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: shadcn.border,
-    marginTop: spacing.sm,
-  },
-  gradeNotesLabel: {
-    fontSize: 10,
-    fontWeight: typography.weight.medium,
-    color: shadcn.mutedForeground,
-    marginBottom: 1,
-  },
-  gradeNotesText: {
-    fontSize: typography.size.xs,
-    color: shadcn.foreground,
-    fontStyle: "italic",
-  },
   sheetBody: {
-    paddingVertical: spacing.xs,
+    paddingTop: spacing.xs,
+    gap: spacing.sm,
   },
   formErrorBox: {
     flexDirection: "row",
     alignItems: "center",
+    gap: spacing.xs,
     backgroundColor: shadcn.status.danger.bg,
-    borderWidth: 1,
-    borderColor: shadcn.status.danger.border,
     padding: spacing.sm,
     borderRadius: radius.md,
-    marginBottom: spacing.md,
+    marginBottom: spacing.xs,
   },
   formErrorText: {
-    fontSize: typography.size.xs,
     color: shadcn.status.danger.text,
-    marginLeft: spacing.xs,
+    fontSize: typography.size.xs,
     flex: 1,
   },
   sheetSubmitBtn: {
     marginTop: spacing.md,
-    width: "100%",
     minHeight: touchTarget.minHeight,
-  },
-  inputDoubleRow: {
-    flexDirection: "row",
-  },
-  inputDoubleCol: {
-    flex: 1,
-    marginRight: spacing.sm,
   },
   receiptSheetBody: {
     alignItems: "center",
-    paddingVertical: spacing.md,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.md,
   },
   receiptIconCircle: {
     width: 56,
     height: 56,
     borderRadius: radius.full,
-    backgroundColor: shadcn.secondary,
-    borderWidth: 1,
-    borderColor: shadcn.border,
+    backgroundColor: shadcn.status.success.bg,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: spacing.md,
   },
   receiptSheetTitle: {
     fontSize: typography.size.base,
-    fontWeight: typography.weight.semibold,
+    fontWeight: typography.weight.bold,
     color: shadcn.foreground,
     textAlign: "center",
+    marginBottom: spacing.xs,
   },
   receiptSheetSub: {
     fontSize: typography.size.xs,
     color: shadcn.mutedForeground,
     textAlign: "center",
-    marginTop: spacing.xs,
     marginBottom: spacing.lg,
   },
   receiptDetailCard: {
     width: "100%",
     backgroundColor: shadcn.secondary,
+    borderRadius: radius.lg,
     padding: spacing.md,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: shadcn.border,
     marginBottom: spacing.lg,
   },
   receiptLabel: {
     fontSize: 11,
     color: shadcn.mutedForeground,
-    marginTop: spacing.xs,
-  },
-  receiptValue: {
-    fontSize: typography.size.sm,
-    fontWeight: typography.weight.medium,
-    color: shadcn.foreground,
+    marginBottom: 2,
   },
   receiptValueHighlight: {
     fontSize: typography.size.base,
@@ -1473,5 +1329,12 @@ const styles = StyleSheet.create({
   },
   receiptDivider: {
     marginVertical: spacing.sm,
+  },
+  receiptValue: {
+    fontSize: typography.size.sm,
+    fontWeight: typography.weight.semibold,
+    color: shadcn.foreground,
+    marginBottom: spacing.xs,
+    fontVariant: ["tabular-nums"],
   },
 });

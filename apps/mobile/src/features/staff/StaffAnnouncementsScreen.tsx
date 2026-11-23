@@ -16,10 +16,12 @@ import {
   Role,
   formatTanggalId,
 } from "@neoschola/shared";
+import { useRouter } from "expo-router";
 import {
-  Screen,
+  TopUtilityBar,
+  DarkActionCard,
+  DarkIconRow,
   Card,
-  Badge,
   Chip,
   Button,
   Input,
@@ -31,9 +33,16 @@ import {
 } from "../../components/ui";
 import { useAuth } from "../../store/auth";
 import * as api from "../../lib/api";
-import { shadcn, spacing, radius, typography, touchTarget } from "../../theme/tokens";
+import {
+  radius,
+  shadcn,
+  spacing,
+  touchTarget,
+  typography,
+} from "../../theme/tokens";
 
 export function StaffAnnouncementsScreen() {
+  const router = useRouter();
   const { user, classes } = useAuth();
   const isAdmin = user?.role === Role.ADMIN;
 
@@ -44,6 +53,9 @@ export function StaffAnnouncementsScreen() {
 
   // Filter Kategori
   const [selectedCategory, setSelectedCategory] = useState<string>("ALL");
+
+  // Detail Modal
+  const [selectedAnnouncement, setSelectedAnnouncement] = useState<Announcement | null>(null);
 
   // Modal Buat Pengumuman
   const [modalVisible, setModalVisible] = useState<boolean>(false);
@@ -161,38 +173,45 @@ export function StaffAnnouncementsScreen() {
     return item.category === selectedCategory;
   });
 
-  const getCategoryBadgeVariant = (cat: AnnouncementCategory) => {
+  const getCategoryIcon = (cat: AnnouncementCategory): keyof typeof Ionicons.glyphMap => {
     switch (cat) {
       case AnnouncementCategory.DARURAT:
-        return "destructive";
+        return "alert-circle-outline";
+      case AnnouncementCategory.KEGIATAN:
+        return "calendar-outline";
+      case AnnouncementCategory.KELAS:
+        return "book-outline";
+      case AnnouncementCategory.SEKOLAH:
+      default:
+        return "megaphone-outline";
+    }
+  };
+
+  const getCategoryTone = (
+    cat: AnnouncementCategory
+  ): "danger" | "warning" | "info" | "neutral" => {
+    switch (cat) {
+      case AnnouncementCategory.DARURAT:
+        return "danger";
       case AnnouncementCategory.KEGIATAN:
         return "warning";
       case AnnouncementCategory.KELAS:
         return "info";
       case AnnouncementCategory.SEKOLAH:
       default:
-        return "secondary";
+        return "neutral";
     }
   };
 
   return (
-    <Screen
-      scroll={false}
-      headerShown={true}
-      title="Info & Pengumuman"
-      subtitle="Publikasi maklumat penting bagi warga sekolah"
-      rightAction={
-        <TouchableOpacity
-          style={styles.createHeaderButton}
-          onPress={handleOpenCreateModal}
-          activeOpacity={0.7}
-          accessibilityRole="button"
-          accessibilityLabel="Buat pengumuman baru"
-        >
-          <Ionicons name="add" size={20} color={shadcn.foreground} />
-        </TouchableOpacity>
-      }
-    >
+    <View style={styles.container}>
+      <TopUtilityBar
+        title="Pengumuman"
+        subtitle="Publikasi maklumat penting bagi warga sekolah"
+        profileName={user?.name || "Staf"}
+        onPressNotifications={() => router.push("/notifications")}
+      />
+
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
@@ -205,14 +224,14 @@ export function StaffAnnouncementsScreen() {
           />
         }
       >
-        {/* Tombol Buat Pengumuman Utama */}
-        <Button
+        {/* DarkActionCard CTA Buat Pengumuman */}
+        <DarkActionCard
+          eyebrow="Publikasi"
           title="Buat Pengumuman Baru"
+          description="Siarkan informasi kegiatan, libur, atau maklumat darurat kepada seluruh wali murid dan siswa binaan."
+          ctaLabel="Tulis Pengumuman"
           onPress={handleOpenCreateModal}
-          variant="default"
-          accessibilityLabel="Buat Pengumuman Baru Sekolah"
-          leftIcon={<Ionicons name="megaphone-outline" size={18} color={shadcn.primaryForeground} />}
-          style={styles.topCreateButton}
+          style={styles.actionCardMargin}
         />
 
         {/* Filter Chip Kategori */}
@@ -274,91 +293,77 @@ export function StaffAnnouncementsScreen() {
             message="Belum ada pengumuman yang diterbitkan untuk kategori ini."
           />
         ) : (
-          <View style={styles.announcementsList}>
-            {filteredAnnouncements.map((item) => {
-              const isDarurat = item.category === AnnouncementCategory.DARURAT;
-
-              if (isDarurat) {
-                return (
-                  <Card key={item.id} style={styles.announcementCard}>
-                    <View style={styles.cardHeader}>
-                      <View style={styles.badgeGroup}>
-                        {item.is_pinned && (
-                          <View style={styles.pinnedBadge}>
-                            <Ionicons name="pin" size={12} color={shadcn.status.warning.text} />
-                            <Text style={styles.pinnedText}>Disematkan</Text>
-                          </View>
-                        )}
-                        <Badge label="Darurat" variant="destructive" />
-                      </View>
-                      <Text style={styles.dateText}>
-                        {formatTanggalId(item.created_at, { shortMonth: true })}
-                      </Text>
-                    </View>
-
-                    <Alert
-                      variant="destructive"
-                      title={item.title}
-                      description={item.content}
-                      style={styles.alertEmergency}
-                    />
-
-                    <Separator style={styles.footerSeparator} />
-                    <View style={styles.cardFooter}>
-                      <Ionicons name="person-circle-outline" size={16} color={shadcn.mutedForeground} />
-                      <Text style={styles.authorText}>
-                        Oleh: {item.created_by_name || "Staf Sekolah"}
-                      </Text>
-                    </View>
-                  </Card>
-                );
-              }
+          <Card style={styles.announcementsContainer}>
+            {filteredAnnouncements.map((item, index) => {
+              const formattedDate = formatTanggalId(item.created_at, { shortMonth: true });
+              const subtext = `${item.created_by_name || "Staf Sekolah"}${
+                item.class_name ? ` • Kelas ${item.class_name}` : ""
+              } • ${item.content}`;
 
               return (
-                <Card key={item.id} style={styles.announcementCard}>
-                  {/* Header Kartu Pengumuman */}
-                  <View style={styles.cardHeader}>
-                    <View style={styles.badgeGroup}>
-                      {item.is_pinned && (
-                        <View style={styles.pinnedBadge}>
-                          <Ionicons name="pin" size={12} color={shadcn.status.warning.text} />
-                          <Text style={styles.pinnedText}>Disematkan</Text>
-                        </View>
-                      )}
-                      <Badge
-                        label={item.category}
-                        variant={getCategoryBadgeVariant(item.category)}
-                      />
-                      {Boolean(item.class_name) && (
-                        <Badge
-                          label={`Kelas ${item.class_name}`}
-                          variant="outline"
-                          style={styles.classBadge}
-                        />
-                      )}
-                    </View>
-                    <Text style={styles.dateText}>
-                      {formatTanggalId(item.created_at, { shortMonth: true })}
-                    </Text>
-                  </View>
-
-                  {/* Judul & Isi */}
-                  <Text style={styles.announcementTitle}>{item.title}</Text>
-                  <Text style={styles.announcementContent}>{item.content}</Text>
-
-                  {/* Footer Pembuat */}
-                  <Separator style={styles.footerSeparator} />
-                  <View style={styles.cardFooter}>
-                    <Ionicons name="person-circle-outline" size={16} color={shadcn.mutedForeground} />
-                    <Text style={styles.authorText}>
-                      Oleh: {item.created_by_name || "Staf Sekolah"}
-                    </Text>
-                  </View>
-                </Card>
+                <View key={item.id}>
+                  {index > 0 && <Separator />}
+                  <DarkIconRow
+                    icon={getCategoryIcon(item.category)}
+                    title={item.title}
+                    subtitle={subtext}
+                    rightPrimary={item.category}
+                    rightSecondary={formattedDate}
+                    rightSecondaryTone={getCategoryTone(item.category)}
+                    onPress={() => setSelectedAnnouncement(item)}
+                    accessibilityLabel={`Baca detail pengumuman ${item.title}`}
+                  />
+                </View>
               );
             })}
-          </View>
+          </Card>
         )}
+
+        {/* Sheet Detail Pengumuman */}
+        <Sheet
+          visible={Boolean(selectedAnnouncement)}
+          onClose={() => setSelectedAnnouncement(null)}
+          title="Rincian Pengumuman"
+        >
+          {selectedAnnouncement && (
+            <View style={styles.sheetDetailBody}>
+              <View style={styles.sheetDetailMetaRow}>
+                <Text style={styles.sheetDetailCategory}>
+                  {selectedAnnouncement.category}
+                  {selectedAnnouncement.class_name ? ` • Kelas ${selectedAnnouncement.class_name}` : ""}
+                </Text>
+                <Text style={styles.sheetDetailDate}>
+                  {formatTanggalId(selectedAnnouncement.created_at, { includeDay: true })}
+                </Text>
+              </View>
+
+              <Text style={styles.sheetDetailTitle}>
+                {selectedAnnouncement.title}
+              </Text>
+
+              <Separator style={styles.sheetDivider} />
+
+              <Text style={styles.sheetDetailContent}>
+                {selectedAnnouncement.content}
+              </Text>
+
+              <View style={styles.sheetDetailFooter}>
+                <Ionicons name="person-circle-outline" size={16} color={shadcn.mutedForeground} />
+                <Text style={styles.sheetDetailAuthor}>
+                  Diterbitkan oleh: {selectedAnnouncement.created_by_name || "Staf Sekolah"}
+                </Text>
+              </View>
+
+              <Button
+                title="Tutup"
+                onPress={() => setSelectedAnnouncement(null)}
+                variant="outline"
+                accessibilityLabel="Tutup dialog rincian pengumuman"
+                style={styles.sheetCloseBtn}
+              />
+            </View>
+          )}
+        </Sheet>
 
         {/* Sheet Form Buat Pengumuman */}
         <Sheet
@@ -414,9 +419,7 @@ export function StaffAnnouncementsScreen() {
                     <Text
                       style={[
                         styles.choiceChipText,
-                        isSelected
-                          ? styles.choiceChipTextSelected
-                          : styles.choiceChipTextUnselected,
+                        isSelected ? styles.choiceChipTextSelected : styles.choiceChipTextUnselected,
                       ]}
                     >
                       {cat}
@@ -426,200 +429,159 @@ export function StaffAnnouncementsScreen() {
               })}
             </View>
 
-            {/* Pilihan Sasaran Kelas */}
-            <Label>Sasaran Penerima</Label>
-            <View style={styles.optionsWrap}>
-              <TouchableOpacity
-                style={[
-                  styles.choiceChip,
-                  targetClassId === null
-                    ? styles.choiceChipSelected
-                    : styles.choiceChipUnselected,
-                ]}
-                onPress={() => setTargetClassId(null)}
-                activeOpacity={0.7}
-                accessibilityRole="button"
-                accessibilityLabel="Sasaran seluruh sekolah"
-              >
-                <Text
-                  style={[
-                    styles.choiceChipText,
-                    targetClassId === null
-                      ? styles.choiceChipTextSelected
-                      : styles.choiceChipTextUnselected,
-                  ]}
+            {/* Target Kelas Khusus Kategori KELAS */}
+            {category === AnnouncementCategory.KELAS && (
+              <View style={styles.classTargetSection}>
+                <Label>Pilih Rombongan Belajar (Target Kelas)</Label>
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.classChipsScroll}
                 >
-                  Semua Kelas (Global)
-                </Text>
-              </TouchableOpacity>
+                  {availableClasses.map((cls) => {
+                    const isSelected = targetClassId === cls.id;
+                    return (
+                      <TouchableOpacity
+                        key={cls.id}
+                        style={[
+                          styles.choiceChip,
+                          isSelected ? styles.choiceChipSelected : styles.choiceChipUnselected,
+                        ]}
+                        onPress={() => setTargetClassId(isSelected ? null : cls.id)}
+                        activeOpacity={0.7}
+                        accessibilityRole="button"
+                        accessibilityLabel={`Target rombel ${cls.name}`}
+                      >
+                        <Text
+                          style={[
+                            styles.choiceChipText,
+                            isSelected
+                              ? styles.choiceChipTextSelected
+                              : styles.choiceChipTextUnselected,
+                          ]}
+                        >
+                          {cls.name}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </ScrollView>
+              </View>
+            )}
 
-              {availableClasses.map((cls) => {
-                const isSelected = targetClassId === cls.id;
-                return (
-                  <TouchableOpacity
-                    key={cls.id}
-                    style={[
-                      styles.choiceChip,
-                      isSelected ? styles.choiceChipSelected : styles.choiceChipUnselected,
-                    ]}
-                    onPress={() => setTargetClassId(cls.id)}
-                    activeOpacity={0.7}
-                    accessibilityRole="button"
-                    accessibilityLabel={`Sasaran rombel ${cls.name}`}
-                  >
-                    <Text
-                      style={[
-                        styles.choiceChipText,
-                        isSelected
-                          ? styles.choiceChipTextSelected
-                          : styles.choiceChipTextUnselected,
-                      ]}
-                    >
-                      {cls.name}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-
-            {/* Toggle Sematkan (Pinned) */}
+            {/* Opsi Sematkan / Pin Pengumuman */}
             <View style={styles.switchRow}>
               <View style={styles.switchTextCol}>
-                <Text style={styles.switchTitle}>Sematkan Pengumuman</Text>
-                <Text style={styles.switchSubtitle}>
-                  Tampilkan di posisi teratas halaman pengumuman
+                <Text style={styles.switchTitle}>Sematkan di Atas (Pin)</Text>
+                <Text style={styles.switchDescription}>
+                  Tampilkan pengumuman ini di posisi paling atas
                 </Text>
               </View>
               <Switch
                 value={isPinned}
                 onValueChange={setIsPinned}
                 trackColor={{ false: shadcn.secondary, true: shadcn.primary }}
-                thumbColor={isPinned ? shadcn.primaryForeground : shadcn.background}
-                accessibilityLabel="Toggle sematkan pengumuman di atas"
+                thumbColor={shadcn.primaryForeground}
+                accessibilityLabel="Opsi sematkan pengumuman"
               />
             </View>
 
-            {/* Tombol Simpan */}
             <Button
               title={submitting ? "Menerbitkan..." : "Terbitkan Pengumuman"}
               onPress={handleCreateAnnouncement}
               variant="default"
               loading={submitting}
-              accessibilityLabel="Konfirmasi terbitkan pengumuman"
+              accessibilityLabel="Konfirmasi terbitkan pengumuman baru"
               style={styles.sheetSubmitButton}
             />
           </View>
         </Sheet>
       </ScrollView>
-    </Screen>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  createHeaderButton: {
-    width: touchTarget.minWidth,
-    height: touchTarget.minHeight,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: shadcn.border,
+  container: {
+    flex: 1,
     backgroundColor: shadcn.background,
   },
   scrollContent: {
     padding: spacing.lg,
     paddingBottom: spacing.max,
   },
-  topCreateButton: {
+  actionCardMargin: {
     marginBottom: spacing.md,
   },
   filterScroll: {
     paddingVertical: spacing.xs,
     marginBottom: spacing.md,
   },
-  announcementsList: {
-    marginBottom: spacing.md,
-  },
-  announcementCard: {
-    padding: spacing.md,
+  announcementsContainer: {
     backgroundColor: shadcn.card,
+    borderRadius: radius.xxl,
+    borderWidth: 1,
     borderColor: shadcn.border,
-    marginBottom: spacing.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
   },
-  cardHeader: {
+  sheetDetailBody: {
+    paddingTop: spacing.xs,
+    gap: spacing.sm,
+  },
+  sheetDetailMetaRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: spacing.sm,
   },
-  badgeGroup: {
-    flexDirection: "row",
-    alignItems: "center",
-    flexWrap: "wrap",
-  },
-  pinnedBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: shadcn.status.warning.bg,
-    borderWidth: 1,
-    borderColor: shadcn.status.warning.border,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 2,
-    borderRadius: radius.full,
-    marginRight: spacing.xs,
-  },
-  pinnedText: {
-    fontSize: 10,
+  sheetDetailCategory: {
+    fontSize: typography.size.xs,
     fontWeight: typography.weight.semibold,
-    color: shadcn.status.warning.text,
-    marginLeft: 2,
+    color: shadcn.status.info.text,
   },
-  classBadge: {
-    marginLeft: spacing.xs,
-  },
-  dateText: {
+  sheetDetailDate: {
     fontSize: 11,
     color: shadcn.mutedForeground,
-    fontVariant: ["tabular-nums"],
   },
-  announcementTitle: {
-    fontSize: typography.size.sm,
-    fontWeight: typography.weight.semibold,
+  sheetDetailTitle: {
+    fontSize: typography.size.lg,
+    fontWeight: typography.weight.bold,
     color: shadcn.foreground,
-    marginBottom: spacing.xs,
   },
-  announcementContent: {
+  sheetDivider: {
+    marginVertical: spacing.xs,
+  },
+  sheetDetailContent: {
     fontSize: typography.size.sm,
-    color: shadcn.mutedForeground,
-    lineHeight: typography.lineHeight.base,
-    marginBottom: spacing.sm,
+    color: shadcn.foreground,
+    lineHeight: 22,
   },
-  alertEmergency: {
-    marginBottom: spacing.sm,
-  },
-  footerSeparator: {
-    marginBottom: spacing.xs,
-  },
-  cardFooter: {
+  sheetDetailFooter: {
     flexDirection: "row",
     alignItems: "center",
-    paddingTop: spacing.xs,
+    gap: spacing.xs,
+    marginTop: spacing.xs,
   },
-  authorText: {
+  sheetDetailAuthor: {
     fontSize: 11,
     color: shadcn.mutedForeground,
-    marginLeft: spacing.xs,
+  },
+  sheetCloseBtn: {
+    marginTop: spacing.md,
+    minHeight: touchTarget.minHeight,
   },
   sheetBody: {
-    paddingVertical: spacing.xs,
+    paddingTop: spacing.xs,
+    gap: spacing.sm,
   },
   sheetErrorAlert: {
-    marginBottom: spacing.md,
+    marginBottom: spacing.xs,
   },
   optionsWrap: {
     flexDirection: "row",
     flexWrap: "wrap",
-    marginBottom: spacing.md,
+    gap: spacing.xs,
+    marginBottom: spacing.xs,
   },
   choiceChip: {
     minHeight: touchTarget.minHeight,
@@ -629,7 +591,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     marginRight: spacing.xs,
-    marginBottom: spacing.xs,
   },
   choiceChipSelected: {
     backgroundColor: shadcn.primary,
@@ -645,20 +606,22 @@ const styles = StyleSheet.create({
   },
   choiceChipTextSelected: {
     color: shadcn.primaryForeground,
-    fontWeight: typography.weight.semibold,
   },
   choiceChipTextUnselected: {
     color: shadcn.foreground,
+  },
+  classTargetSection: {
+    marginTop: spacing.xs,
+  },
+  classChipsScroll: {
+    paddingVertical: spacing.xs,
   },
   switchRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     paddingVertical: spacing.sm,
-    marginBottom: spacing.lg,
-    borderTopWidth: 1,
-    borderBottomWidth: 1,
-    borderColor: shadcn.border,
+    marginTop: spacing.xs,
   },
   switchTextCol: {
     flex: 1,
@@ -669,14 +632,12 @@ const styles = StyleSheet.create({
     fontWeight: typography.weight.medium,
     color: shadcn.foreground,
   },
-  switchSubtitle: {
+  switchDescription: {
     fontSize: typography.size.xs,
     color: shadcn.mutedForeground,
-    marginTop: 2,
   },
   sheetSubmitButton: {
-    marginTop: spacing.sm,
-    width: "100%",
+    marginTop: spacing.md,
     minHeight: touchTarget.minHeight,
   },
 });

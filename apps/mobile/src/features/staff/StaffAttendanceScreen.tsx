@@ -7,6 +7,7 @@ import {
   ScrollView,
   RefreshControl,
   Alert as NativeAlert,
+  useWindowDimensions,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import {
@@ -14,21 +15,29 @@ import {
   Role,
   formatTanggalId,
 } from "@neoschola/shared";
+import { useRouter } from "expo-router";
 import {
-  Screen,
+  TopUtilityBar,
+  PastelStatCard,
   Card,
-  Badge,
   Button,
   Input,
   StateView,
   Avatar,
-  Separator,
   Alert,
 } from "../../components/ui";
 import { useAuth } from "../../store/auth";
 import * as api from "../../lib/api";
 import type { ClassAttendanceItem } from "../../lib/api";
-import { shadcn, spacing, radius, typography, touchTarget } from "../../theme/tokens";
+import {
+  bento,
+  breakpoints,
+  radius,
+  shadcn,
+  spacing,
+  touchTarget,
+  typography,
+} from "../../theme/tokens";
 
 interface ClassOption {
   id: string;
@@ -36,6 +45,10 @@ interface ClassOption {
 }
 
 export function StaffAttendanceScreen() {
+  const router = useRouter();
+  const { width } = useWindowDimensions();
+  const isTablet = width >= breakpoints.tablet;
+
   const { user, classes } = useAuth();
   const isAdmin = user?.role === Role.ADMIN;
 
@@ -191,12 +204,14 @@ export function StaffAttendanceScreen() {
   );
 
   return (
-    <Screen
-      scroll={false}
-      headerShown={true}
-      title="Presensi Kelas"
-      subtitle="Input dan perbarui kehadiran peserta didik"
-    >
+    <View style={styles.container}>
+      <TopUtilityBar
+        title="Presensi Kelas"
+        subtitle="Input dan perbarui kehadiran peserta didik"
+        profileName={user?.name || "Staf"}
+        onPressNotifications={() => router.push("/notifications")}
+      />
+
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
@@ -210,6 +225,37 @@ export function StaffAttendanceScreen() {
           />
         }
       >
+        {/* Strip 3 PastelStatCard Ringkas */}
+        <View style={isTablet ? styles.statsRowTablet : styles.statsRowMobile}>
+          <PastelStatCard
+            tone="mint"
+            value={String(summaryCounts[AttendanceStatus.HADIR])}
+            label="Hadir"
+            icon="checkmark-circle-outline"
+            trendText="Tepat waktu"
+            style={styles.statCardItem}
+          />
+          <PastelStatCard
+            tone="butter"
+            value={String(summaryCounts[AttendanceStatus.SAKIT])}
+            label="Sakit"
+            icon="medkit-outline"
+            trendText="Perlu istirahat"
+            style={styles.statCardItem}
+          />
+          <PastelStatCard
+            tone="iceBlue"
+            value={String(
+              summaryCounts[AttendanceStatus.IZIN] +
+                summaryCounts[AttendanceStatus.ALPA]
+            )}
+            label="Izin & Alpa"
+            icon="alert-circle-outline"
+            trendText={`${summaryCounts[AttendanceStatus.IZIN]} Izin / ${summaryCounts[AttendanceStatus.ALPA]} Alpa`}
+            style={styles.statCardItem}
+          />
+        </View>
+
         {/* Kontrol Kelas & Tanggal */}
         <Card style={styles.controlCard}>
           <Text style={styles.controlLabel}>Pilih Rombel / Kelas:</Text>
@@ -268,9 +314,21 @@ export function StaffAttendanceScreen() {
             />
           </View>
 
-          <Text style={styles.formattedDateInfo}>
-            {formatTanggalId(selectedDate, { includeDay: true })}
-          </Text>
+          <View style={styles.dateActionRow}>
+            <Text style={styles.formattedDateInfo}>
+              {formatTanggalId(selectedDate, { includeDay: true })}
+            </Text>
+            {items.length > 0 && !loading && (
+              <Button
+                title="Semua Hadir"
+                variant="outline"
+                size="sm"
+                onPress={handleMarkAllHadir}
+                accessibilityLabel="Tandai semua siswa hadir"
+                leftIcon={<Ionicons name="checkmark-done" size={16} color={shadcn.foreground} />}
+              />
+            )}
+          </View>
         </Card>
 
         {/* Banner Sukses */}
@@ -281,47 +339,6 @@ export function StaffAttendanceScreen() {
             description={successBanner!}
             style={styles.alertBanner}
           />
-        )}
-
-        {/* Bar Ringkasan & Tindakan Cepat */}
-        {items.length > 0 && !loading && (
-          <Card style={styles.summaryCard}>
-            <View style={styles.summaryCounters}>
-              <View style={styles.counterItem}>
-                <Text style={[styles.counterNumber, { color: shadcn.status.success.text }]}>
-                  {summaryCounts[AttendanceStatus.HADIR]}
-                </Text>
-                <Text style={styles.counterLabel}>Hadir</Text>
-              </View>
-              <View style={styles.counterItem}>
-                <Text style={[styles.counterNumber, { color: shadcn.status.warning.text }]}>
-                  {summaryCounts[AttendanceStatus.SAKIT]}
-                </Text>
-                <Text style={styles.counterLabel}>Sakit</Text>
-              </View>
-              <View style={styles.counterItem}>
-                <Text style={[styles.counterNumber, { color: shadcn.status.info.text }]}>
-                  {summaryCounts[AttendanceStatus.IZIN]}
-                </Text>
-                <Text style={styles.counterLabel}>Izin</Text>
-              </View>
-              <View style={styles.counterItem}>
-                <Text style={[styles.counterNumber, { color: shadcn.status.danger.text }]}>
-                  {summaryCounts[AttendanceStatus.ALPA]}
-                </Text>
-                <Text style={styles.counterLabel}>Alpa</Text>
-              </View>
-            </View>
-
-            <Button
-              title="Semua Hadir"
-              variant="outline"
-              size="sm"
-              onPress={handleMarkAllHadir}
-              accessibilityLabel="Tandai semua siswa hadir"
-              leftIcon={<Ionicons name="checkmark-done" size={16} color={shadcn.foreground} />}
-            />
-          </Card>
         )}
 
         {/* State Loading / Error / Empty */}
@@ -343,226 +360,237 @@ export function StaffAttendanceScreen() {
           />
         ) : (
           <View style={styles.studentsWrapper}>
-            <Card style={styles.studentsCard}>
-              {items.map((student, index) => {
-                const currentStatus =
-                  attendanceMap[student.student_id]?.status || AttendanceStatus.HADIR;
-                const currentNotes = attendanceMap[student.student_id]?.notes || "";
+            {items.map((student) => {
+              const currentStatus =
+                attendanceMap[student.student_id]?.status || AttendanceStatus.HADIR;
+              const currentNotes = attendanceMap[student.student_id]?.notes || "";
 
-                return (
-                  <View key={student.student_id}>
-                    {index > 0 && <Separator />}
-                    <View style={styles.studentItem}>
-                      <View style={styles.studentHeader}>
-                        <Avatar name={student.student_name} size="sm" style={styles.studentAvatar} />
-                        <View style={styles.studentInfoCol}>
-                          <Text style={styles.studentName}>{student.student_name}</Text>
-                          <Text style={styles.studentNis}>NIS: {student.nis}</Text>
-                        </View>
-                      </View>
-
-                      {/* 4 Tombol Toggle Status Cepat (Min 44x44pt) */}
-                      <View style={styles.toggleRow}>
-                        {/* HADIR */}
-                        <TouchableOpacity
-                          style={[
-                            styles.toggleButton,
-                            currentStatus === AttendanceStatus.HADIR
-                              ? styles.toggleHadirActive
-                              : styles.toggleButtonInactive,
-                          ]}
-                          onPress={() =>
-                            handleStatusChange(student.student_id, AttendanceStatus.HADIR)
-                          }
-                          activeOpacity={0.7}
-                          accessibilityRole="button"
-                          accessibilityLabel={`Hadir untuk ${student.student_name}`}
-                        >
-                          <Text
-                            style={[
-                              styles.toggleButtonText,
-                              currentStatus === AttendanceStatus.HADIR
-                                ? styles.toggleHadirTextActive
-                                : styles.toggleButtonTextInactive,
-                            ]}
-                          >
-                            H
-                          </Text>
-                          <Text
-                            style={[
-                              styles.toggleSubText,
-                              currentStatus === AttendanceStatus.HADIR
-                                ? styles.toggleHadirTextActive
-                                : styles.toggleSubTextInactive,
-                            ]}
-                          >
-                            Hadir
-                          </Text>
-                        </TouchableOpacity>
-
-                        {/* SAKIT */}
-                        <TouchableOpacity
-                          style={[
-                            styles.toggleButton,
-                            currentStatus === AttendanceStatus.SAKIT
-                              ? styles.toggleSakitActive
-                              : styles.toggleButtonInactive,
-                          ]}
-                          onPress={() =>
-                            handleStatusChange(student.student_id, AttendanceStatus.SAKIT)
-                          }
-                          activeOpacity={0.7}
-                          accessibilityRole="button"
-                          accessibilityLabel={`Sakit untuk ${student.student_name}`}
-                        >
-                          <Text
-                            style={[
-                              styles.toggleButtonText,
-                              currentStatus === AttendanceStatus.SAKIT
-                                ? styles.toggleSakitTextActive
-                                : styles.toggleButtonTextInactive,
-                            ]}
-                          >
-                            S
-                          </Text>
-                          <Text
-                            style={[
-                              styles.toggleSubText,
-                              currentStatus === AttendanceStatus.SAKIT
-                                ? styles.toggleSakitTextActive
-                                : styles.toggleSubTextInactive,
-                            ]}
-                          >
-                            Sakit
-                          </Text>
-                        </TouchableOpacity>
-
-                        {/* IZIN */}
-                        <TouchableOpacity
-                          style={[
-                            styles.toggleButton,
-                            currentStatus === AttendanceStatus.IZIN
-                              ? styles.toggleIzinActive
-                              : styles.toggleButtonInactive,
-                          ]}
-                          onPress={() =>
-                            handleStatusChange(student.student_id, AttendanceStatus.IZIN)
-                          }
-                          activeOpacity={0.7}
-                          accessibilityRole="button"
-                          accessibilityLabel={`Izin untuk ${student.student_name}`}
-                        >
-                          <Text
-                            style={[
-                              styles.toggleButtonText,
-                              currentStatus === AttendanceStatus.IZIN
-                                ? styles.toggleIzinTextActive
-                                : styles.toggleButtonTextInactive,
-                            ]}
-                          >
-                            I
-                          </Text>
-                          <Text
-                            style={[
-                              styles.toggleSubText,
-                              currentStatus === AttendanceStatus.IZIN
-                                ? styles.toggleIzinTextActive
-                                : styles.toggleSubTextInactive,
-                            ]}
-                          >
-                            Izin
-                          </Text>
-                        </TouchableOpacity>
-
-                        {/* ALPA */}
-                        <TouchableOpacity
-                          style={[
-                            styles.toggleButton,
-                            currentStatus === AttendanceStatus.ALPA
-                              ? styles.toggleAlpaActive
-                              : styles.toggleButtonInactive,
-                          ]}
-                          onPress={() =>
-                            handleStatusChange(student.student_id, AttendanceStatus.ALPA)
-                          }
-                          activeOpacity={0.7}
-                          accessibilityRole="button"
-                          accessibilityLabel={`Alpa untuk ${student.student_name}`}
-                        >
-                          <Text
-                            style={[
-                              styles.toggleButtonText,
-                              currentStatus === AttendanceStatus.ALPA
-                                ? styles.toggleAlpaTextActive
-                                : styles.toggleButtonTextInactive,
-                            ]}
-                          >
-                            A
-                          </Text>
-                          <Text
-                            style={[
-                              styles.toggleSubText,
-                              currentStatus === AttendanceStatus.ALPA
-                                ? styles.toggleAlpaTextActive
-                                : styles.toggleSubTextInactive,
-                            ]}
-                          >
-                            Alpa
-                          </Text>
-                        </TouchableOpacity>
-                      </View>
-
-                      {/* Input Catatan Opsional jika Sakit/Izin/Alpa */}
-                      {currentStatus !== AttendanceStatus.HADIR && (
-                        <View style={styles.notesContainer}>
-                          <Input
-                            placeholder="Tulis catatan (misal: Surat dokter terlampir)"
-                            value={currentNotes}
-                            onChangeText={(txt) => handleNotesChange(student.student_id, txt)}
-                            accessibilityLabel={`Catatan presensi ${student.student_name}`}
-                            containerStyle={styles.notesInputContainer}
-                          />
-                        </View>
-                      )}
+              return (
+                <View key={student.student_id} style={styles.studentCard}>
+                  <View style={styles.studentHeader}>
+                    <Avatar name={student.student_name} size="sm" style={styles.studentAvatar} />
+                    <View style={styles.studentInfoCol}>
+                      <Text style={styles.studentName}>{student.student_name}</Text>
+                      <Text style={styles.studentNis}>NIS: {student.nis}</Text>
                     </View>
                   </View>
-                );
-              })}
-            </Card>
 
-            {/* Tombol Simpan Presensi Utama */}
-            <View style={styles.saveButtonContainer}>
+                  {/* 4 Tombol Toggle Status Cepat (Min 44x44pt) */}
+                  <View style={styles.toggleRow}>
+                    {/* HADIR */}
+                    <TouchableOpacity
+                      style={[
+                        styles.toggleButton,
+                        currentStatus === AttendanceStatus.HADIR
+                          ? styles.toggleHadirActive
+                          : styles.toggleButtonInactive,
+                      ]}
+                      onPress={() =>
+                        handleStatusChange(student.student_id, AttendanceStatus.HADIR)
+                      }
+                      activeOpacity={0.7}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Hadir untuk ${student.student_name}`}
+                    >
+                      <Text
+                        style={[
+                          styles.toggleButtonText,
+                          currentStatus === AttendanceStatus.HADIR
+                            ? styles.toggleHadirTextActive
+                            : styles.toggleButtonTextInactive,
+                        ]}
+                      >
+                        H
+                      </Text>
+                      <Text
+                        style={[
+                          styles.toggleSubText,
+                          currentStatus === AttendanceStatus.HADIR
+                            ? styles.toggleHadirTextActive
+                            : styles.toggleSubTextInactive,
+                        ]}
+                      >
+                        Hadir
+                      </Text>
+                    </TouchableOpacity>
+
+                    {/* SAKIT */}
+                    <TouchableOpacity
+                      style={[
+                        styles.toggleButton,
+                        currentStatus === AttendanceStatus.SAKIT
+                          ? styles.toggleSakitActive
+                          : styles.toggleButtonInactive,
+                      ]}
+                      onPress={() =>
+                        handleStatusChange(student.student_id, AttendanceStatus.SAKIT)
+                      }
+                      activeOpacity={0.7}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Sakit untuk ${student.student_name}`}
+                    >
+                      <Text
+                        style={[
+                          styles.toggleButtonText,
+                          currentStatus === AttendanceStatus.SAKIT
+                            ? styles.toggleSakitTextActive
+                            : styles.toggleButtonTextInactive,
+                        ]}
+                      >
+                        S
+                      </Text>
+                      <Text
+                        style={[
+                          styles.toggleSubText,
+                          currentStatus === AttendanceStatus.SAKIT
+                            ? styles.toggleSakitTextActive
+                            : styles.toggleSubTextInactive,
+                        ]}
+                      >
+                        Sakit
+                      </Text>
+                    </TouchableOpacity>
+
+                    {/* IZIN */}
+                    <TouchableOpacity
+                      style={[
+                        styles.toggleButton,
+                        currentStatus === AttendanceStatus.IZIN
+                          ? styles.toggleIzinActive
+                          : styles.toggleButtonInactive,
+                      ]}
+                      onPress={() =>
+                        handleStatusChange(student.student_id, AttendanceStatus.IZIN)
+                      }
+                      activeOpacity={0.7}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Izin untuk ${student.student_name}`}
+                    >
+                      <Text
+                        style={[
+                          styles.toggleButtonText,
+                          currentStatus === AttendanceStatus.IZIN
+                            ? styles.toggleIzinTextActive
+                            : styles.toggleButtonTextInactive,
+                        ]}
+                      >
+                        I
+                      </Text>
+                      <Text
+                        style={[
+                          styles.toggleSubText,
+                          currentStatus === AttendanceStatus.IZIN
+                            ? styles.toggleIzinTextActive
+                            : styles.toggleSubTextInactive,
+                        ]}
+                      >
+                        Izin
+                      </Text>
+                    </TouchableOpacity>
+
+                    {/* ALPA */}
+                    <TouchableOpacity
+                      style={[
+                        styles.toggleButton,
+                        currentStatus === AttendanceStatus.ALPA
+                          ? styles.toggleAlpaActive
+                          : styles.toggleButtonInactive,
+                      ]}
+                      onPress={() =>
+                        handleStatusChange(student.student_id, AttendanceStatus.ALPA)
+                      }
+                      activeOpacity={0.7}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Alpa untuk ${student.student_name}`}
+                    >
+                      <Text
+                        style={[
+                          styles.toggleButtonText,
+                          currentStatus === AttendanceStatus.ALPA
+                            ? styles.toggleAlpaTextActive
+                            : styles.toggleButtonTextInactive,
+                        ]}
+                      >
+                        A
+                      </Text>
+                      <Text
+                        style={[
+                          styles.toggleSubText,
+                          currentStatus === AttendanceStatus.ALPA
+                            ? styles.toggleAlpaTextActive
+                            : styles.toggleSubTextInactive,
+                        ]}
+                      >
+                        Alpa
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+
+                  {/* Input Catatan Opsional */}
+                  <Input
+                    placeholder="Catatan kendala / keterangan..."
+                    value={currentNotes}
+                    onChangeText={(val) => handleNotesChange(student.student_id, val)}
+                    style={styles.notesInput}
+                    accessibilityLabel={`Catatan presensi untuk ${student.student_name}`}
+                  />
+                </View>
+              );
+            })}
+
+            {/* Tombol Simpan Utama */}
+            <View style={styles.saveWrapper}>
               <Button
-                title={saving ? "Menyimpan Data..." : "Simpan Presensi Kelas"}
+                title={saving ? "Menyimpan..." : "Simpan Presensi Kelas"}
                 onPress={handleSaveAttendance}
                 variant="default"
-                loading={saving}
                 size="lg"
-                accessibilityLabel="Simpan Presensi Kelas Sekarang"
-                leftIcon={<Ionicons name="cloud-upload-outline" size={18} color={shadcn.primaryForeground} />}
+                loading={saving}
+                leftIcon={<Ionicons name="save-outline" size={20} color={shadcn.primaryForeground} />}
+                accessibilityLabel="Simpan seluruh data presensi rombel"
+                style={styles.saveMainButton}
               />
             </View>
           </View>
         )}
       </ScrollView>
-    </Screen>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: shadcn.background,
+  },
   scrollContent: {
     padding: spacing.lg,
-    paddingBottom: spacing.max * 2,
+    paddingBottom: spacing.max,
+  },
+  statsRowTablet: {
+    flexDirection: "row",
+    gap: spacing.md,
+    marginBottom: spacing.md,
+  },
+  statsRowMobile: {
+    flexDirection: "column",
+    gap: spacing.sm,
+    marginBottom: spacing.md,
+  },
+  statCardItem: {
+    flex: 1,
   },
   controlCard: {
-    marginBottom: spacing.md,
-    padding: spacing.md,
     backgroundColor: shadcn.card,
+    borderRadius: radius.xl,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+    borderWidth: 1,
     borderColor: shadcn.border,
   },
   controlLabel: {
     fontSize: typography.size.sm,
-    fontWeight: typography.weight.semibold,
+    fontWeight: typography.weight.medium,
     color: shadcn.foreground,
     marginBottom: spacing.xs,
   },
@@ -572,12 +600,12 @@ const styles = StyleSheet.create({
   },
   classChip: {
     minHeight: touchTarget.minHeight,
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: spacing.md,
     borderRadius: radius.md,
     borderWidth: 1,
     alignItems: "center",
     justifyContent: "center",
-    marginRight: spacing.sm,
+    marginRight: spacing.xs,
   },
   classChipSelected: {
     backgroundColor: shadcn.primary,
@@ -588,12 +616,11 @@ const styles = StyleSheet.create({
     borderColor: shadcn.border,
   },
   classChipText: {
-    fontSize: typography.size.sm,
+    fontSize: typography.size.xs,
     fontWeight: typography.weight.medium,
   },
   classChipTextSelected: {
     color: shadcn.primaryForeground,
-    fontWeight: typography.weight.semibold,
   },
   classChipTextUnselected: {
     color: shadcn.foreground,
@@ -601,66 +628,42 @@ const styles = StyleSheet.create({
   dateRow: {
     flexDirection: "row",
     alignItems: "flex-end",
-    marginTop: spacing.xs,
+    gap: spacing.sm,
   },
   dateInputCol: {
     flex: 1,
-    marginRight: spacing.sm,
   },
   todayButton: {
-    marginBottom: spacing.md,
+    minHeight: touchTarget.minHeight,
+    marginBottom: spacing.xs,
+  },
+  dateActionRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: spacing.xs,
   },
   formattedDateInfo: {
     fontSize: typography.size.xs,
     color: shadcn.mutedForeground,
-    fontWeight: typography.weight.medium,
   },
   alertBanner: {
     marginBottom: spacing.md,
   },
-  summaryCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    padding: spacing.md,
-    backgroundColor: shadcn.card,
-    borderColor: shadcn.border,
-    marginBottom: spacing.md,
-  },
-  summaryCounters: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  counterItem: {
-    alignItems: "center",
-    marginRight: spacing.lg,
-  },
-  counterNumber: {
-    fontSize: typography.size.lg,
-    fontWeight: typography.weight.bold,
-    fontVariant: ["tabular-nums"],
-  },
-  counterLabel: {
-    fontSize: 10,
-    color: shadcn.mutedForeground,
-    fontWeight: typography.weight.medium,
-  },
   studentsWrapper: {
-    marginBottom: spacing.lg,
+    gap: spacing.md,
   },
-  studentsCard: {
-    padding: 0,
+  studentCard: {
     backgroundColor: shadcn.card,
+    borderRadius: radius.xl,
+    borderWidth: 1,
     borderColor: shadcn.border,
-    overflow: "hidden",
-  },
-  studentItem: {
     padding: spacing.md,
   },
   studentHeader: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: spacing.md,
+    marginBottom: spacing.sm,
   },
   studentAvatar: {
     marginRight: spacing.sm,
@@ -680,77 +683,72 @@ const styles = StyleSheet.create({
   },
   toggleRow: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    gap: spacing.xs,
+    marginBottom: spacing.sm,
   },
   toggleButton: {
     flex: 1,
     minHeight: touchTarget.minHeight,
-    minWidth: touchTarget.minWidth,
     borderRadius: radius.md,
-    borderWidth: 1,
     alignItems: "center",
     justifyContent: "center",
-    marginHorizontal: 3,
+    borderWidth: 1,
     paddingVertical: spacing.xs,
   },
   toggleButtonInactive: {
-    backgroundColor: shadcn.background,
+    backgroundColor: shadcn.secondary,
     borderColor: shadcn.border,
   },
-  toggleHadirActive: {
-    backgroundColor: shadcn.status.success.bg,
-    borderColor: shadcn.status.success.border,
-  },
-  toggleSakitActive: {
-    backgroundColor: shadcn.status.warning.bg,
-    borderColor: shadcn.status.warning.border,
-  },
-  toggleIzinActive: {
-    backgroundColor: shadcn.status.info.bg,
-    borderColor: shadcn.status.info.border,
-  },
-  toggleAlpaActive: {
-    backgroundColor: shadcn.status.danger.bg,
-    borderColor: shadcn.status.danger.border,
-  },
   toggleButtonText: {
-    fontSize: typography.size.base,
+    fontSize: typography.size.sm,
     fontWeight: typography.weight.bold,
   },
   toggleButtonTextInactive: {
     color: shadcn.mutedForeground,
   },
-  toggleHadirTextActive: {
-    color: shadcn.status.success.text,
-  },
-  toggleSakitTextActive: {
-    color: shadcn.status.warning.text,
-  },
-  toggleIzinTextActive: {
-    color: shadcn.status.info.text,
-  },
-  toggleAlpaTextActive: {
-    color: shadcn.status.danger.text,
-  },
   toggleSubText: {
-    fontSize: 9,
-    fontWeight: typography.weight.medium,
+    fontSize: 10,
     marginTop: 1,
   },
   toggleSubTextInactive: {
     color: shadcn.mutedForeground,
   },
-  notesContainer: {
+  toggleHadirActive: {
+    backgroundColor: bento.mint,
+    borderColor: bento.mintText,
+  },
+  toggleHadirTextActive: {
+    color: bento.mintText,
+  },
+  toggleSakitActive: {
+    backgroundColor: bento.butter,
+    borderColor: bento.butterText,
+  },
+  toggleSakitTextActive: {
+    color: bento.butterText,
+  },
+  toggleIzinActive: {
+    backgroundColor: bento.iceBlue,
+    borderColor: bento.iceBlueText,
+  },
+  toggleIzinTextActive: {
+    color: bento.iceBlueText,
+  },
+  toggleAlpaActive: {
+    backgroundColor: shadcn.status.danger.bg,
+    borderColor: shadcn.status.danger.border,
+  },
+  toggleAlpaTextActive: {
+    color: shadcn.status.danger.text,
+  },
+  notesInput: {
+    marginTop: spacing.xs,
+  },
+  saveWrapper: {
     marginTop: spacing.sm,
-    paddingTop: spacing.xs,
-    borderTopWidth: 1,
-    borderTopColor: shadcn.border,
+    marginBottom: spacing.xl,
   },
-  notesInputContainer: {
-    marginBottom: 0,
-  },
-  saveButtonContainer: {
-    marginTop: spacing.md,
-    marginBottom: spacing.max,
+  saveMainButton: {
+    minHeight: 48,
   },
 });
