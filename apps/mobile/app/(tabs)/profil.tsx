@@ -9,9 +9,17 @@ import {
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { formatTanggalId } from "@neoschola/shared";
-import { Screen, Card, Badge, Button, SectionHeader } from "../../src/components/ui";
+import {
+  Screen,
+  Card,
+  Badge,
+  Button,
+  Avatar,
+  Separator,
+  SectionHeader,
+} from "../../src/components/ui";
 import { useAuth } from "../../src/store/auth";
-import { colors, spacing, radius, typography, touchTarget } from "../../src/theme/tokens";
+import { shadcn, spacing, radius, typography, touchTarget } from "../../src/theme/tokens";
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -55,31 +63,28 @@ export default function ProfileScreen() {
           accessibilityRole="button"
           accessibilityLabel="Kembali ke layar sebelumnya"
         >
-          <Ionicons name="arrow-back" size={24} color={colors.textPrimary} />
+          <Ionicons name="arrow-back" size={22} color={shadcn.foreground} />
         </TouchableOpacity>
       }
+      style={styles.screen}
     >
-      {/* Kartu Profil Pengguna */}
+      {/* 1. Kartu Profil Pengguna */}
       <Card style={styles.profileCard}>
         <View style={styles.profileHeaderRow}>
-          <View style={styles.avatarCircle}>
-            <Text style={styles.avatarText}>
-              {user?.name ? user.name.slice(0, 1).toUpperCase() : "U"}
-            </Text>
-          </View>
+          <Avatar name={user?.name || "Pengguna"} size="lg" />
           <View style={styles.profileInfoCol}>
             <Text style={styles.profileName}>{user?.name || "Nama Pengguna"}</Text>
             <Text style={styles.profileEmail}>{user?.email || "email@sekolah.id"}</Text>
             <View style={styles.roleBadgeRow}>
               <Badge
                 label={getRoleName(user?.role)}
-                variant="success"
+                variant="secondary"
               />
             </View>
           </View>
         </View>
 
-        <View style={styles.profileDivider} />
+        <Separator style={styles.cardSeparator} />
 
         <View style={styles.profileMetaRow}>
           <View style={styles.profileMetaItem}>
@@ -93,7 +98,7 @@ export default function ProfileScreen() {
         </View>
       </Card>
 
-      {/* Daftar Anak Asuh (Khusus Wali Murid) */}
+      {/* 2. Daftar Anak Asuh (Khusus Wali Murid) */}
       {user?.role === "GUARDIAN" && (
         <View style={styles.sectionContainer}>
           <SectionHeader
@@ -102,65 +107,61 @@ export default function ProfileScreen() {
           />
 
           {students.length === 0 ? (
-            <Card style={styles.emptyChildCard}>
-              <Text style={styles.emptyChildText}>
+            <Card style={styles.emptyCard}>
+              <Text style={styles.emptyText}>
                 Belum ada data anak asuh yang terhubung. Hubungi Tata Usaha jika data anak Anda belum muncul.
               </Text>
             </Card>
           ) : (
-            students.map((student) => (
-              <Card key={student.id} style={styles.childCard}>
-                <View style={styles.childHeader}>
-                  <View style={styles.childAvatarBadge}>
-                    <Ionicons name="school-outline" size={20} color={colors.primary} />
+            <Card style={styles.listCard}>
+              {students.map((student, index) => (
+                <React.Fragment key={student.id}>
+                  {index > 0 && <Separator />}
+                  <View style={styles.studentRow}>
+                    <Avatar name={student.full_name} size="sm" />
+                    <View style={styles.studentInfoCol}>
+                      <View style={styles.studentNameLine}>
+                        <Text style={styles.studentNameText}>{student.full_name}</Text>
+                        <Badge label={student.class_name || "Kelas"} variant="outline" />
+                      </View>
+                      <View style={styles.studentDetailsRow}>
+                        <Text style={styles.studentDetailLabel}>
+                          NIS: <Text style={styles.studentDetailValue}>{student.nis}</Text>
+                        </Text>
+                        <Text style={styles.studentDetailDivider}>•</Text>
+                        <Text style={styles.studentDetailLabel}>
+                          NISN: <Text style={styles.studentDetailValue}>{student.nisn}</Text>
+                        </Text>
+                      </View>
+                      <View style={styles.studentDetailsRow}>
+                        <Text style={styles.studentDetailLabel}>
+                          {student.gender === "L" ? "Laki-laki" : "Perempuan"}
+                        </Text>
+                        <Text style={styles.studentDetailDivider}>•</Text>
+                        <Text style={styles.studentDetailLabel}>
+                          Lahir: {formatTanggalId(student.birth_date)}
+                        </Text>
+                      </View>
+                    </View>
                   </View>
-                  <View style={styles.childTitleCol}>
-                    <Text style={styles.childName}>{student.full_name}</Text>
-                    <Text style={styles.childClass}>
-                      {student.class_name || "Kelas"}
-                    </Text>
-                  </View>
-                </View>
-
-                <View style={styles.childDetailsGrid}>
-                  <View style={styles.childDetailItem}>
-                    <Text style={styles.childDetailLabel}>NIS</Text>
-                    <Text style={styles.childDetailValue}>{student.nis}</Text>
-                  </View>
-                  <View style={styles.childDetailItem}>
-                    <Text style={styles.childDetailLabel}>NISN</Text>
-                    <Text style={styles.childDetailValue}>{student.nisn}</Text>
-                  </View>
-                  <View style={styles.childDetailItem}>
-                    <Text style={styles.childDetailLabel}>Jenis Kelamin</Text>
-                    <Text style={styles.childDetailValue}>
-                      {student.gender === "L" ? "Laki-laki" : "Perempuan"}
-                    </Text>
-                  </View>
-                  <View style={styles.childDetailItem}>
-                    <Text style={styles.childDetailLabel}>Tanggal Lahir</Text>
-                    <Text style={styles.childDetailValue}>
-                      {formatTanggalId(student.birth_date)}
-                    </Text>
-                  </View>
-                </View>
-              </Card>
-            ))
+                </React.Fragment>
+              ))}
+            </Card>
           )}
         </View>
       )}
 
-      {/* Kontak Darurat Sekolah */}
+      {/* 3. Kontak Resmi Sekolah */}
       <View style={styles.sectionContainer}>
         <SectionHeader
           title="Kontak Resmi Sekolah"
           subtitle="SDN Nusantara Harapan"
         />
 
-        <Card style={styles.contactCard}>
-          <View style={styles.contactItem}>
+        <Card style={styles.listCard}>
+          <View style={styles.contactRow}>
             <View style={styles.contactIconCircle}>
-              <Ionicons name="call-outline" size={20} color={colors.primary} />
+              <Ionicons name="call-outline" size={18} color={shadcn.primary} />
             </View>
             <View style={styles.contactTextCol}>
               <Text style={styles.contactLabel}>Tata Usaha & Administrasi</Text>
@@ -168,11 +169,11 @@ export default function ProfileScreen() {
             </View>
           </View>
 
-          <View style={styles.contactDivider} />
+          <Separator />
 
-          <View style={styles.contactItem}>
+          <View style={styles.contactRow}>
             <View style={styles.contactIconCircle}>
-              <Ionicons name="medkit-outline" size={20} color={colors.primary} />
+              <Ionicons name="medkit-outline" size={18} color={shadcn.primary} />
             </View>
             <View style={styles.contactTextCol}>
               <Text style={styles.contactLabel}>UKS (Unit Kesehatan Sekolah)</Text>
@@ -180,11 +181,11 @@ export default function ProfileScreen() {
             </View>
           </View>
 
-          <View style={styles.contactDivider} />
+          <Separator />
 
-          <View style={styles.contactItem}>
+          <View style={styles.contactRow}>
             <View style={styles.contactIconCircle}>
-              <Ionicons name="shield-checkmark-outline" size={20} color={colors.primary} />
+              <Ionicons name="shield-checkmark-outline" size={18} color={shadcn.primary} />
             </View>
             <View style={styles.contactTextCol}>
               <Text style={styles.contactLabel}>Pos Satpam & Keamanan</Text>
@@ -192,11 +193,11 @@ export default function ProfileScreen() {
             </View>
           </View>
 
-          <View style={styles.contactDivider} />
+          <Separator />
 
-          <View style={styles.contactItem}>
+          <View style={styles.contactRow}>
             <View style={styles.contactIconCircle}>
-              <Ionicons name="time-outline" size={20} color={colors.primary} />
+              <Ionicons name="time-outline" size={18} color={shadcn.primary} />
             </View>
             <View style={styles.contactTextCol}>
               <Text style={styles.contactLabel}>Jam Layanan Kantor</Text>
@@ -206,7 +207,7 @@ export default function ProfileScreen() {
         </Card>
       </View>
 
-      {/* Info Lingkungan Demo Sintetis */}
+      {/* 4. Info Lingkungan Demo Sintetis */}
       <View style={styles.sectionContainer}>
         <SectionHeader
           title="Tentang Lingkungan Aplikasi"
@@ -215,7 +216,7 @@ export default function ProfileScreen() {
 
         <Card style={styles.demoNoticeCard}>
           <View style={styles.demoNoticeHeader}>
-            <Ionicons name="information-circle-outline" size={22} color={colors.primary} />
+            <Ionicons name="information-circle-outline" size={20} color={shadcn.primary} />
             <Text style={styles.demoNoticeTitle}>Akun & Data Demo Sintetis</Text>
           </View>
           <Text style={styles.demoNoticeBody}>
@@ -224,20 +225,21 @@ export default function ProfileScreen() {
         </Card>
       </View>
 
-      {/* Tombol Keluar Akun */}
+      {/* 5. Tombol Keluar Akun */}
       <View style={styles.logoutContainer}>
         <Button
           title="Keluar Akun"
           onPress={handleLogout}
           loading={loggingOut}
-          variant="danger"
+          variant="destructive"
           leftIcon={
             <Ionicons
               name="log-out-outline"
-              size={20}
-              color={colors.badge.danger.text}
+              size={18}
+              color={shadcn.destructiveForeground}
             />
           }
+          style={styles.logoutBtn}
           accessibilityLabel="Keluar dari akun Anda saat ini"
         />
       </View>
@@ -246,6 +248,9 @@ export default function ProfileScreen() {
 }
 
 const styles = StyleSheet.create({
+  screen: {
+    backgroundColor: shadcn.canvas,
+  },
   backButton: {
     width: touchTarget.minWidth,
     height: touchTarget.minHeight,
@@ -254,44 +259,31 @@ const styles = StyleSheet.create({
   },
   profileCard: {
     marginBottom: spacing.lg,
+    padding: spacing.md,
   },
   profileHeaderRow: {
     flexDirection: "row",
     alignItems: "center",
   },
-  avatarCircle: {
-    width: 60,
-    height: 60,
-    borderRadius: radius.full,
-    backgroundColor: colors.primary,
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: spacing.md,
-  },
-  avatarText: {
-    fontSize: typography.size.xxl,
-    fontWeight: typography.weight.bold,
-    color: colors.textInverse,
-  },
   profileInfoCol: {
     flex: 1,
+    marginLeft: spacing.md,
   },
   profileName: {
-    fontSize: typography.size.lg,
+    fontSize: typography.size.base,
     fontWeight: typography.weight.bold,
-    color: colors.textPrimary,
+    color: shadcn.foreground,
+    letterSpacing: typography.tracking.snug,
   },
   profileEmail: {
-    fontSize: typography.size.sm,
-    color: colors.textSecondary,
+    fontSize: typography.size.xs,
+    color: shadcn.mutedForeground,
     marginTop: 2,
   },
   roleBadgeRow: {
     marginTop: spacing.xs,
   },
-  profileDivider: {
-    height: 1,
-    backgroundColor: colors.border,
+  cardSeparator: {
     marginVertical: spacing.md,
   },
   profileMetaRow: {
@@ -303,89 +295,83 @@ const styles = StyleSheet.create({
   },
   metaLabel: {
     fontSize: typography.size.xs,
-    color: colors.textSecondary,
+    color: shadcn.mutedForeground,
     marginBottom: 2,
   },
   metaValue: {
     fontSize: typography.size.sm,
-    fontWeight: typography.weight.semibold,
-    color: colors.textPrimary,
+    fontWeight: typography.weight.medium,
+    color: shadcn.foreground,
   },
   sectionContainer: {
     marginBottom: spacing.lg,
   },
-  emptyChildCard: {
+  emptyCard: {
     padding: spacing.md,
   },
-  emptyChildText: {
+  emptyText: {
     fontSize: typography.size.sm,
-    color: colors.textSecondary,
+    color: shadcn.mutedForeground,
     lineHeight: typography.lineHeight.sm,
   },
-  childCard: {
-    marginBottom: spacing.md,
+  listCard: {
+    padding: 0,
+    overflow: "hidden",
   },
-  childHeader: {
+  studentRow: {
     flexDirection: "row",
-    alignItems: "center",
-    marginBottom: spacing.md,
-  },
-  childAvatarBadge: {
-    width: 36,
-    height: 36,
-    borderRadius: radius.md,
-    backgroundColor: colors.primarySoft,
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: spacing.md,
-  },
-  childTitleCol: {
-    flex: 1,
-  },
-  childName: {
-    fontSize: typography.size.base,
-    fontWeight: typography.weight.bold,
-    color: colors.textPrimary,
-  },
-  childClass: {
-    fontSize: typography.size.xs,
-    color: colors.textSecondary,
-    marginTop: 1,
-  },
-  childDetailsGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-    paddingTop: spacing.sm,
-  },
-  childDetailItem: {
-    width: "50%",
-    marginBottom: spacing.xs,
-  },
-  childDetailLabel: {
-    fontSize: 11,
-    color: colors.textSecondary,
-  },
-  childDetailValue: {
-    fontSize: typography.size.sm,
-    fontWeight: typography.weight.semibold,
-    color: colors.textPrimary,
-    marginTop: 1,
-  },
-  contactCard: {
+    alignItems: "flex-start",
     padding: spacing.md,
   },
-  contactItem: {
+  studentInfoCol: {
+    flex: 1,
+    marginLeft: spacing.md,
+  },
+  studentNameLine: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 2,
+    gap: spacing.xs,
+  },
+  studentNameText: {
+    fontSize: typography.size.sm,
+    fontWeight: typography.weight.semibold,
+    color: shadcn.foreground,
+    flex: 1,
+  },
+  studentDetailsRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 2,
+  },
+  studentDetailLabel: {
+    fontSize: 11,
+    color: shadcn.mutedForeground,
+  },
+  studentDetailValue: {
+    fontWeight: typography.weight.medium,
+    color: shadcn.foreground,
+    fontVariant: ["tabular-nums"],
+  },
+  studentDetailDivider: {
+    fontSize: 11,
+    color: shadcn.mutedForeground,
+    marginHorizontal: spacing.xs,
+  },
+  contactRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: spacing.md,
     minHeight: touchTarget.minHeight,
   },
   contactIconCircle: {
     width: 36,
     height: 36,
-    borderRadius: radius.full,
-    backgroundColor: colors.primarySoft,
+    borderRadius: radius.md,
+    backgroundColor: shadcn.secondary,
+    borderWidth: 1,
+    borderColor: shadcn.border,
     alignItems: "center",
     justifyContent: "center",
     marginRight: spacing.md,
@@ -395,23 +381,18 @@ const styles = StyleSheet.create({
   },
   contactLabel: {
     fontSize: typography.size.xs,
-    color: colors.textSecondary,
+    color: shadcn.mutedForeground,
   },
   contactValue: {
     fontSize: typography.size.sm,
-    fontWeight: typography.weight.bold,
-    color: colors.textPrimary,
+    fontWeight: typography.weight.semibold,
+    color: shadcn.foreground,
     marginTop: 1,
-  },
-  contactDivider: {
-    height: 1,
-    backgroundColor: colors.border,
-    marginVertical: spacing.xs,
+    fontVariant: ["tabular-nums"],
   },
   demoNoticeCard: {
-    backgroundColor: colors.primarySoft,
-    borderColor: "#BBF7D0",
     padding: spacing.md,
+    backgroundColor: shadcn.background,
   },
   demoNoticeHeader: {
     flexDirection: "row",
@@ -420,17 +401,20 @@ const styles = StyleSheet.create({
   },
   demoNoticeTitle: {
     fontSize: typography.size.sm,
-    fontWeight: typography.weight.bold,
-    color: colors.primary,
+    fontWeight: typography.weight.semibold,
+    color: shadcn.foreground,
     marginLeft: spacing.xs,
   },
   demoNoticeBody: {
     fontSize: typography.size.xs,
-    color: colors.textSecondary,
+    color: shadcn.mutedForeground,
     lineHeight: typography.lineHeight.xs,
   },
   logoutContainer: {
     marginTop: spacing.md,
     marginBottom: spacing.xxl,
+  },
+  logoutBtn: {
+    width: "100%",
   },
 });
