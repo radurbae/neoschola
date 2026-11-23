@@ -79,6 +79,7 @@ export default function TabsLayout() {
         screenOptions={{
           headerShown: false,
           tabBarStyle: { display: "none" },
+          animation: "fade",
         }}
       >
         <Tabs.Screen name="index" />

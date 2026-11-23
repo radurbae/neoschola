@@ -32,6 +32,7 @@ import {
   bento,
   shadcn,
   breakpoints,
+  layout,
   spacing,
   radius,
   typography,
@@ -143,7 +144,16 @@ export default function AcademicScreen() {
       />
 
       {students.length > 0 && (
-        <View style={styles.childSwitcherWrapper}>
+        <View
+          style={[
+            styles.childSwitcherWrapper,
+            {
+              paddingHorizontal: isTablet
+                ? layout.tabletPaddingX
+                : layout.mobilePaddingX,
+            },
+          ]}
+        >
           <ChildSwitcher
             students={students}
             activeStudentId={activeStudentId}
@@ -176,8 +186,18 @@ export default function AcademicScreen() {
       ) : (
         <ScrollView
           style={styles.scrollBody}
-          contentContainerStyle={styles.scrollContent}
+          contentContainerStyle={[
+            styles.scrollContent,
+            {
+              paddingHorizontal: isTablet
+                ? layout.tabletPaddingX
+                : layout.mobilePaddingX,
+            },
+          ]}
           showsVerticalScrollIndicator={false}
+          scrollEventThrottle={16}
+          decelerationRate="normal"
+          bounces={true}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
@@ -221,6 +241,9 @@ export default function AcademicScreen() {
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
+              snapToInterval={180}
+              decelerationRate="fast"
+              snapToAlignment="start"
               contentContainerStyle={styles.statCardsScrollMobile}
             >
               <PastelStatCard
@@ -406,16 +429,16 @@ const styles = StyleSheet.create({
   },
   childSwitcherWrapper: {
     backgroundColor: bento.surface,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.xs,
+    paddingTop: 12,
+    paddingBottom: 4,
   },
   scrollBody: {
     flex: 1,
   },
   scrollContent: {
-    padding: spacing.lg,
-    paddingBottom: spacing.max,
-    gap: spacing.lg,
+    paddingTop: 12,
+    paddingBottom: layout.scrollBottomPad,
+    gap: layout.sectionGap,
   },
   sectionHeaderRow: {
     marginBottom: spacing.xs,
@@ -423,23 +446,27 @@ const styles = StyleSheet.create({
   sectionHeading: {
     fontSize: typography.size.base,
     fontWeight: typography.weight.bold,
+    fontFamily: typography.family.bold,
     color: shadcn.foreground,
     letterSpacing: typography.tracking.snug,
   },
   statCardsRowTablet: {
     flexDirection: "row",
-    gap: spacing.md,
+    alignItems: "stretch",
+    gap: 14,
   },
   statCardItemTablet: {
     flex: 1,
+    alignSelf: "stretch",
   },
   statCardsScrollMobile: {
     flexDirection: "row",
-    gap: spacing.md,
+    gap: 12,
     paddingVertical: spacing.xs,
   },
   statCardItemMobile: {
-    width: 220,
+    width: 168,
+    minHeight: 164,
   },
   tabBarWrapper: {
     marginTop: spacing.xs,
@@ -469,6 +496,7 @@ const styles = StyleSheet.create({
   },
   emptyInlineText: {
     fontSize: typography.size.xs,
+    fontFamily: typography.family.regular,
     color: bento.pastelMutedText,
     textAlign: "center",
   },
