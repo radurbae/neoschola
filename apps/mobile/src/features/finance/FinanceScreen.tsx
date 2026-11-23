@@ -3,7 +3,6 @@ import {
   View,
   Text,
   StyleSheet,
-  TouchableOpacity,
   RefreshControl,
   ScrollView,
 } from "react-native";
@@ -17,7 +16,10 @@ import {
   Chip,
   Button,
   Input,
-  ModalSheet,
+  Label,
+  Sheet,
+  Alert,
+  Separator,
   ChildSwitcher,
   StateView,
 } from "../../components/ui";
@@ -25,7 +27,7 @@ import type { BadgeVariant } from "../../components/ui";
 import { useAuth } from "../../store/auth";
 import * as api from "../../lib/api";
 import {
-  colors,
+  shadcn,
   spacing,
   radius,
   typography,
@@ -50,7 +52,7 @@ export function FinanceScreen() {
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // Modal Pembayaran Sandbox
+  // Sheet Pembayaran Sandbox
   const [paymentModalInvoice, setPaymentModalInvoice] = useState<Invoice | null>(
     null
   );
@@ -62,7 +64,7 @@ export function FinanceScreen() {
   const [submittingPayment, setSubmittingPayment] = useState<boolean>(false);
   const [paymentError, setPaymentError] = useState<string | null>(null);
 
-  // Modal Kuitansi Digital
+  // Sheet Kuitansi Digital
   const [receiptModalInvoice, setReceiptModalInvoice] = useState<Invoice | null>(
     null
   );
@@ -159,15 +161,15 @@ export function FinanceScreen() {
   ): { label: string; variant: BadgeVariant } => {
     switch (status) {
       case "UNPAID":
-        return { label: "Belum Dibayar", variant: "danger" };
+        return { label: "Belum Dibayar", variant: "destructive" };
       case "WAITING_VERIFICATION":
         return { label: "Menunggu Verifikasi", variant: "warning" };
       case "PAID":
         return { label: "Lunas", variant: "success" };
       case "OVERDUE":
-        return { label: "Jatuh Tempo", variant: "danger" };
+        return { label: "Jatuh Tempo", variant: "destructive" };
       case "REJECTED":
-        return { label: "Ditolak", variant: "danger" };
+        return { label: "Ditolak", variant: "destructive" };
       default:
         return { label: status, variant: "neutral" };
     }
@@ -176,7 +178,7 @@ export function FinanceScreen() {
   const handleOpenPaymentModal = (invoice: Invoice) => {
     setPaymentModalInvoice(invoice);
     setSelectedPaymentMethod("TRANSFER_BANK");
-    // Generate default mock ref untuk kenyamanan sandbox
+    // Generate nomor mock ref untuk pengujian sandbox
     const randomRef = `REF-${Math.floor(100000 + Math.random() * 900000)}`;
     setPaymentRef(randomRef);
     setProofNote(`Pembayaran ${invoice.title} a.n. ${activeStudent?.full_name || "Siswa"}`);
@@ -206,7 +208,7 @@ export function FinanceScreen() {
       });
 
       setPaymentModalInvoice(null);
-      // Refresh daftar
+      // Refresh daftar tagihan
       fetchInvoices(false);
     } catch (err: any) {
       setPaymentError(
@@ -234,34 +236,54 @@ export function FinanceScreen() {
         />
       )}
 
-      {/* Kartu Ringkasan Total Tagihan Aktif */}
-      <Card style={styles.summaryCard}>
-        <View style={styles.summaryTopRow}>
-          <View style={styles.summaryIconBadge}>
-            <Ionicons name="wallet" size={24} color={colors.primary} />
-          </View>
-          <View style={styles.summaryTitleCol}>
-            <Text style={styles.summaryLabel}>Total Tagihan Belum Lunas</Text>
-            <Text style={styles.summaryStudentName}>
+      {/* 1 Card Hero Ringkasan Total Tagihan Belum Lunas (Minimalis & Elegan) */}
+      <Card style={styles.heroCard}>
+        <View style={styles.heroTopRow}>
+          <View style={styles.heroTextCol}>
+            <Text style={styles.heroLabel}>Total Tagihan Belum Lunas</Text>
+            <Text style={styles.heroStudentName}>
               {activeStudent?.full_name || "Semua Siswa"}
             </Text>
           </View>
+          <Badge
+            label={
+              filterCounts.BELUM_LUNAS > 0
+                ? `${filterCounts.BELUM_LUNAS} Tagihan`
+                : "Semua Lunas"
+            }
+            variant={filterCounts.BELUM_LUNAS > 0 ? "outline" : "secondary"}
+          />
         </View>
 
-        <Text style={styles.summaryAmount}>
+        <Text style={styles.heroAmount}>
           {formatRupiah(totalUnpaidAmount)}
         </Text>
 
-        <View style={styles.summaryFooterRow}>
-          <Text style={styles.summaryFooterText}>
+        <Separator style={styles.heroSeparator} />
+
+        <View style={styles.heroFooterRow}>
+          <Ionicons
+            name={
+              filterCounts.BELUM_LUNAS > 0
+                ? "alert-circle-outline"
+                : "checkmark-circle-outline"
+            }
+            size={16}
+            color={
+              filterCounts.BELUM_LUNAS > 0
+                ? shadcn.mutedForeground
+                : shadcn.status.success.text
+            }
+          />
+          <Text style={styles.heroFooterText}>
             {filterCounts.BELUM_LUNAS > 0
               ? `${filterCounts.BELUM_LUNAS} tagihan memerlukan pelunasan`
-              : "Semua kewajiban keuangan telah terpenuhi"}
+              : "Seluruh kewajiban pembayaran telah lunas"}
           </Text>
         </View>
       </Card>
 
-      {/* Filter Chips */}
+      {/* Filter Status Chip Horizontal */}
       <View style={styles.filterSection}>
         <ScrollView
           horizontal
@@ -332,7 +354,7 @@ export function FinanceScreen() {
                     <Text style={styles.invoiceTitle}>{invoice.title}</Text>
                     {Boolean(invoice.student_name) && (
                       <Text style={styles.invoiceStudentClass}>
-                        {invoice.student_name} • {invoice.class_name || "Siswa"}
+                        {invoice.student_name} - {invoice.class_name || "Siswa"}
                       </Text>
                     )}
                   </View>
@@ -342,7 +364,7 @@ export function FinanceScreen() {
                   />
                 </View>
 
-                {/* Deskripsi Tagihan jika ada */}
+                {/* Deskripsi Tagihan */}
                 {Boolean(invoice.description) && (
                   <Text style={styles.invoiceDescription}>
                     {invoice.description}
@@ -350,7 +372,7 @@ export function FinanceScreen() {
                 )}
 
                 {/* Info Nominal & Jatuh Tempo */}
-                <View style={styles.invoiceDetailRow}>
+                <View style={styles.invoiceDetailBox}>
                   <View style={styles.detailCol}>
                     <Text style={styles.detailLabel}>Nominal</Text>
                     <Text style={styles.detailAmount}>
@@ -365,21 +387,25 @@ export function FinanceScreen() {
                   </View>
                 </View>
 
+                <Separator style={styles.cardSeparator} />
+
                 {/* Tombol Aksi */}
                 <View style={styles.actionRow}>
                   {isPayable && (
                     <Button
-                      title="Bayar / Konfirmasi Transfer"
-                      variant="primary"
+                      title="Bayar / Konfirmasi"
+                      variant="default"
                       onPress={() => handleOpenPaymentModal(invoice)}
                       leftIcon={
                         <Ionicons
                           name="card-outline"
                           size={18}
-                          color={colors.textInverse}
+                          color={shadcn.primaryForeground}
                         />
                       }
-                      accessibilityLabel={`Bayar tagihan ${invoice.title} sejumlah ${formatRupiah(invoice.amount)}`}
+                      accessibilityLabel={`Bayar tagihan ${invoice.title} sejumlah ${formatRupiah(
+                        invoice.amount
+                      )}`}
                     />
                   )}
 
@@ -392,7 +418,7 @@ export function FinanceScreen() {
                         <Ionicons
                           name="receipt-outline"
                           size={18}
-                          color={colors.primary}
+                          color={shadcn.foreground}
                         />
                       }
                       accessibilityLabel={`Buka kuitansi resmi untuk ${invoice.title}`}
@@ -400,16 +426,11 @@ export function FinanceScreen() {
                   )}
 
                   {invoice.status === "WAITING_VERIFICATION" && (
-                    <View style={styles.waitingNotice}>
-                      <Ionicons
-                        name="hourglass-outline"
-                        size={16}
-                        color={colors.badge.warning.text}
-                      />
-                      <Text style={styles.waitingNoticeText}>
-                        Bukti pembayaran telah dikirim dan menunggu verifikasi admin TU.
-                      </Text>
-                    </View>
+                    <Alert
+                      variant="warning"
+                      title="Menunggu Verifikasi"
+                      description="Bukti pembayaran telah dikirim dan sedang diverifikasi oleh staf tata usaha."
+                    />
                   )}
                 </View>
               </Card>
@@ -418,28 +439,32 @@ export function FinanceScreen() {
         </View>
       )}
 
-      {/* ModalSheet Konfirmasi Pembayaran Sandbox */}
-      <ModalSheet
+      {/* Sheet Konfirmasi Pembayaran Sandbox */}
+      <Sheet
         visible={Boolean(paymentModalInvoice)}
         onClose={() => setPaymentModalInvoice(null)}
         title="Konfirmasi Pembayaran (Uji Coba)"
       >
         {paymentModalInvoice && (
-          <View style={styles.modalBody}>
+          <View style={styles.sheetBody}>
             {/* Ringkasan Tagihan */}
             <View style={styles.paymentSummaryCard}>
-              <Text style={styles.paymentSummaryLabel}>Total Yang Harus Dibayar</Text>
+              <Text style={styles.paymentSummaryLabel}>
+                Total Yang Harus Dibayar
+              </Text>
               <Text style={styles.paymentSummaryAmount}>
                 {formatRupiah(paymentModalInvoice.amount)}
               </Text>
               <Text style={styles.paymentSummaryTitle}>
-                {paymentModalInvoice.title} • {activeStudent?.full_name}
+                {paymentModalInvoice.title} - {activeStudent?.full_name}
               </Text>
             </View>
 
+            <Separator style={styles.sheetSeparator} />
+
             {/* Pilihan Metode Pembayaran */}
             <View style={styles.formSection}>
-              <Text style={styles.formSectionLabel}>Metode Pembayaran:</Text>
+              <Label required>Metode Pembayaran</Label>
               <View style={styles.paymentMethodChips}>
                 {PAYMENT_METHODS.map((method) => (
                   <Chip
@@ -453,94 +478,103 @@ export function FinanceScreen() {
               </View>
             </View>
 
-            {/* Nomor Rekening Tujuan Sandbox */}
+            {/* Rekening Tujuan Sandbox */}
             <View style={styles.bankInfoBox}>
               <Text style={styles.bankInfoTitle}>Rekening Tujuan Resmi:</Text>
-              <Text style={styles.bankInfoNumber}>Bank Mandiri: 137-00-1234567-8</Text>
-              <Text style={styles.bankInfoName}>a.n. SDN Nusantara Harapan</Text>
+              <Text style={styles.bankInfoNumber}>
+                Bank Mandiri: 137-00-1234567-8
+              </Text>
+              <Text style={styles.bankInfoName}>
+                a.n. SDN Nusantara Harapan
+              </Text>
             </View>
 
+            <Separator style={styles.sheetSeparator} />
+
             {/* Input Nomor Referensi Transfer */}
-            <Input
-              label="Nomor Referensi Transfer / Transaksi"
-              placeholder="Contoh: REF-892184 / No Struk"
-              value={paymentRef}
-              onChangeText={setPaymentRef}
-              containerStyle={styles.formGroup}
-              accessibilityLabel="Input nomor referensi transfer"
-            />
+            <View style={styles.formGroup}>
+              <Label required>Nomor Referensi Transfer / Transaksi</Label>
+              <Input
+                placeholder="Contoh: REF-892184 / No Struk"
+                value={paymentRef}
+                onChangeText={setPaymentRef}
+                accessibilityLabel="Input nomor referensi transfer"
+              />
+            </View>
 
             {/* Catatan / Keterangan Bukti Bayar */}
-            <Input
-              label="Catatan Pembayaran"
-              placeholder="Contoh: Transfer via m-banking a.n. Budi Santoso"
-              value={proofNote}
-              onChangeText={setProofNote}
-              containerStyle={styles.formGroup}
-              accessibilityLabel="Input catatan bukti bayar"
-            />
+            <View style={styles.formGroup}>
+              <Label>Catatan Pembayaran</Label>
+              <Input
+                placeholder="Contoh: Transfer via m-banking a.n. Budi Santoso"
+                value={proofNote}
+                onChangeText={setProofNote}
+                accessibilityLabel="Input catatan bukti bayar"
+              />
+            </View>
 
             {/* Opsional URL Bukti Bayar */}
-            <Input
-              label="URL Bukti Transfer (Opsional)"
-              placeholder="https://bukti-transfer.demo/foto.jpg"
-              value={paymentProofUrl}
-              onChangeText={setPaymentProofUrl}
-              containerStyle={styles.formGroup}
-              accessibilityLabel="Input URL bukti bayar opsional"
-            />
+            <View style={styles.formGroup}>
+              <Label>URL Bukti Transfer (Opsional)</Label>
+              <Input
+                placeholder="https://bukti-transfer.demo/foto.jpg"
+                value={paymentProofUrl}
+                onChangeText={setPaymentProofUrl}
+                accessibilityLabel="Input URL bukti transfer opsional"
+              />
+            </View>
 
-            {/* Error Message jika ada */}
+            {/* Alert Error jika ada */}
             {Boolean(paymentError) && (
-              <View style={styles.errorBox}>
-                <Ionicons
-                  name="alert-circle"
-                  size={18}
-                  color={colors.badge.danger.text}
-                />
-                <Text style={styles.errorText}>{paymentError}</Text>
-              </View>
+              <Alert
+                variant="destructive"
+                title="Kendala Pembayaran"
+                description={paymentError || ""}
+                style={styles.formAlert}
+              />
             )}
 
+            <Separator style={styles.sheetSeparator} />
+
             {/* Tombol Kirim Konfirmasi */}
-            <View style={styles.modalActionButtons}>
+            <View style={styles.sheetActionButtons}>
               <Button
                 title="Kirim Konfirmasi Pembayaran"
-                variant="primary"
+                variant="default"
                 loading={submittingPayment}
                 onPress={handleSubmitPayment}
                 leftIcon={
                   <Ionicons
-                    name="checkmark-circle"
+                    name="checkmark-circle-outline"
                     size={20}
-                    color={colors.textInverse}
+                    color={shadcn.primaryForeground}
                   />
                 }
                 accessibilityLabel="Kirim konfirmasi pembayaran sekarang"
               />
               <Button
                 title="Batal"
-                variant="secondary"
+                variant="outline"
                 onPress={() => setPaymentModalInvoice(null)}
                 accessibilityLabel="Batal konfirmasi pembayaran"
               />
             </View>
           </View>
         )}
-      </ModalSheet>
+      </Sheet>
 
-      {/* ModalSheet Kuitansi Digital Resmi */}
-      <ModalSheet
+      {/* Sheet Kuitansi Digital Resmi Bergaya Dokumen/Struk Editorial */}
+      <Sheet
         visible={Boolean(receiptModalInvoice)}
         onClose={() => setReceiptModalInvoice(null)}
         title="Kuitansi Digital Resmi"
       >
         {receiptModalInvoice && (
           <View style={styles.receiptContainer}>
-            {/* Header Sekolah Kuitansi */}
+            {/* Header Dokumen Kuitansi */}
             <View style={styles.receiptHeader}>
               <View style={styles.schoolBadgeSmall}>
-                <Ionicons name="school" size={20} color={colors.primary} />
+                <Ionicons name="school-outline" size={18} color={shadcn.foreground} />
                 <Text style={styles.schoolBadgeText}>SDN Nusantara Harapan</Text>
               </View>
               <Text style={styles.receiptMainTitle}>BUKTI PEMBAYARAN RESMI</Text>
@@ -552,9 +586,9 @@ export function FinanceScreen() {
               </View>
             </View>
 
-            <View style={styles.receiptDivider} />
+            <Separator style={styles.receiptSeparator} />
 
-            {/* Rincian Kuitansi */}
+            {/* Rincian Kuitansi Bergaya Struk Dokumen */}
             <View style={styles.receiptGrid}>
               <View style={styles.receiptRow}>
                 <Text style={styles.receiptFieldLabel}>Nama Siswa</Text>
@@ -562,6 +596,7 @@ export function FinanceScreen() {
                   {receiptModalInvoice.student_name || activeStudent?.full_name || "-"}
                 </Text>
               </View>
+              <Separator style={styles.rowSeparator} />
 
               <View style={styles.receiptRow}>
                 <Text style={styles.receiptFieldLabel}>Kelas</Text>
@@ -569,6 +604,7 @@ export function FinanceScreen() {
                   {receiptModalInvoice.class_name || activeStudent?.class_name || "Kelas 4A"}
                 </Text>
               </View>
+              <Separator style={styles.rowSeparator} />
 
               <View style={styles.receiptRow}>
                 <Text style={styles.receiptFieldLabel}>Uraian Pembayaran</Text>
@@ -576,6 +612,7 @@ export function FinanceScreen() {
                   {receiptModalInvoice.title}
                 </Text>
               </View>
+              <Separator style={styles.rowSeparator} />
 
               <View style={styles.receiptRow}>
                 <Text style={styles.receiptFieldLabel}>Jumlah Dibayar</Text>
@@ -583,6 +620,7 @@ export function FinanceScreen() {
                   {formatRupiah(receiptModalInvoice.amount)}
                 </Text>
               </View>
+              <Separator style={styles.rowSeparator} />
 
               <View style={styles.receiptRow}>
                 <Text style={styles.receiptFieldLabel}>Metode Pembayaran</Text>
@@ -590,6 +628,7 @@ export function FinanceScreen() {
                   {receiptModalInvoice.payment_method || "Transfer Bank"}
                 </Text>
               </View>
+              <Separator style={styles.rowSeparator} />
 
               <View style={styles.receiptRow}>
                 <Text style={styles.receiptFieldLabel}>Nomor Referensi</Text>
@@ -597,6 +636,7 @@ export function FinanceScreen() {
                   {receiptModalInvoice.payment_ref || "-"}
                 </Text>
               </View>
+              <Separator style={styles.rowSeparator} />
 
               <View style={styles.receiptRow}>
                 <Text style={styles.receiptFieldLabel}>Tanggal Verifikasi</Text>
@@ -609,6 +649,7 @@ export function FinanceScreen() {
                   )}
                 </Text>
               </View>
+              <Separator style={styles.rowSeparator} />
 
               <View style={styles.receiptRow}>
                 <Text style={styles.receiptFieldLabel}>Petugas Verifikator</Text>
@@ -618,26 +659,32 @@ export function FinanceScreen() {
               </View>
             </View>
 
-            <View style={styles.receiptNoticeBox}>
-              <Ionicons
-                name="information-circle"
-                size={18}
-                color={colors.primary}
-              />
-              <Text style={styles.receiptNoticeText}>
-                Kuitansi digital ini merupakan bukti pembayaran sah yang dikeluarkan oleh sistem informasi SDN Nusantara Harapan.
-              </Text>
-            </View>
+            <Separator style={styles.receiptSeparator} />
+
+            {/* Catatan Dokumen Resmi */}
+            <Alert
+              variant="default"
+              title="Keabsahan Dokumen"
+              description="Kuitansi digital ini merupakan bukti pembayaran sah yang dikeluarkan oleh sistem informasi SDN Nusantara Harapan."
+              icon={
+                <Ionicons
+                  name="information-circle-outline"
+                  size={20}
+                  color={shadcn.foreground}
+                />
+              }
+              style={styles.receiptAlert}
+            />
 
             <Button
               title="Tutup Kuitansi"
-              variant="secondary"
+              variant="outline"
               onPress={() => setReceiptModalInvoice(null)}
               accessibilityLabel="Tutup kuitansi digital"
             />
           </View>
         )}
-      </ModalSheet>
+      </Sheet>
     </Screen>
   );
 }
@@ -646,55 +693,54 @@ const styles = StyleSheet.create({
   childSwitcherStyle: {
     marginBottom: spacing.md,
   },
-  summaryCard: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primaryPressed,
+  // Hero Card Ringkasan Total Tagihan: Minimalis & Elegan
+  heroCard: {
+    backgroundColor: shadcn.card,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: shadcn.border,
     padding: spacing.lg,
     marginBottom: spacing.md,
   },
-  summaryTopRow: {
+  heroTopRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: spacing.md,
-    marginBottom: spacing.sm,
+    justifyContent: "space-between",
+    marginBottom: spacing.xs,
   },
-  summaryIconBadge: {
-    width: 44,
-    height: 44,
-    borderRadius: radius.full,
-    backgroundColor: "rgba(255, 255, 255, 0.15)",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  summaryTitleCol: {
+  heroTextCol: {
     flex: 1,
   },
-  summaryLabel: {
+  heroLabel: {
     fontSize: typography.size.xs,
-    color: "#D1FAE5",
+    color: shadcn.mutedForeground,
     fontWeight: typography.weight.medium,
   },
-  summaryStudentName: {
+  heroStudentName: {
     fontSize: typography.size.sm,
-    color: colors.textInverse,
-    fontWeight: typography.weight.bold,
+    color: shadcn.foreground,
+    fontWeight: typography.weight.semibold,
+    marginTop: 2,
   },
-  summaryAmount: {
+  heroAmount: {
     fontSize: typography.size.xxxl,
-    fontWeight: typography.weight.heavy,
-    color: colors.textInverse,
+    fontWeight: typography.weight.semibold,
+    color: shadcn.foreground,
     fontVariant: ["tabular-nums"],
     marginVertical: spacing.xs,
+    letterSpacing: typography.tracking.tight,
   },
-  summaryFooterRow: {
-    borderTopWidth: 1,
-    borderTopColor: "rgba(255, 255, 255, 0.2)",
-    paddingTop: spacing.xs + 2,
-    marginTop: spacing.xs,
+  heroSeparator: {
+    marginVertical: spacing.sm,
   },
-  summaryFooterText: {
+  heroFooterRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.xs,
+  },
+  heroFooterText: {
     fontSize: typography.size.xs,
-    color: "#E2E8F0",
+    color: shadcn.mutedForeground,
   },
   filterSection: {
     marginBottom: spacing.md,
@@ -722,25 +768,28 @@ const styles = StyleSheet.create({
   },
   invoiceTitle: {
     fontSize: typography.size.base,
-    fontWeight: typography.weight.bold,
-    color: colors.textPrimary,
+    fontWeight: typography.weight.semibold,
+    color: shadcn.foreground,
+    letterSpacing: typography.tracking.snug,
   },
   invoiceStudentClass: {
     fontSize: typography.size.xs,
-    color: colors.textSecondary,
+    color: shadcn.mutedForeground,
     marginTop: 2,
   },
   invoiceDescription: {
     fontSize: typography.size.sm,
-    color: colors.textSecondary,
+    color: shadcn.mutedForeground,
     marginBottom: spacing.md,
     lineHeight: typography.lineHeight.sm,
   },
-  invoiceDetailRow: {
+  invoiceDetailBox: {
     flexDirection: "row",
     justifyContent: "space-between",
-    backgroundColor: colors.cardSecondary,
+    backgroundColor: shadcn.secondary,
     borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: shadcn.border,
     padding: spacing.md,
     marginBottom: spacing.md,
   },
@@ -752,139 +801,110 @@ const styles = StyleSheet.create({
   },
   detailLabel: {
     fontSize: typography.size.xs,
-    color: colors.textSecondary,
+    color: shadcn.mutedForeground,
     marginBottom: 2,
   },
   detailAmount: {
     fontSize: typography.size.base,
-    fontWeight: typography.weight.bold,
-    color: colors.textPrimary,
+    fontWeight: typography.weight.semibold,
+    color: shadcn.foreground,
     fontVariant: ["tabular-nums"],
   },
   detailDate: {
     fontSize: typography.size.sm,
     fontWeight: typography.weight.medium,
-    color: colors.textPrimary,
+    color: shadcn.foreground,
     fontVariant: ["tabular-nums"],
+  },
+  cardSeparator: {
+    marginVertical: spacing.sm,
   },
   actionRow: {
     marginTop: spacing.xs,
   },
-  waitingNotice: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: colors.badge.warning.bg,
-    borderColor: colors.badge.warning.border,
-    borderWidth: 1,
-    padding: spacing.md,
-    borderRadius: radius.md,
-    gap: spacing.sm,
-  },
-  waitingNoticeText: {
-    flex: 1,
-    fontSize: typography.size.xs,
-    color: colors.badge.warning.text,
-    lineHeight: 18,
-  },
 
-  // Modal Pembayaran
-  modalBody: {
+  // Sheet Pembayaran Styles
+  sheetBody: {
     paddingBottom: spacing.xxl,
   },
   paymentSummaryCard: {
-    backgroundColor: colors.primarySoft,
-    borderColor: "#BBF7D0",
-    borderWidth: 1,
+    backgroundColor: shadcn.secondary,
     borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: shadcn.border,
     padding: spacing.md,
-    marginBottom: spacing.md,
     alignItems: "center",
   },
   paymentSummaryLabel: {
     fontSize: typography.size.xs,
-    color: colors.primary,
-    fontWeight: typography.weight.semibold,
+    color: shadcn.mutedForeground,
+    fontWeight: typography.weight.medium,
   },
   paymentSummaryAmount: {
     fontSize: typography.size.xxl,
-    fontWeight: typography.weight.heavy,
-    color: colors.primary,
+    fontWeight: typography.weight.semibold,
+    color: shadcn.foreground,
     fontVariant: ["tabular-nums"],
     marginVertical: 4,
+    letterSpacing: typography.tracking.tight,
   },
   paymentSummaryTitle: {
     fontSize: typography.size.sm,
-    color: colors.textSecondary,
+    color: shadcn.mutedForeground,
+  },
+  sheetSeparator: {
+    marginVertical: spacing.md,
   },
   formSection: {
-    marginBottom: spacing.md,
-  },
-  formSectionLabel: {
-    fontSize: typography.size.sm,
-    fontWeight: typography.weight.semibold,
-    color: colors.textPrimary,
     marginBottom: spacing.xs,
   },
   paymentMethodChips: {
     flexDirection: "row",
     flexWrap: "wrap",
     gap: spacing.xs,
+    marginTop: spacing.xs,
   },
   bankInfoBox: {
-    backgroundColor: colors.cardSecondary,
+    backgroundColor: shadcn.secondary,
     borderRadius: radius.md,
-    padding: spacing.md,
-    marginBottom: spacing.md,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: shadcn.border,
+    padding: spacing.md,
+    marginTop: spacing.md,
   },
   bankInfoTitle: {
     fontSize: typography.size.xs,
-    color: colors.textSecondary,
+    color: shadcn.mutedForeground,
     marginBottom: 2,
   },
   bankInfoNumber: {
     fontSize: typography.size.base,
-    fontWeight: typography.weight.bold,
-    color: colors.textPrimary,
+    fontWeight: typography.weight.semibold,
+    color: shadcn.foreground,
     fontVariant: ["tabular-nums"],
   },
   bankInfoName: {
     fontSize: typography.size.xs,
-    color: colors.textSecondary,
+    color: shadcn.mutedForeground,
     marginTop: 2,
   },
   formGroup: {
     marginBottom: spacing.md,
   },
-  errorBox: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: colors.badge.danger.bg,
-    borderColor: colors.badge.danger.border,
-    borderWidth: 1,
-    padding: spacing.md,
-    borderRadius: radius.md,
+  formAlert: {
     marginBottom: spacing.md,
-    gap: spacing.sm,
   },
-  errorText: {
-    flex: 1,
-    fontSize: typography.size.sm,
-    color: colors.badge.danger.text,
-  },
-  modalActionButtons: {
+  sheetActionButtons: {
     gap: spacing.sm,
-    marginTop: spacing.xs,
   },
 
-  // Modal Kuitansi
+  // Sheet Kuitansi Styles
   receiptContainer: {
     paddingBottom: spacing.xxl,
   },
   receiptHeader: {
     alignItems: "center",
-    marginBottom: spacing.md,
+    marginBottom: spacing.xs,
   },
   schoolBadgeSmall: {
     flexDirection: "row",
@@ -894,74 +914,62 @@ const styles = StyleSheet.create({
   },
   schoolBadgeText: {
     fontSize: typography.size.sm,
-    fontWeight: typography.weight.bold,
-    color: colors.primary,
+    fontWeight: typography.weight.semibold,
+    color: shadcn.foreground,
   },
   receiptMainTitle: {
-    fontSize: typography.size.lg,
-    fontWeight: typography.weight.heavy,
-    color: colors.textPrimary,
+    fontSize: typography.size.base,
+    fontWeight: typography.weight.semibold,
+    color: shadcn.foreground,
     letterSpacing: 0.5,
   },
   receiptNo: {
     fontSize: typography.size.xs,
-    color: colors.textSecondary,
+    color: shadcn.mutedForeground,
     marginTop: 2,
     fontVariant: ["tabular-nums"],
   },
   statusPaidBadge: {
     marginTop: spacing.sm,
   },
-  receiptDivider: {
-    height: 1,
-    backgroundColor: colors.border,
+  receiptSeparator: {
     marginVertical: spacing.md,
   },
   receiptGrid: {
-    backgroundColor: colors.cardSecondary,
+    backgroundColor: shadcn.card,
     borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: shadcn.border,
     padding: spacing.md,
-    marginBottom: spacing.lg,
-    gap: spacing.sm + 2,
   },
   receiptRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
+    paddingVertical: spacing.xs,
+    minHeight: touchTarget.minHeight - 10,
+  },
+  rowSeparator: {
+    marginVertical: spacing.xs,
   },
   receiptFieldLabel: {
     fontSize: typography.size.sm,
-    color: colors.textSecondary,
+    color: shadcn.mutedForeground,
     flex: 1,
   },
   receiptFieldValue: {
     fontSize: typography.size.sm,
-    fontWeight: typography.weight.semibold,
-    color: colors.textPrimary,
+    fontWeight: typography.weight.medium,
+    color: shadcn.foreground,
     flex: 1,
     textAlign: "right",
     fontVariant: ["tabular-nums"],
   },
   receiptAmount: {
-    color: colors.primary,
-    fontSize: typography.size.base,
-    fontWeight: typography.weight.bold,
+    fontWeight: typography.weight.semibold,
+    color: shadcn.foreground,
   },
-  receiptNoticeBox: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: colors.primarySoft,
-    borderColor: "#BBF7D0",
-    borderWidth: 1,
-    padding: spacing.md,
-    borderRadius: radius.md,
-    marginBottom: spacing.lg,
-    gap: spacing.sm,
-  },
-  receiptNoticeText: {
-    flex: 1,
-    fontSize: typography.size.xs,
-    color: colors.primary,
-    lineHeight: 18,
+  receiptAlert: {
+    marginBottom: spacing.md,
   },
 });

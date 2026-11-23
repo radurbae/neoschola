@@ -18,13 +18,17 @@ import {
   Chip,
   Button,
   Input,
-  ModalSheet,
+  Label,
+  Sheet,
+  Alert,
+  Avatar,
+  Separator,
   StateView,
 } from "../../components/ui";
 import { useAuth } from "../../store/auth";
 import * as api from "../../lib/api";
 import {
-  colors,
+  shadcn,
   spacing,
   radius,
   typography,
@@ -40,13 +44,13 @@ export function ThreadsScreen() {
 
   const [threads, setThreads] = useState<MessageThread[]>([]);
   const [serviceHours, setServiceHours] = useState<string>(
-    "Senin–Jumat, 07.00–15.00 WIB"
+    "Senin - Jumat, 07.00 - 15.00 WIB"
   );
   const [loading, setLoading] = useState<boolean>(true);
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // Modal Sheet Pesan Baru
+  // Sheet Pesan Baru
   const [newThreadModalVisible, setNewThreadModalVisible] = useState<boolean>(false);
   const [selectedStudentId, setSelectedStudentId] = useState<string>("");
   const [subject, setSubject] = useState<string>("");
@@ -66,7 +70,8 @@ export function ThreadsScreen() {
       const res = await api.getThreads();
       setThreads(res.threads || []);
       if (res.service_hours) {
-        setServiceHours(res.service_hours);
+        // Bersihkan dash en/em menjadi hyphen baku
+        setServiceHours(res.service_hours.replace(/[\u2013\u2014]/g, " - "));
       }
     } catch (err: any) {
       setErrorMessage(
@@ -140,27 +145,31 @@ export function ThreadsScreen() {
       subtitle="Komunikasi langsung wali murid & sekolah"
       rightAction={
         <Button
-          title="+ Pesan Baru"
-          variant="primary"
+          title="Pesan Baru"
+          variant="default"
           size="sm"
           onPress={handleOpenNewThreadModal}
+          leftIcon={
+            <Ionicons name="add" size={16} color={shadcn.primaryForeground} />
+          }
           accessibilityLabel="Buka formulir pesan baru ke wali kelas"
         />
       }
     >
-      {/* Banner Informasi Jam Layanan */}
-      <View style={styles.serviceBanner}>
-        <View style={styles.serviceIconCircle}>
-          <Ionicons
-            name="time-outline"
-            size={20}
-            color={colors.primary}
-          />
-        </View>
-        <View style={styles.serviceTextCol}>
-          <Text style={styles.serviceTitle}>Jam Layanan Guru:</Text>
-          <Text style={styles.serviceSubtitle}>{serviceHours}</Text>
-        </View>
+      {/* Jam Layanan Sekolah dalam Alert variant="default" (Monokrom Tenang) */}
+      <View style={styles.serviceAlertSection}>
+        <Alert
+          variant="default"
+          title="Jam Layanan Guru"
+          description={`Layanan konsultasi guru aktif: ${serviceHours}. Pesan di luar jam tersebut akan ditanggapi pada hari kerja berikutnya.`}
+          icon={
+            <Ionicons
+              name="time-outline"
+              size={20}
+              color={shadcn.foreground}
+            />
+          }
+        />
       </View>
 
       {/* Konten Daftar Percakapan */}
@@ -178,7 +187,7 @@ export function ThreadsScreen() {
         <StateView
           type="empty"
           title="Belum Ada Percakapan"
-          message="Anda belum memiliki pesan aktif dengan pihak sekolah. Mulai percakapan baru dengan menekan tombol di bawah."
+          message="Anda belum memiliki pesan aktif dengan pihak sekolah. Mulai percakapan baru dengan menekan tombol Pesan Baru di atas."
           actionLabel="Mulai Pesan Baru"
           onAction={handleOpenNewThreadModal}
         />
@@ -191,109 +200,113 @@ export function ThreadsScreen() {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={() => fetchThreads(true)}
-              tintColor={colors.primary}
-              colors={[colors.primary]}
+              tintColor={shadcn.primary}
+              colors={[shadcn.primary]}
             />
           }
         >
-          {threads.map((thread) => {
-            const hasUnread = Boolean(thread.unread_count && thread.unread_count > 0);
-            return (
-              <Card
-                key={thread.id}
-                style={[
-                  styles.threadCard,
-                  hasUnread && styles.threadCardUnread,
-                ]}
-                onPress={() => router.push(`/chat/${thread.id}`)}
-                accessibilityLabel={`Percakapan subjek ${thread.subject}, terkait siswa ${
-                  thread.student_name || "Siswa"
-                }. ${hasUnread ? `${thread.unread_count} pesan baru.` : ""}`}
-              >
-                <View style={styles.threadCardHeader}>
-                  <View style={styles.threadPartnerInfo}>
-                    <View style={styles.teacherAvatar}>
-                      <Ionicons
-                        name="person"
-                        size={18}
-                        color={colors.primary}
-                      />
-                    </View>
-                    <View style={styles.threadHeaderTitles}>
-                      <Text style={styles.threadTeacherName}>
-                        {thread.teacher_name || DEFAULT_TEACHER_NAME}
-                      </Text>
-                      <Text style={styles.threadStudentBadge}>
-                        Terkait: {thread.student_name || "Siswa Asuh"}
-                      </Text>
-                    </View>
-                  </View>
+          {/* Daftar Percakapan dalam 1 Card dipisah Separator */}
+          <Card style={styles.threadsCard}>
+            {threads.map((thread, index) => {
+              const hasUnread = Boolean(thread.unread_count && thread.unread_count > 0);
+              const teacherName = thread.teacher_name || DEFAULT_TEACHER_NAME;
+              const studentName = thread.student_name || "Siswa Asuh";
 
-                  {/* Waktu & Badge Unread */}
-                  <View style={styles.threadHeaderMeta}>
-                    <Text style={styles.threadTimeText}>
-                      {formatTanggalId(thread.last_message_at || thread.created_at, {
-                        shortMonth: true,
-                      })}
-                    </Text>
-                    {hasUnread && (
-                      <View style={styles.unreadBadge}>
-                        <Text style={styles.unreadBadgeText}>
-                          {thread.unread_count}
+              return (
+                <React.Fragment key={thread.id}>
+                  {index > 0 && <Separator />}
+                  <TouchableOpacity
+                    style={[
+                      styles.threadRow,
+                      hasUnread && styles.threadRowUnread,
+                    ]}
+                    onPress={() => router.push(`/chat/${thread.id}`)}
+                    activeOpacity={0.7}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Percakapan dengan ${teacherName}, terkait siswa ${studentName}, subjek ${thread.subject}. ${
+                      hasUnread ? `${thread.unread_count} pesan belum dibaca.` : ""
+                    }`}
+                  >
+                    <Avatar name={teacherName} size="md" />
+
+                    <View style={styles.threadContentCol}>
+                      {/* Baris Atas: Nama Lawan Bicara & Waktu */}
+                      <View style={styles.threadTopRow}>
+                        <Text style={styles.threadTeacherName} numberOfLines={1}>
+                          {teacherName}
+                        </Text>
+                        <Text style={styles.threadTimeText}>
+                          {formatTanggalId(thread.last_message_at || thread.created_at, {
+                            shortMonth: true,
+                          })}
                         </Text>
                       </View>
-                    )}
-                  </View>
-                </View>
 
-                {/* Subjek Percakapan */}
-                <Text style={styles.threadSubject} numberOfLines={1}>
-                  {thread.subject}
-                </Text>
+                      {/* Baris Tengah: Badge Siswa & Subjek */}
+                      <View style={styles.threadSubjectRow}>
+                        <Badge
+                          label={studentName}
+                          variant="outline"
+                          style={styles.studentBadge}
+                        />
+                        <Text style={styles.threadSubject} numberOfLines={1}>
+                          {thread.subject}
+                        </Text>
+                      </View>
 
-                {/* Cuplikan Pesan Terakhir */}
-                <Text
-                  style={[
-                    styles.threadSnippet,
-                    hasUnread && styles.threadSnippetUnread,
-                  ]}
-                  numberOfLines={2}
-                >
-                  {thread.last_message || "Belum ada pesan."}
-                </Text>
-              </Card>
-            );
-          })}
+                      {/* Baris Bawah: Cuplikan Pesan & Counter Unread */}
+                      <View style={styles.threadBottomRow}>
+                        <Text
+                          style={[
+                            styles.threadSnippet,
+                            hasUnread && styles.threadSnippetUnread,
+                          ]}
+                          numberOfLines={2}
+                        >
+                          {thread.last_message || "Belum ada pesan."}
+                        </Text>
+                        {hasUnread && (
+                          <View style={styles.unreadPill}>
+                            <Text style={styles.unreadPillText}>
+                              {thread.unread_count}
+                            </Text>
+                          </View>
+                        )}
+                      </View>
+                    </View>
+                  </TouchableOpacity>
+                </React.Fragment>
+              );
+            })}
+          </Card>
         </ScrollView>
       )}
 
-      {/* ModalSheet Buat Pesan Baru */}
-      <ModalSheet
+      {/* Sheet Buat Pesan Baru */}
+      <Sheet
         visible={newThreadModalVisible}
         onClose={() => setNewThreadModalVisible(false)}
         title="Mulai Pesan Baru"
       >
         <View style={styles.newThreadForm}>
           {/* Penerima Tetap: Wali Kelas */}
-          <View style={styles.recipientCard}>
-            <Text style={styles.fieldLabel}>Penerima Pesan:</Text>
-            <View style={styles.recipientRow}>
-              <View style={styles.recipientIconCircle}>
-                <Ionicons name="school" size={20} color={colors.primary} />
-              </View>
-              <View style={styles.recipientTextCol}>
-                <Text style={styles.recipientName}>{DEFAULT_TEACHER_NAME}</Text>
-                <Text style={styles.recipientRole}>
-                  Wali Kelas SDN Nusantara Harapan
-                </Text>
-              </View>
+          <Label>Penerima Pesan</Label>
+          <View style={styles.recipientRow}>
+            <Avatar name={DEFAULT_TEACHER_NAME} size="md" />
+            <View style={styles.recipientTextCol}>
+              <Text style={styles.recipientName}>{DEFAULT_TEACHER_NAME}</Text>
+              <Text style={styles.recipientRole}>
+                Wali Kelas SDN Nusantara Harapan
+              </Text>
             </View>
           </View>
+
+          <Separator style={styles.formSeparator} />
 
           {/* Pemilihan Anak Asuh */}
           {students.length > 0 && (
             <View style={styles.formGroup}>
-              <Text style={styles.fieldLabel}>Pilih Siswa Terkait:</Text>
+              <Label required>Pilih Siswa Terkait</Label>
               <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
@@ -305,7 +318,7 @@ export function ThreadsScreen() {
                     label={`${student.nickname || student.full_name} (${student.class_name || "Siswa"})`}
                     selected={selectedStudentId === student.id}
                     onPress={() => setSelectedStudentId(student.id)}
-                    accessibilityLabel={`Pilih anak: ${student.full_name}`}
+                    accessibilityLabel={`Pilih siswa ${student.full_name}`}
                   />
                 ))}
               </ScrollView>
@@ -313,241 +326,198 @@ export function ThreadsScreen() {
           )}
 
           {/* Subjek Percakapan */}
-          <Input
-            label="Subjek Percakapan"
-            placeholder="Contoh: Konsultasi Nilai Matematika"
-            value={subject}
-            onChangeText={setSubject}
-            containerStyle={styles.formGroup}
-            accessibilityLabel="Input subjek percakapan"
-          />
+          <View style={styles.formGroup}>
+            <Label required>Subjek Percakapan</Label>
+            <Input
+              placeholder="Contoh: Konsultasi Nilai Matematika"
+              value={subject}
+              onChangeText={setSubject}
+              accessibilityLabel="Input subjek percakapan"
+            />
+          </View>
 
           {/* Pesan Awal */}
-          <Input
-            label="Pesan Awal"
-            placeholder="Tuliskan pertanyaan atau hal yang ingin Anda sampaikan kepada wali kelas..."
-            value={initialMessage}
-            onChangeText={setInitialMessage}
-            multiline
-            numberOfLines={4}
-            containerStyle={styles.formGroup}
-            inputStyle={styles.textAreaField}
-            accessibilityLabel="Input isi pesan awal"
-          />
+          <View style={styles.formGroup}>
+            <Label required>Pesan Awal</Label>
+            <Input
+              placeholder="Tuliskan pertanyaan atau hal yang ingin Anda sampaikan kepada wali kelas..."
+              value={initialMessage}
+              onChangeText={setInitialMessage}
+              multiline
+              numberOfLines={4}
+              accessibilityLabel="Input isi pesan awal"
+            />
+          </View>
 
-          {/* Error Message jika ada */}
+          {/* Alert Error jika ada kendala validasi / API */}
           {Boolean(formError) && (
-            <View style={styles.formErrorBox}>
-              <Ionicons
-                name="alert-circle"
-                size={18}
-                color={colors.badge.danger.text}
-              />
-              <Text style={styles.formErrorText}>{formError}</Text>
-            </View>
+            <Alert
+              variant="destructive"
+              title="Perhatian"
+              description={formError || ""}
+              style={styles.formAlert}
+            />
           )}
+
+          <Separator style={styles.formSeparator} />
 
           {/* Tombol Aksi Kirim */}
           <View style={styles.formButtonRow}>
             <Button
               title="Kirim Pesan"
-              variant="primary"
+              variant="default"
               loading={creatingThread}
               onPress={handleCreateThread}
               leftIcon={
                 <Ionicons
                   name="paper-plane-outline"
                   size={18}
-                  color={colors.textInverse}
+                  color={shadcn.primaryForeground}
                 />
               }
-              accessibilityLabel="Kirim pesan baru dan buka percakapan"
+              accessibilityLabel="Kirim pesan baru dan buka ruang percakapan"
             />
             <Button
               title="Batal"
-              variant="secondary"
+              variant="outline"
               onPress={() => setNewThreadModalVisible(false)}
               accessibilityLabel="Batal membuat pesan baru"
             />
           </View>
         </View>
-      </ModalSheet>
+      </Sheet>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  serviceBanner: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: colors.primarySoft,
-    borderColor: "#BBF7D0",
-    borderWidth: 1,
-    marginHorizontal: spacing.lg,
-    marginTop: spacing.md,
-    marginBottom: spacing.sm,
-    padding: spacing.md,
-    borderRadius: radius.md,
-    gap: spacing.md,
-  },
-  serviceIconCircle: {
-    width: 36,
-    height: 36,
-    borderRadius: radius.full,
-    backgroundColor: "#DCFCE7",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  serviceTextCol: {
-    flex: 1,
-  },
-  serviceTitle: {
-    fontSize: typography.size.xs,
-    fontWeight: typography.weight.bold,
-    color: colors.primary,
-  },
-  serviceSubtitle: {
-    fontSize: typography.size.sm,
-    color: colors.textPrimary,
-    fontWeight: typography.weight.medium,
-    marginTop: 2,
-    fontVariant: ["tabular-nums"],
+  serviceAlertSection: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.md,
+    backgroundColor: shadcn.canvas,
   },
   threadsScrollView: {
     flex: 1,
   },
   threadsScrollContent: {
-    padding: spacing.lg,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.xs,
     paddingBottom: spacing.xxxl,
   },
-  threadCard: {
-    padding: spacing.lg,
-    marginBottom: spacing.md,
+  threadsCard: {
+    padding: 0,
+    overflow: "hidden",
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: shadcn.border,
+    backgroundColor: shadcn.card,
   },
-  threadCardUnread: {
-    borderColor: colors.primary,
-    borderWidth: 1.5,
-    backgroundColor: "#FDFDFD",
-  },
-  threadCardHeader: {
+  threadRow: {
     flexDirection: "row",
     alignItems: "flex-start",
-    justifyContent: "space-between",
-    marginBottom: spacing.xs,
+    padding: spacing.lg,
+    minHeight: touchTarget.minHeight,
+    gap: spacing.md,
+    backgroundColor: shadcn.card,
   },
-  threadPartnerInfo: {
+  threadRowUnread: {
+    backgroundColor: shadcn.background,
+  },
+  threadContentCol: {
+    flex: 1,
+  },
+  threadTopRow: {
     flexDirection: "row",
     alignItems: "center",
-    flex: 1,
-    gap: spacing.sm,
-  },
-  teacherAvatar: {
-    width: 36,
-    height: 36,
-    borderRadius: radius.full,
-    backgroundColor: colors.primarySoft,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1,
-    borderColor: "#BBF7D0",
-  },
-  threadHeaderTitles: {
-    flex: 1,
+    justifyContent: "space-between",
+    marginBottom: 2,
   },
   threadTeacherName: {
     fontSize: typography.size.sm,
-    fontWeight: typography.weight.bold,
-    color: colors.textPrimary,
-  },
-  threadStudentBadge: {
-    fontSize: typography.size.xs,
-    color: colors.textSecondary,
-    marginTop: 2,
-  },
-  threadHeaderMeta: {
-    alignItems: "flex-end",
-    gap: 4,
+    fontWeight: typography.weight.semibold,
+    color: shadcn.foreground,
+    flex: 1,
+    marginRight: spacing.sm,
   },
   threadTimeText: {
     fontSize: typography.size.xs,
-    color: colors.textSecondary,
+    color: shadcn.mutedForeground,
     fontVariant: ["tabular-nums"],
   },
-  unreadBadge: {
-    backgroundColor: colors.primary,
+  threadSubjectRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.xs,
+    marginVertical: 4,
+  },
+  studentBadge: {
+    paddingVertical: 2,
+  },
+  threadSubject: {
+    fontSize: typography.size.sm,
+    fontWeight: typography.weight.medium,
+    color: shadcn.foreground,
+    flex: 1,
+  },
+  threadBottomRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginTop: 2,
+    gap: spacing.sm,
+  },
+  threadSnippet: {
+    fontSize: typography.size.xs,
+    color: shadcn.mutedForeground,
+    lineHeight: typography.lineHeight.xs + 2,
+    flex: 1,
+  },
+  threadSnippetUnread: {
+    color: shadcn.foreground,
+    fontWeight: typography.weight.medium,
+  },
+  unreadPill: {
+    backgroundColor: shadcn.primary,
     borderRadius: radius.full,
-    minWidth: 20,
-    height: 20,
+    minWidth: 22,
+    height: 22,
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 6,
   },
-  unreadBadgeText: {
-    color: colors.textInverse,
+  unreadPillText: {
+    color: shadcn.primaryForeground,
     fontSize: 11,
     fontWeight: typography.weight.bold,
     fontVariant: ["tabular-nums"],
   },
-  threadSubject: {
-    fontSize: typography.size.base,
-    fontWeight: typography.weight.semibold,
-    color: colors.textPrimary,
-    marginTop: spacing.xs,
-    marginBottom: spacing.xs,
-  },
-  threadSnippet: {
-    fontSize: typography.size.sm,
-    color: colors.textSecondary,
-    lineHeight: typography.lineHeight.sm,
-  },
-  threadSnippetUnread: {
-    color: colors.textPrimary,
-    fontWeight: typography.weight.medium,
-  },
 
-  // Form Modal Styles
+  // Sheet Form Styles
   newThreadForm: {
     paddingBottom: spacing.xxl,
-  },
-  fieldLabel: {
-    fontSize: typography.size.sm,
-    fontWeight: typography.weight.semibold,
-    color: colors.textPrimary,
-    marginBottom: spacing.xs,
-  },
-  recipientCard: {
-    backgroundColor: colors.cardSecondary,
-    borderRadius: radius.md,
-    padding: spacing.md,
-    marginBottom: spacing.md,
   },
   recipientRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.md,
-    marginTop: spacing.xs,
-  },
-  recipientIconCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: radius.full,
-    backgroundColor: colors.primarySoft,
-    alignItems: "center",
-    justifyContent: "center",
+    padding: spacing.md,
+    borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: "#BBF7D0",
+    borderColor: shadcn.border,
+    backgroundColor: shadcn.secondary,
+    marginBottom: spacing.xs,
   },
   recipientTextCol: {
     flex: 1,
   },
   recipientName: {
     fontSize: typography.size.sm,
-    fontWeight: typography.weight.bold,
-    color: colors.textPrimary,
+    fontWeight: typography.weight.semibold,
+    color: shadcn.foreground,
   },
   recipientRole: {
     fontSize: typography.size.xs,
-    color: colors.textSecondary,
+    color: shadcn.mutedForeground,
     marginTop: 2,
   },
   formGroup: {
@@ -557,29 +527,14 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     paddingVertical: spacing.xs,
   },
-  textAreaField: {
-    minHeight: 96,
-    textAlignVertical: "top",
+  formSeparator: {
+    marginVertical: spacing.md,
   },
-  formErrorBox: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: colors.badge.danger.bg,
-    borderColor: colors.badge.danger.border,
-    borderWidth: 1,
-    padding: spacing.md,
-    borderRadius: radius.md,
+  formAlert: {
     marginBottom: spacing.md,
-    gap: spacing.sm,
-  },
-  formErrorText: {
-    flex: 1,
-    fontSize: typography.size.sm,
-    color: colors.badge.danger.text,
-    fontWeight: typography.weight.medium,
   },
   formButtonRow: {
     gap: spacing.sm,
-    marginTop: spacing.sm,
+    marginTop: spacing.xs,
   },
 });

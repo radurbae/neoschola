@@ -7,17 +7,22 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
-  ActivityIndicator,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { formatTanggalId } from "@neoschola/shared";
 import type { Message, MessageThread } from "@neoschola/shared";
-import { Screen, Input, Button, StateView } from "../../components/ui";
+import {
+  Screen,
+  Input,
+  Button,
+  Avatar,
+  Alert,
+  StateView,
+} from "../../components/ui";
 import { useAuth } from "../../store/auth";
 import * as api from "../../lib/api";
 import {
-  colors,
+  shadcn,
   spacing,
   radius,
   typography,
@@ -85,7 +90,7 @@ export function ChatScreen() {
     try {
       const res = await api.sendThreadMessage(id, { content: contentToSend });
       setMessages((prev) => [...prev, res.message]);
-    } catch (err: any) {
+    } catch {
       // Kembalikan teks jika gagal kirim
       setInputContent(contentToSend);
     } finally {
@@ -104,18 +109,9 @@ export function ChatScreen() {
   };
 
   return (
-    <Screen
-      scroll={false}
-      headerShown={true}
-      title={thread?.subject || "Ruang Percakapan"}
-      subtitle={
-        thread
-          ? `${thread.teacher_name || "Wali Kelas"} • Siswa: ${
-              thread.student_name || "Siswa"
-            }`
-          : "Memuat info..."
-      }
-      rightAction={
+    <Screen scroll={false} headerShown={false}>
+      {/* Header Percakapan Hairline shadcn.background dengan tombol kembali 44x44pt + Avatar sm + subjek */}
+      <View style={styles.headerBar}>
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => router.back()}
@@ -123,14 +119,33 @@ export function ChatScreen() {
           accessibilityRole="button"
           accessibilityLabel="Kembali ke daftar pesan"
         >
-          <Ionicons name="arrow-back" size={24} color={colors.textPrimary} />
+          <Ionicons name="arrow-back" size={20} color={shadcn.foreground} />
         </TouchableOpacity>
-      }
-    >
+
+        <Avatar
+          name={thread?.teacher_name || "Wali Kelas"}
+          size="sm"
+          style={styles.headerAvatar}
+        />
+
+        <View style={styles.headerTitleCol}>
+          <Text style={styles.headerTitle} numberOfLines={1}>
+            {thread?.subject || "Ruang Percakapan"}
+          </Text>
+          <Text style={styles.headerSubtitle} numberOfLines={1}>
+            {thread
+              ? `${thread.teacher_name || "Wali Kelas"} - Siswa: ${
+                  thread.student_name || "Siswa"
+                }`
+              : "Memuat informasi..."}
+          </Text>
+        </View>
+      </View>
+
       <KeyboardAvoidingView
         style={styles.chatContainer}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 8 : 0}
       >
         {/* Area Pesan */}
         {loading ? (
@@ -150,20 +165,23 @@ export function ChatScreen() {
             contentContainerStyle={styles.messagesContent}
             showsVerticalScrollIndicator={false}
           >
-            {/* Header info thread */}
+            {/* Notifikasi Monokrom Resmi Percakapan */}
             {thread && (
-              <View style={styles.threadInfoBox}>
-                <Ionicons
-                  name="shield-checkmark"
-                  size={16}
-                  color={colors.primary}
-                />
-                <Text style={styles.threadInfoText}>
-                  Percakapan resmi terpantau dengan{" "}
-                  {thread.teacher_name || "Wali Kelas"} terkait{" "}
-                  {thread.student_name || "Siswa"}.
-                </Text>
-              </View>
+              <Alert
+                variant="default"
+                title="Percakapan Resmi Sekolah"
+                description={`Percakapan langsung terpantau dengan ${
+                  thread.teacher_name || "Wali Kelas"
+                } terkait siswa asuh ${thread.student_name || "Siswa"}.`}
+                icon={
+                  <Ionicons
+                    name="shield-checkmark-outline"
+                    size={20}
+                    color={shadcn.foreground}
+                  />
+                }
+                style={styles.threadAlert}
+              />
             )}
 
             {messages.length === 0 ? (
@@ -210,7 +228,7 @@ export function ChatScreen() {
                         {msg.content}
                       </Text>
 
-                      {/* Waktu Pesan */}
+                      {/* Waktu Pesan & Tanda Terkirim */}
                       <View style={styles.bubbleFooter}>
                         <Text
                           style={[
@@ -226,7 +244,7 @@ export function ChatScreen() {
                           <Ionicons
                             name="checkmark-done"
                             size={14}
-                            color="#BBF7D0"
+                            color={shadcn.primaryForeground}
                             style={styles.checkIcon}
                           />
                         )}
@@ -239,37 +257,34 @@ export function ChatScreen() {
           </ScrollView>
         )}
 
-        {/* Input Bar Bawah */}
-        <View style={styles.inputBar}>
-          <Input
-            placeholder="Ketik pesan untuk guru..."
-            value={inputContent}
-            onChangeText={setInputContent}
-            containerStyle={styles.textInputWrapper}
-            inputStyle={styles.inputField}
-            accessibilityLabel="Tulis pesan"
-          />
-          <TouchableOpacity
-            style={[
-              styles.sendButton,
-              (!inputContent.trim() || sending) && styles.sendButtonDisabled,
-            ]}
-            onPress={handleSendMessage}
+        {/* Composer Bawah shadcn.background dengan border top shadcn.border, Input, dan Button default */}
+        <View style={styles.composerBar}>
+          <View style={styles.composerInputCol}>
+            <Input
+              placeholder="Ketik pesan untuk guru..."
+              value={inputContent}
+              onChangeText={setInputContent}
+              containerStyle={styles.inputContainer}
+              inputStyle={styles.inputField}
+              accessibilityLabel="Tulis pesan untuk guru"
+            />
+          </View>
+          <Button
+            variant="default"
+            size="icon"
+            loading={sending}
             disabled={!inputContent.trim() || sending}
-            activeOpacity={0.7}
-            accessibilityRole="button"
-            accessibilityLabel="Kirim pesan"
-          >
-            {sending ? (
-              <ActivityIndicator size="small" color={colors.textInverse} />
-            ) : (
+            onPress={handleSendMessage}
+            leftIcon={
               <Ionicons
                 name="send"
                 size={18}
-                color={colors.textInverse}
+                color={shadcn.primaryForeground}
               />
-            )}
-          </TouchableOpacity>
+            }
+            accessibilityLabel="Kirim pesan sekarang"
+            style={styles.sendButton}
+          />
         </View>
       </KeyboardAvoidingView>
     </Screen>
@@ -277,6 +292,16 @@ export function ChatScreen() {
 }
 
 const styles = StyleSheet.create({
+  headerBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    minHeight: 56,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    backgroundColor: shadcn.background,
+    borderBottomWidth: 1,
+    borderBottomColor: shadcn.border,
+  },
   backButton: {
     width: touchTarget.minWidth,
     height: touchTarget.minHeight,
@@ -284,8 +309,27 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     borderRadius: radius.md,
   },
+  headerAvatar: {
+    marginRight: spacing.sm,
+  },
+  headerTitleCol: {
+    flex: 1,
+    justifyContent: "center",
+  },
+  headerTitle: {
+    fontSize: typography.size.base,
+    fontWeight: typography.weight.semibold,
+    color: shadcn.foreground,
+    letterSpacing: typography.tracking.snug,
+  },
+  headerSubtitle: {
+    fontSize: typography.size.xs,
+    color: shadcn.mutedForeground,
+    marginTop: 2,
+  },
   chatContainer: {
     flex: 1,
+    backgroundColor: shadcn.canvas,
   },
   messagesScroll: {
     flex: 1,
@@ -294,22 +338,8 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     paddingBottom: spacing.lg,
   },
-  threadInfoBox: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: colors.cardSecondary,
-    padding: spacing.md,
-    borderRadius: radius.md,
+  threadAlert: {
     marginBottom: spacing.lg,
-    gap: spacing.sm,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  threadInfoText: {
-    flex: 1,
-    fontSize: typography.size.xs,
-    color: colors.textSecondary,
-    lineHeight: 18,
   },
   emptyMessagesBox: {
     padding: spacing.xl,
@@ -317,8 +347,9 @@ const styles = StyleSheet.create({
   },
   emptyMessagesText: {
     fontSize: typography.size.sm,
-    color: colors.textSecondary,
+    color: shadcn.mutedForeground,
     textAlign: "center",
+    lineHeight: typography.lineHeight.sm,
   },
   bubbleRow: {
     flexDirection: "row",
@@ -334,47 +365,35 @@ const styles = StyleSheet.create({
     maxWidth: "80%",
     borderRadius: radius.lg,
     paddingVertical: spacing.sm + 2,
-    paddingHorizontal: spacing.md + 2,
-    ...Platform.select({
-      ios: {
-        shadowColor: "#0F172A",
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.05,
-        shadowRadius: 2,
-      },
-      android: {
-        elevation: 1,
-      },
-      web: {
-        boxShadow: "0 1px 2px rgba(15, 23, 42, 0.05)",
-      },
-    }),
+    paddingHorizontal: spacing.md,
   },
+  // Pesan Sendiri: shadcn.primary teks shadcn.primaryForeground
   bubbleCardMy: {
-    backgroundColor: colors.primary, // Kontras teks putih 7.4:1 terhadap hijau primary
+    backgroundColor: shadcn.primary,
     borderBottomRightRadius: 2,
   },
+  // Pesan Lawan Bicara: shadcn.secondary teks shadcn.foreground border shadcn.border
   bubbleCardPartner: {
-    backgroundColor: colors.card,
+    backgroundColor: shadcn.secondary,
     borderBottomLeftRadius: 2,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: shadcn.border,
   },
   senderNameText: {
     fontSize: typography.size.xs,
-    fontWeight: typography.weight.bold,
-    color: colors.primary,
+    fontWeight: typography.weight.semibold,
+    color: shadcn.foreground,
     marginBottom: 2,
   },
   messageText: {
-    fontSize: typography.size.base - 1,
-    lineHeight: typography.lineHeight.base - 2,
+    fontSize: typography.size.sm,
+    lineHeight: typography.lineHeight.sm + 2,
   },
   messageTextMy: {
-    color: colors.textInverse,
+    color: shadcn.primaryForeground,
   },
   messageTextPartner: {
-    color: colors.textPrimary,
+    color: shadcn.foreground,
   },
   bubbleFooter: {
     flexDirection: "row",
@@ -388,43 +407,40 @@ const styles = StyleSheet.create({
     fontVariant: ["tabular-nums"],
   },
   messageTimeTextMy: {
-    color: "#E2E8F0",
+    color: shadcn.primaryForeground,
+    opacity: 0.75,
   },
   messageTimeTextPartner: {
-    color: colors.textSecondary,
+    color: shadcn.mutedForeground,
   },
   checkIcon: {
     marginLeft: 2,
+    opacity: 0.85,
   },
 
-  // Input Bar Styles
-  inputBar: {
+  // Composer Bawah
+  composerBar: {
     flexDirection: "row",
-    alignItems: "flex-end",
+    alignItems: "center",
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
-    backgroundColor: colors.card,
+    backgroundColor: shadcn.background,
     borderTopWidth: 1,
-    borderTopColor: colors.border,
+    borderTopColor: shadcn.border,
     gap: spacing.sm,
   },
-  textInputWrapper: {
+  composerInputCol: {
     flex: 1,
+  },
+  inputContainer: {
     marginBottom: 0,
   },
   inputField: {
     minHeight: touchTarget.minHeight,
-    paddingVertical: 10,
+    paddingVertical: 8,
   },
   sendButton: {
     width: touchTarget.minWidth,
     height: touchTarget.minHeight,
-    backgroundColor: colors.primary,
-    borderRadius: radius.md,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  sendButtonDisabled: {
-    opacity: 0.5,
   },
 });
