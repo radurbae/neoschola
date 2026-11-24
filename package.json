@@ -11,5 +11,8 @@
     "typecheck": "npm run --workspaces --if-present typecheck",
     "test:api": "npm run --workspace=apps/api test",
     "build:mobile:web": "npm run --workspace=apps/mobile build:web"
+  },
+  "overrides": {
+    "expo-font": "~13.0.4"
   }
 }
