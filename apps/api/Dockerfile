@@ -16,9 +16,7 @@ COPY packages/shared/src packages/shared/src
 COPY apps/api/tsconfig.json apps/api/tsconfig.json
 COPY apps/api/src apps/api/src
 
-RUN mkdir -p /data && chown -R bun:bun /app /data
-
-USER bun
+RUN mkdir -p /data
 
 ENV NODE_ENV=production
 ENV PORT=3001
