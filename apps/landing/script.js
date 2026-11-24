@@ -1,9 +1,3 @@
-/**
- * NeoSchola Landing Page Script
- * Pure Vanilla JavaScript, zero build step.
- * Strict No Dash Rule.
- */
-
 window.NEOSCHOLA_CONFIG = {
   // Ganti dengan URL domain deployment web app NeoSchola
   demoUrl: "https://app.neoschola.floc.site",
@@ -13,7 +7,6 @@ window.NEOSCHOLA_CONFIG = {
   contactEmail: "floccreativeid@gmail.com"
 };
 
-// Data simulasi siswa untuk Child Switcher interaktif di hero preview
 var DEMO_CHILDREN = {
   raka: {
     name: "Raka Pratama",
@@ -53,7 +46,6 @@ document.addEventListener("DOMContentLoaded", function () {
   initDemoLinks();
 });
 
-// Penampung live announcement untuk pembaca layar (screen reader)
 function initLiveClipboardFeedback() {
   if (!document.getElementById("clipboard-live-region")) {
     var liveRegion = document.createElement("div");
@@ -74,7 +66,6 @@ function announceToScreenReader(message) {
   }
 }
 
-// Navigasi Mobile Drawer
 function initMobileDrawer() {
   var btnHamburger = document.getElementById("btn-hamburger");
   var drawer = document.getElementById("mobile-drawer");
@@ -95,7 +86,6 @@ function initMobileDrawer() {
     toggleDrawer();
   });
 
-  // Tutup drawer jika link navigasi di dalamnya diklik
   var mobileLinks = drawer.querySelectorAll("a");
   for (var i = 0; i < mobileLinks.length; i++) {
     mobileLinks[i].addEventListener("click", function () {
@@ -103,7 +93,6 @@ function initMobileDrawer() {
     });
   }
 
-  // Tutup dengan tombol Escape
   document.addEventListener("keydown", function (e) {
     if (e.key === "Escape" && drawer.classList.contains("is-open")) {
       toggleDrawer(false);
@@ -112,7 +101,6 @@ function initMobileDrawer() {
   });
 }
 
-// Child Switcher di Hero Preview
 function initChildSwitcher() {
   var tabs = document.querySelectorAll(".child-tab");
   var cardPresensi = document.getElementById("hero-card-presensi");
@@ -136,7 +124,6 @@ function initChildSwitcher() {
     var data = DEMO_CHILDREN[childKey];
     if (!data) return;
 
-    // Update Presensi Card
     presensiStatus.textContent = data.attendanceStatus;
     presensiDetail.textContent = data.attendanceDetail;
     presensiSub.textContent = data.attendanceSub;
@@ -148,12 +135,10 @@ function initChildSwitcher() {
       }
     }
 
-    // Update Tugas Card
     tugasStatus.textContent = data.taskStatus;
     tugasDetail.textContent = data.taskDetail;
     tugasSub.textContent = data.taskSub;
 
-    // Update SPP Card
     sppStatus.textContent = data.sppStatus;
     sppDetail.textContent = data.sppDetail;
     sppSub.textContent = data.sppSub;
@@ -182,7 +167,6 @@ function initChildSwitcher() {
   }
 }
 
-// Alur Peran Tablist Aksesibel (Keyboard support: panah kiri/kanan, Home, End)
 function initRoleTabs() {
   var tablist = document.querySelector('[role="tablist"].role-tabs');
   if (!tablist) return;
@@ -242,7 +226,7 @@ function initRoleTabs() {
   }
 }
 
-// Fallback clipboard manual
+// Fallback for non-HTTPS origins or environments where navigator.clipboard is rejected
 function copyTextFallback(text) {
   var textArea = document.createElement("textarea");
   textArea.value = text;
@@ -283,7 +267,6 @@ function copyToClipboard(text, onSuccess, onError) {
   }
 }
 
-// Inisialisasi tombol Salin Email dan Salin Sandi
 function initCopyButtons() {
   var buttons = document.querySelectorAll(".btn-copy");
   for (var i = 0; i < buttons.length; i++) {
@@ -311,7 +294,6 @@ function initCopyButtons() {
   }
 }
 
-// Inisialisasi tombol buka aplikasi demo dan kontak dinamis dari NEOSCHOLA_CONFIG
 function initDemoLinks() {
   var cfg = window.NEOSCHOLA_CONFIG || {};
   var demoBtns = document.querySelectorAll(".btn-open-demo");
@@ -331,6 +313,15 @@ function initDemoLinks() {
     btnWaConsult.setAttribute("href", "https://wa.me/" + waNumber + "?text=" + consultText);
   }
 
+  var btnWaDirect = document.getElementById("btn-wa-direct");
+  if (btnWaDirect) {
+    var defaultWaNumber = cfg.whatsappNumber || "6285791702218";
+    var defaultDirectText = encodeURIComponent(
+      "Halo Tim NeoSchola, saya ingin menjadwalkan demo portal sekolah."
+    );
+    btnWaDirect.setAttribute("href", "https://wa.me/" + defaultWaNumber + "?text=" + defaultDirectText);
+  }
+
   var linkContactEmail = document.getElementById("link-contact-email");
   if (linkContactEmail) {
     var contactEmail = cfg.contactEmail || "floccreativeid@gmail.com";
@@ -339,7 +330,6 @@ function initDemoLinks() {
   }
 }
 
-// Form Prospek / Jadwalkan Demo
 function initLeadForm() {
   var form = document.getElementById("lead-form");
   if (!form) return;
@@ -357,43 +347,43 @@ function initLeadForm() {
   var btnWaDirect = document.getElementById("btn-wa-direct");
   var btnCopyMsg = document.getElementById("btn-copy-wa-message");
 
-  function validate() {
-    var isValid = true;
-
-    if (!schoolNameInput.value.trim()) {
-      schoolNameInput.classList.add("has-error");
-      if (errorSchool) errorSchool.classList.add("is-visible");
-      isValid = false;
+  function setFieldError(input, errorEl, hasError) {
+    if (!input) return;
+    if (hasError) {
+      input.classList.add("has-error");
+      input.setAttribute("aria-invalid", "true");
+      if (errorEl) {
+        input.setAttribute("aria-describedby", errorEl.id);
+        errorEl.classList.add("is-visible");
+      }
     } else {
-      schoolNameInput.classList.remove("has-error");
-      if (errorSchool) errorSchool.classList.remove("is-visible");
+      input.classList.remove("has-error");
+      input.setAttribute("aria-invalid", "false");
+      if (errorEl) {
+        input.removeAttribute("aria-describedby");
+        errorEl.classList.remove("is-visible");
+      }
     }
-
-    if (!contactNameInput.value.trim()) {
-      contactNameInput.classList.add("has-error");
-      if (errorContact) errorContact.classList.add("is-visible");
-      isValid = false;
-    } else {
-      contactNameInput.classList.remove("has-error");
-      if (errorContact) errorContact.classList.remove("is-visible");
-    }
-
-    return isValid;
   }
 
-  // Bersihkan error saat pengguna mengetik
+  function validate() {
+    var isSchoolValid = Boolean(schoolNameInput.value.trim());
+    setFieldError(schoolNameInput, errorSchool, !isSchoolValid);
+
+    var isContactValid = Boolean(contactNameInput.value.trim());
+    setFieldError(contactNameInput, errorContact, !isContactValid);
+
+    return isSchoolValid && isContactValid;
+  }
+
   schoolNameInput.addEventListener("input", function () {
-    if (this.value.trim()) {
-      this.classList.remove("has-error");
-      if (errorSchool) errorSchool.classList.remove("is-visible");
-    }
+    var hasError = !this.value.trim();
+    setFieldError(this, errorSchool, hasError);
   });
 
   contactNameInput.addEventListener("input", function () {
-    if (this.value.trim()) {
-      this.classList.remove("has-error");
-      if (errorContact) errorContact.classList.remove("is-visible");
-    }
+    var hasError = !this.value.trim();
+    setFieldError(this, errorContact, hasError);
   });
 
   form.addEventListener("submit", function (e) {
@@ -426,11 +416,10 @@ function initLeadForm() {
     var waNumber = (window.NEOSCHOLA_CONFIG && window.NEOSCHOLA_CONFIG.whatsappNumber) || "6285791702218";
     var waUrl = "https://wa.me/" + waNumber + "?text=" + encodeURIComponent(waMessage);
 
-    // Buka WhatsApp di tab baru
     window.open(waUrl, "_blank", "noopener,noreferrer");
 
-    // Tampilkan panel konfirmasi dengan aksi fallback
     if (confirmationBox) {
+      confirmationBox.hidden = false;
       confirmationBox.classList.add("is-visible");
       if (btnWaDirect) {
         btnWaDirect.setAttribute("href", waUrl);
