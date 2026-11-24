@@ -1,6 +1,32 @@
 // Native Web Crypto implementation (PBKDF2 for password hashing, HMAC-SHA256 for JWT)
 
-const DEFAULT_SECRET = process.env.JWT_SECRET || "neoschola-demo-jwt-secret-2026-key";
+const DEV_FALLBACK_SECRET = "neoschola-demo-jwt-secret-2026-key";
+
+export function getJwtSecret(
+  env: Record<string, string | undefined> = process.env
+): string {
+  const secret = env.JWT_SECRET?.trim();
+  const isProd = env.NODE_ENV === "production";
+
+  if (secret) {
+    if (isProd && secret.length < 32) {
+      throw new Error("JWT_SECRET di production minimal 32 karakter.");
+    }
+    return secret;
+  }
+
+  if (isProd) {
+    throw new Error("JWT_SECRET wajib disetel saat NODE_ENV=production.");
+  }
+
+  return DEV_FALLBACK_SECRET;
+}
+
+export function assertProductionSecurityConfig(
+  env: Record<string, string | undefined> = process.env
+): void {
+  getJwtSecret(env);
+}
 
 // ==========================================
 // 1. Helpers: Base64URL & Hex Encoding
@@ -114,9 +140,10 @@ async function getHmacKey(secret: string): Promise<CryptoKey> {
 
 export async function signJwt(
   payload: Record<string, any>,
-  secret: string = DEFAULT_SECRET,
+  secret?: string,
   expiresInSeconds: number = 7 * 86400 // 7 days default
 ): Promise<string> {
+  const resolvedSecret = secret ?? getJwtSecret();
   const header = { alg: "HS256", typ: "JWT" };
   const exp = payload.exp ?? Math.floor(Date.now() / 1000) + expiresInSeconds;
   const fullPayload = { ...payload, exp };
@@ -125,7 +152,7 @@ export async function signJwt(
   const encodedPayload = base64UrlEncode(JSON.stringify(fullPayload));
   const dataToSign = `${encodedHeader}.${encodedPayload}`;
 
-  const key = await getHmacKey(secret);
+  const key = await getHmacKey(resolvedSecret);
   const signatureBuffer = await crypto.subtle.sign(
     "HMAC",
     key,
@@ -138,16 +165,17 @@ export async function signJwt(
 
 export async function verifyJwt<T = any>(
   token: string,
-  secret: string = DEFAULT_SECRET
+  secret?: string
 ): Promise<T | null> {
   try {
+    const resolvedSecret = secret ?? getJwtSecret();
     const parts = token.split(".");
     if (parts.length !== 3) return null;
 
     const [encodedHeader, encodedPayload, encodedSignature] = parts;
     const dataToSign = `${encodedHeader}.${encodedPayload}`;
 
-    const key = await getHmacKey(secret);
+    const key = await getHmacKey(resolvedSecret);
     const signatureBuffer = Buffer.from(
       encodedSignature.replace(/-/g, "+").replace(/_/g, "/") +
         "=".repeat((4 - (encodedSignature.length % 4)) % 4),

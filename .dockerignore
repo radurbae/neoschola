@@ -1,0 +1,8 @@
+node_modules
+.git
+apps/mobile
+apps/landing
+apps/api/data
+anti-slop
+docs
+*.log

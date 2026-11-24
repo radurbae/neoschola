@@ -82,6 +82,9 @@ const DEMO_ACCOUNTS: DemoAccount[] = [
 ];
 
 const DEFAULT_DEMO_PASSWORD = "neoschola123";
+const IS_DEMO_MODE =
+  (typeof process !== "undefined" ? process.env?.EXPO_PUBLIC_DEMO_MODE : undefined) !==
+  "false";
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -124,6 +127,7 @@ export default function LoginScreen() {
   };
 
   const handleQuickLogin = (demoEmail: string) => {
+    if (!IS_DEMO_MODE) return;
     setEmail(demoEmail);
     setPassword(DEFAULT_DEMO_PASSWORD);
     handleLogin(demoEmail, DEFAULT_DEMO_PASSWORD);
@@ -254,30 +258,34 @@ export default function LoginScreen() {
             </View>
 
             {/* Pemisah Masuk Cepat Akun Demo */}
-            <View style={styles.separatorRow}>
-              <Separator style={styles.separatorFlex} />
-              <Text style={styles.separatorText}>Masuk Cepat Akun Demo</Text>
-              <Separator style={styles.separatorFlex} />
-            </View>
+            {IS_DEMO_MODE && visibleDemoAccounts.length > 0 && (
+              <>
+                <View style={styles.separatorRow}>
+                  <Separator style={styles.separatorFlex} />
+                  <Text style={styles.separatorText}>Masuk Cepat Akun Demo</Text>
+                  <Separator style={styles.separatorFlex} />
+                </View>
 
-            {/* Daftar Akun Demo memakai DarkIconRow dipisah Separator */}
-            <View style={styles.demoListCard}>
-              {visibleDemoAccounts.map((account, index) => (
-                <React.Fragment key={account.email}>
-                  {index > 0 && <Separator />}
-                  <DarkIconRow
-                    icon="person-outline"
-                    title={account.name}
-                    subtitle={`${account.roleBadge} • ${account.description}`}
-                    rightPrimary="Masuk"
-                    rightSecondary={account.email}
-                    rightSecondaryTone="neutral"
-                    onPress={() => handleQuickLogin(account.email)}
-                    accessibilityLabel={`Masuk cepat sebagai ${account.name}, ${account.roleTitle}`}
-                  />
-                </React.Fragment>
-              ))}
-            </View>
+                {/* Daftar Akun Demo memakai DarkIconRow dipisah Separator */}
+                <View style={styles.demoListCard}>
+                  {visibleDemoAccounts.map((account, index) => (
+                    <React.Fragment key={account.email}>
+                      {index > 0 && <Separator />}
+                      <DarkIconRow
+                        icon="person-outline"
+                        title={account.name}
+                        subtitle={`${account.roleBadge} • ${account.description}`}
+                        rightPrimary="Masuk"
+                        rightSecondary={account.email}
+                        rightSecondaryTone="neutral"
+                        onPress={() => handleQuickLogin(account.email)}
+                        accessibilityLabel={`Masuk cepat sebagai ${account.name}, ${account.roleTitle}`}
+                      />
+                    </React.Fragment>
+                  ))}
+                </View>
+              </>
+            )}
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
