@@ -1,114 +1,166 @@
-# Panduan Deploy Demo NeoSchola
+# Panduan Deploy Demo Live NeoSchola (3 Subdomain)
 
-Dokumen ini menjelaskan prosedur deployment backend NeoSchola API (Docker), web application mobile, landing page, dan otomasi pembersihan data demo.
+Dokumen ini menjelaskan prosedur deployment arsitektur live 3 subdomain untuk platform NeoSchola dari repositori GitHub `radurbae/neoschola`.
 
-## 1. Arsitektur Deployment
+## Tabel Arsitektur 3 Subdomain
 
-- **API Backend**: Docker container Bun berjalan di VPS / PaaS (Fly.io, Railway, atau VPS mandiri) dengan persistent volume pada direktori `/data`.
-- **Frontend Web & Landing**: Static export di-host melalui Cloudflare Pages atau Vercel.
-- **Database**: SQLite lokal yang tersimpan di `/data/neoschola.sqlite`.
-
----
-
-## 2. Deploy API via Docker
-
-### Build Docker Image
-Jalankan perintah build dari root monorepo:
-```bash
-docker build -f apps/api/Dockerfile -t neoschola-api:latest .
-```
-
-### Menjalankan Container (VPS Mandiri)
-Siapkan persistent storage dan jalankan container:
-```bash
-mkdir -p /srv/neoschola/data
-chown -R 1000:1000 /srv/neoschola/data
-
-docker run -d \
-  --name neoschola-api \
-  --restart unless-stopped \
-  -p 3001:3001 \
-  -v /srv/neoschola/data:/data \
-  -e NODE_ENV=production \
-  -e PORT=3001 \
-  -e DATABASE_PATH=/data/neoschola.sqlite \
-  -e JWT_SECRET="masukkan-kunci-rahasia-jwt-minimal-32-karakter-acak" \
-  -e CORS_ORIGIN="https://neoschola.floc.site" \
-  -e SEED_DEMO_DATA=true \
-  -e ALLOW_DEMO_RESET=false \
-  neoschola-api:latest
-```
-*(Catatan: tambahkan origin landing page dipisahkan koma jika domain landing page berbeda dari demo app).*
-
-### Deploy ke Fly.io / Railway
-- Pasang Persistent Volume mount pada path `/data` (ukuran 1 GB cukup untuk SQLite demo).
-- Set Environment Variables: `NODE_ENV=production`, `PORT=3001`, `DATABASE_PATH=/data/neoschola.sqlite`, `JWT_SECRET` (>= 32 karakter), `CORS_ORIGIN`.
+| Komponen | Domain Publik | Platform Host | Konfigurasi Deployment | Catatan Build |
+| :--- | :--- | :--- | :--- | :--- |
+| **Landing Page** | `https://neoschola.floc.site` | Vercel | Root Directory: `apps/landing`<br>File config: `apps/landing/vercel.json` | Statis murni tanpa build command |
+| **Demo Web App** | `https://app.neoschola.floc.site` | Vercel | Root Directory: `apps/mobile`<br>File config: `apps/mobile/vercel.json` | Command: `npm run build:mobile:web`<br>Output: `dist` |
+| **Backend API** | `https://api.neoschola.floc.site` | Railway | Root repo: `railway.json`<br>Dockerfile: `apps/api/Dockerfile` | Bun Docker runtime dengan Persistent Volume `/data` |
 
 ---
 
-## 3. Reverse Proxy & HTTPS (Nginx / Caddy)
+## Bagian 1: Deploy Backend API (api.neoschola.floc.site) di Railway
 
-Pastikan backend berjalan di balik reverse proxy HTTPS.
+Backend NeoSchola mengandalkan runtime Bun Alpine dan database SQLite yang membutuhkan penyimpanan persisten.
 
-### Contoh Konfigurasi Caddy
-```caddy
-api.neoschola.floc.site {
-    reverse_proxy 127.0.0.1:3001 {
-        header_up X-Real-IP {remote_host}
-        header_up X-Forwarded-For {remote_host}
-    }
-}
-```
-
-### Contoh Konfigurasi Nginx
-```nginx
-server {
-    server_name api.neoschola.floc.site;
-
-    location / {
-        proxy_pass http://127.0.0.1:3001;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-}
-```
-
----
-
-## 4. Build & Deploy Frontend
-
-### A. Mobile Web App (Expo Web)
-1. Salin konfigurasi environment:
-   ```bash
-   cp apps/mobile/.env.example apps/mobile/.env
+### Prosedur Setup di Railway
+1. Buat project baru di Railway, pilih **Deploy from GitHub repo**, lalu sambungkan ke repositori `radurbae/neoschola`.
+2. Railway otomatis mendeteksi file konfigurasi root `railway.json` yang mengarahkan builder Dockerfile ke `apps/api/Dockerfile`.
+3. Tambahkan volume persisten:
+   - Masuk ke tab **Volumes** pada service API.
+   - Klik **Add Volume** dengan Mount Path: `/data`.
+4. Konfigurasikan **Variables** pada service API:
+   ```env
+   NODE_ENV=production
+   DATABASE_PATH=/data/neoschola.sqlite
+   JWT_SECRET=buat_kunci_acak_minimal_32_karakter
+   CORS_ORIGIN=https://app.neoschola.floc.site,https://neoschola.floc.site
+   SEED_DEMO_DATA=true
+   ALLOW_DEMO_RESET=false
    ```
-2. Isi `EXPO_PUBLIC_API_URL=https://api.neoschola.floc.site` dan `EXPO_PUBLIC_DEMO_MODE=true`.
-3. Build static web bundle:
-   ```bash
-   npm run build:mobile:web
-   ```
-4. Output tersimpan di `apps/mobile/dist`. Deploy direktori ini ke Cloudflare Pages atau Vercel.
+   > Generate string acak untuk `JWT_SECRET` pada terminal lokal dengan perintah:
+   > ```bash
+   > openssl rand -hex 32
+   > ```
+5. Sambungkan custom domain:
+   - Buka tab **Settings** -> **Networking** -> **Custom Domain**.
+   - Tambahkan domain `api.neoschola.floc.site`.
+   - Salin DNS Target record CNAME yang diberikan oleh Railway untuk dipasang pada DNS provider.
 
-### B. Landing Page
-Folder `apps/landing/` berisi file statis murni (HTML/CSS/JS) tanpa tahap build.
-Cukup upload atau deploy direktori `apps/landing` secara langsung ke Cloudflare Pages, Vercel, atau static host pilihan Anda.
+### Opsi Alternatif Hosting API
+- **Fly.io**: Siapkan volume persisten terlebih dahulu via CLI:
+  ```bash
+  fly volumes create neoschola_data --size 1
+  ```
+  Mount volume tersebut ke `/data` pada file konfigurasi `fly.toml`.
+- **Render**: Hindari tier free Render untuk database SQLite produksi atau demo aktif karena free tier Render tidak menyediakan persistent disk, sehingga data akan terhapus setiap restart container.
+- **VPS Docker Mandiri**:
+  ```bash
+  mkdir -p /srv/neoschola/data
+  chown -R 1000:1000 /srv/neoschola/data
+
+  docker build -f apps/api/Dockerfile -t neoschola-api:latest .
+  docker run -d \
+    --name neoschola-api \
+    --restart unless-stopped \
+    -p 3001:3001 \
+    -v /srv/neoschola/data:/data \
+    -e NODE_ENV=production \
+    -e PORT=3001 \
+    -e DATABASE_PATH=/data/neoschola.sqlite \
+    -e JWT_SECRET="hasil_generate_openssl" \
+    -e CORS_ORIGIN="https://app.neoschola.floc.site,https://neoschola.floc.site" \
+    -e SEED_DEMO_DATA=true \
+    -e ALLOW_DEMO_RESET=false \
+    neoschola-api:latest
+  ```
 
 ---
 
-## 5. Otomasi Reset Database Demo (Cron Job)
+## Bagian 2: Deploy Demo Web App (app.neoschola.floc.site) di Vercel
 
-Untuk menjaga data akun demo tetap konsisten setiap hari, pasang cron job harian pada jam 03:00 WIB (pukul 20:00 UTC).
+Aplikasi demo merupakan web export React Native (Expo Web) yang menyajikan antarmuka interaktif untuk Wali Murid, Guru, dan Staf TU.
 
-### Menjalankan di dalam Container Aktif
-Jalankan perintah ini di host cron (`crontab -e`):
-```cron
-0 20 * * * docker exec -e ALLOW_DEMO_RESET=true neoschola-api bun apps/api/src/db/resetDemo.ts >> /var/log/neoschola-reset.log 2>&1
+### Prosedur Setup di Vercel
+1. Pada dashboard Vercel, klik **Add New** -> **Project**, lalu impor repositori `radurbae/neoschola`.
+2. Ubah konfigurasi **Root Directory** ke: `apps/mobile`.
+3. Biarkan Framework Preset sebagai **Other**. Konfigurasi instalasi monorepo dan build script akan dikendalikan otomatis oleh `apps/mobile/vercel.json`:
+   - `installCommand`: `cd ../.. && npm ci`
+   - `buildCommand`: `cd ../.. && npm run build:mobile:web`
+   - `outputDirectory`: `dist`
+4. Masukkan **Environment Variables**:
+   ```env
+   EXPO_PUBLIC_API_URL=https://api.neoschola.floc.site
+   EXPO_PUBLIC_APP_VARIANT=all
+   EXPO_PUBLIC_DEMO_MODE=true
+   ```
+5. Deploy project, lalu buka **Settings** -> **Domains**. Tambahkan domain: `app.neoschola.floc.site`.
+
+---
+
+## Bagian 3: Deploy Landing Page (neoschola.floc.site) di Vercel
+
+Landing page NeoSchola dibangun dengan Vanilla JavaScript murni, HTML5, dan CSS modern tanpa tahapan kompilasi.
+
+### Prosedur Setup di Vercel
+1. Buat project baru kedua di dashboard Vercel dari repositori yang sama (`radurbae/neoschola`).
+2. Tentukan nama project, misalnya `neoschola-landing`.
+3. Set **Root Directory** ke: `apps/landing`.
+4. Biarkan Framework Preset sebagai **Other** tanpa build command. File `apps/landing/vercel.json` akan menerapkan konfigurasi clean URLs dan HTTP security headers secara otomatis.
+5. Deploy project, lalu masuk ke menu **Settings** -> **Domains** dan tambahkan domain utama: `neoschola.floc.site`.
+
+---
+
+## Bagian 4: Konfigurasi DNS di Hostinger (dns-parking.com)
+
+Kelola domain `floc.site` melalui DNS Zone Editor Hostinger dengan menambahkan 3 record CNAME berikut:
+
+| Tipe | Nama Host / Subdomain | Target / Nilai Record | TTL | Keterangan |
+| :--- | :--- | :--- | :--- | :--- |
+| `CNAME` | `neoschola` | Target CNAME dari Vercel (contoh: `cname.vercel-dns.com.`) | 300 / Auto | Landing Page |
+| `CNAME` | `app.neoschola` | Target CNAME dari Vercel (contoh: `cname.vercel-dns.com.`) | 300 / Auto | Demo Web App |
+| `CNAME` | `api.neoschola` | Target CNAME dari Railway (contoh: `xxxx.up.railway.app.`) | 300 / Auto | Backend API |
+
+Pastikan propagasi DNS selesai diperiksa sebelum melakukan uji coba live traffic.
+
+---
+
+## Bagian 5: Reset Data Demo Harian & Smoke Test Live
+
+### Otomasi Pembersihan Data Demo (Daily Cron)
+Untuk menjaga integritas data simulasi agar tidak dipenuhi data uji coba publik secara berlebihan, jadwalkan reset data demo setiap hari pada pukul 03:00 WIB (ekivalen dengan pukul `20:00 UTC` / ekspresi cron `0 20 * * *`).
+
+Skrip reset dijalankan dengan flag guard:
+```bash
+ALLOW_DEMO_RESET=true bun apps/api/src/db/resetDemo.ts
 ```
 
-### Menjalankan via Local Bun CLI
-Jika menggunakan VPS tanpa container:
-```cron
-0 20 * * * cd /srv/neoschola/apps/api && ALLOW_DEMO_RESET=true bun src/db/resetDemo.ts >> /var/log/neoschola-reset.log 2>&1
-```
+- **Implementasi Railway**: Buat service Cron Job terpisah dalam project Railway yang sama, pasang mount Volume `/data` yang sama, dan jadwalkan cron `0 20 * * *` dengan command di atas.
+- **Implementasi VPS Mandiri**: Tambahkan baris berikut pada crontab host (`crontab -e`):
+  ```crontab
+  0 20 * * * docker exec -e ALLOW_DEMO_RESET=true neoschola-api bun apps/api/src/db/resetDemo.ts >> /var/log/neoschola-reset.log 2>&1
+  ```
+
+### Smoke Test Live Verifikasi
+
+Setelah seluruh domain aktif dan sertifikat SSL/TLS terbit, jalankan serangkaian pengujian terminal berikut:
+
+1. **Uji Kesehatan Backend API**:
+   ```bash
+   curl -fsS https://api.neoschola.floc.site/health
+   ```
+   Ekspektasi output JSON: `{"status":"ok",...}` dengan kode status HTTP 200.
+
+2. **Uji Header Landing Page**:
+   ```bash
+   curl -I https://neoschola.floc.site
+   ```
+   Ekspektasi status HTTP 200 OK dengan security headers nosniff dan DENY.
+
+3. **Uji Header Demo Web App**:
+   ```bash
+   curl -I https://app.neoschola.floc.site
+   ```
+   Ekspektasi status HTTP 200 OK.
+
+4. **Uji Preflight CORS API**:
+   ```bash
+   curl -I -X OPTIONS https://api.neoschola.floc.site/api/auth/login \
+     -H "Origin: https://app.neoschola.floc.site" \
+     -H "Access-Control-Request-Method: POST"
+   ```
+   Ekspektasi response header:
+   `access-control-allow-origin: https://app.neoschola.floc.site`

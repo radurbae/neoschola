@@ -27,6 +27,6 @@ ENV DATABASE_PATH=/data/neoschola.sqlite
 EXPOSE 3001
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
-  CMD bun -e "fetch('http://127.0.0.1:3001/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+  CMD bun -e "const p=process.env.PORT||3001;fetch('http://127.0.0.1:'+p+'/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
 
 CMD ["bun", "apps/api/src/index.ts"]

@@ -6,7 +6,7 @@
 
 window.NEOSCHOLA_CONFIG = {
   // Ganti dengan URL domain deployment web app NeoSchola
-  demoUrl: "https://neoschola.floc.site",
+  demoUrl: "https://app.neoschola.floc.site",
   // Ganti nomor WhatsApp admin resmi sekolah/penjualan (format internasional tanpa tanda +)
   whatsappNumber: "6285791702218",
   // Alamat email korespondensi resmi
@@ -315,7 +315,7 @@ function initCopyButtons() {
 function initDemoLinks() {
   var cfg = window.NEOSCHOLA_CONFIG || {};
   var demoBtns = document.querySelectorAll(".btn-open-demo");
-  var demoUrl = cfg.demoUrl || "https://neoschola.floc.site";
+  var demoUrl = cfg.demoUrl || "https://app.neoschola.floc.site";
   for (var i = 0; i < demoBtns.length; i++) {
     demoBtns[i].setAttribute("href", demoUrl);
     demoBtns[i].setAttribute("target", "_blank");
