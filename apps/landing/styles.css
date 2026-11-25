@@ -1194,8 +1194,8 @@ label[for],
 
 @media (min-width: 768px) {
   .footer-grid {
-    grid-template-columns: 1.4fr 1fr;
-    gap: 48px;
+    grid-template-columns: 1.4fr 1fr 1fr;
+    gap: 40px;
   }
 }
 
@@ -1275,6 +1275,138 @@ label[for],
     justify-content: space-between;
     align-items: center;
   }
+}
+
+.legal-main {
+  padding: 40px 0 80px;
+}
+
+.legal-header {
+  margin-bottom: 32px;
+}
+
+.legal-badge {
+  display: inline-flex;
+  align-items: center;
+  background-color: var(--ice-blue-subtle);
+  color: var(--ice-blue-cta);
+  border: 1px solid var(--ice-blue-border);
+  padding: 6px 14px;
+  border-radius: 9999px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  margin-bottom: 16px;
+}
+
+.legal-title {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--obsidian-fg);
+  line-height: 1.25;
+  margin-bottom: 12px;
+  letter-spacing: -0.02em;
+}
+
+@media (min-width: 768px) {
+  .legal-title {
+    font-size: 2.4rem;
+  }
+}
+
+.legal-meta {
+  font-size: 0.9rem;
+  color: var(--obsidian-muted);
+  font-weight: 600;
+}
+
+.legal-card {
+  background-color: var(--obsidian-card);
+  border: 1px solid var(--obsidian-border);
+  border-radius: var(--radius-lg);
+  padding: 24px 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+@media (min-width: 640px) {
+  .legal-card {
+    padding: 36px 32px;
+  }
+}
+
+.legal-section {
+  margin-bottom: 28px;
+  padding-bottom: 28px;
+  border-bottom: 1px solid var(--obsidian-border);
+}
+
+.legal-section:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.legal-section-title {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--obsidian-fg);
+  margin-bottom: 12px;
+  line-height: 1.4;
+}
+
+.legal-text {
+  font-size: 0.95rem;
+  line-height: 1.7;
+  color: var(--obsidian-fg);
+  margin-bottom: 12px;
+}
+
+.legal-text:last-child {
+  margin-bottom: 0;
+}
+
+.legal-list {
+  margin: 10px 0 14px 20px;
+  padding: 0;
+  color: var(--obsidian-fg);
+}
+
+.legal-list li {
+  font-size: 0.95rem;
+  line-height: 1.65;
+  margin-bottom: 8px;
+}
+
+.legal-list li:last-child {
+  margin-bottom: 0;
+}
+
+.legal-table-wrapper {
+  overflow-x: auto;
+  margin: 16px 0;
+  -webkit-overflow-scrolling: touch;
+}
+
+.legal-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.legal-table th,
+.legal-table td {
+  padding: 12px 14px;
+  text-align: left;
+  border: 1px solid var(--obsidian-border);
+}
+
+.legal-table th {
+  background-color: var(--obsidian-subtle);
+  color: var(--obsidian-fg);
+  font-weight: 700;
+}
+
+.legal-table td {
+  color: var(--obsidian-fg);
 }
 
 @media (prefers-reduced-motion: reduce) {

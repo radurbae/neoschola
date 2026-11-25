@@ -27,6 +27,7 @@ import type {
   SubmitPaymentRequest,
   VerifyInvoiceRequest,
   Notification,
+  StaffAttendanceSummaryResponse,
 } from "@neoschola/shared";
 
 // Base API URL dari environment Expo atau fallback localhost
@@ -392,6 +393,10 @@ export async function verifyInvoice(
     method: "PATCH",
     body: payload,
   });
+}
+
+export async function getAttendanceSummary(): Promise<StaffAttendanceSummaryResponse> {
+  return request<StaffAttendanceSummaryResponse>("/api/attendance/summary");
 }
 
 // Notifikasi

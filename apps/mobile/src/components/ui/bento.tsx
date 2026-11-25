@@ -435,7 +435,7 @@ export function MiniTrendChart({
   onPeriodChange,
   style,
 }: MiniTrendChartProps) {
-  const maxValue = Math.max(...points.map((p) => p.value), 1);
+  const maxValue = points.length > 0 ? Math.max(...points.map((p) => p.value), 1) : 1;
 
   return (
     <View style={[styles.trendCard, style]}>
@@ -453,27 +453,40 @@ export function MiniTrendChart({
       </View>
 
       <View style={styles.sparklineContainer}>
-        {points.map((point, index) => {
-          const isLast = index === points.length - 1;
-          const barHeight = Math.max((point.value / maxValue) * 52, 6);
+        {points.length === 0 ? (
+          <View style={styles.sparklineEmptyContainer}>
+            <Text style={styles.sparklineEmptyText}>
+              Belum ada data presensi pada periode ini.
+            </Text>
+          </View>
+        ) : (
+          points.map((point, index) => {
+            const isLast = index === points.length - 1;
+            const isZero = point.value === 0;
+            const barHeight = isZero
+              ? 4
+              : Math.max((point.value / maxValue) * 52, 6);
 
-          return (
-            <View key={point.label + index} style={styles.sparklineBarColumn}>
-              <View
-                style={[
-                  styles.sparklineBar,
-                  {
-                    height: barHeight,
-                    backgroundColor: isLast
-                      ? bento.iceBlueActive
-                      : bento.iceBlueBar,
-                  },
-                ]}
-              />
-              <Text style={styles.sparklineBarLabel}>{point.label}</Text>
-            </View>
-          );
-        })}
+            return (
+              <View key={point.label + index} style={styles.sparklineBarColumn}>
+                <View
+                  style={[
+                    styles.sparklineBar,
+                    {
+                      height: barHeight,
+                      backgroundColor: isZero
+                        ? shadcn.border
+                        : isLast
+                        ? bento.iceBlueActive
+                        : bento.iceBlueBar,
+                    },
+                  ]}
+                />
+                <Text style={styles.sparklineBarLabel}>{point.label}</Text>
+              </View>
+            );
+          })
+        )}
       </View>
 
       {Boolean(periods && periods.length > 0) && (
@@ -1136,6 +1149,18 @@ const styles = StyleSheet.create({
     alignItems: "flex-end",
     justifyContent: "space-between",
     marginVertical: spacing.lg,
+  },
+  sparklineEmptyContainer: {
+    flex: 1,
+    height: "100%",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  sparklineEmptyText: {
+    fontSize: typography.size.xs,
+    fontFamily: typography.family.medium,
+    color: shadcn.mutedForeground,
+    textAlign: "center",
   },
   sparklineBarColumn: {
     alignItems: "center",

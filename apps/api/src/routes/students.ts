@@ -3,6 +3,7 @@ import type { Database } from "bun:sqlite";
 import { Role } from "@neoschola/shared";
 import type { AppEnv } from "../app";
 import { requireAuth, assertStudentAccess } from "../middleware/auth";
+import { buildStudentAttendanceTrends } from "../lib/attendanceTrend";
 
 export function createStudentRoutes(db: Database): Hono<AppEnv> {
   const router = new Hono<AppEnv>();
@@ -15,10 +16,12 @@ export function createStudentRoutes(db: Database): Hono<AppEnv> {
       rows = db
         .query(
           `SELECT s.id, s.nis, s.nisn, s.full_name, s.nickname, s.class_id, c.name as class_name,
+                  c.homeroom_teacher_id, ht.name as homeroom_teacher_name,
                   s.gender, s.birth_date, s.is_active, s.created_at
            FROM students s
            JOIN guardian_students gs ON s.id = gs.student_id
            LEFT JOIN classes c ON s.class_id = c.id
+           LEFT JOIN users ht ON c.homeroom_teacher_id = ht.id
            WHERE gs.guardian_id = ?
            ORDER BY s.full_name ASC`
         )
@@ -27,9 +30,11 @@ export function createStudentRoutes(db: Database): Hono<AppEnv> {
       rows = db
         .query(
           `SELECT s.id, s.nis, s.nisn, s.full_name, s.nickname, s.class_id, c.name as class_name,
+                  c.homeroom_teacher_id, ht.name as homeroom_teacher_name,
                   s.gender, s.birth_date, s.is_active, s.created_at
            FROM students s
            JOIN classes c ON s.class_id = c.id
+           LEFT JOIN users ht ON c.homeroom_teacher_id = ht.id
            WHERE c.homeroom_teacher_id = ?
            ORDER BY s.full_name ASC`
         )
@@ -39,9 +44,11 @@ export function createStudentRoutes(db: Database): Hono<AppEnv> {
       rows = db
         .query(
           `SELECT s.id, s.nis, s.nisn, s.full_name, s.nickname, s.class_id, c.name as class_name,
+                  c.homeroom_teacher_id, ht.name as homeroom_teacher_name,
                   s.gender, s.birth_date, s.is_active, s.created_at
            FROM students s
            LEFT JOIN classes c ON s.class_id = c.id
+           LEFT JOIN users ht ON c.homeroom_teacher_id = ht.id
            ORDER BY s.full_name ASC`
         )
         .all();
@@ -75,9 +82,11 @@ export function createStudentRoutes(db: Database): Hono<AppEnv> {
     const studentRow = db
       .query(
         `SELECT s.id, s.nis, s.nisn, s.full_name, s.nickname, s.class_id, c.name as class_name,
+                c.homeroom_teacher_id, ht.name as homeroom_teacher_name,
                 s.gender, s.birth_date, s.is_active, s.created_at
          FROM students s
          LEFT JOIN classes c ON s.class_id = c.id
+         LEFT JOIN users ht ON c.homeroom_teacher_id = ht.id
          WHERE s.id = ?`
       )
       .get(studentId) as any | null;
@@ -148,6 +157,17 @@ export function createStudentRoutes(db: Database): Hono<AppEnv> {
     const totalAttendance = hadir + sakit + izin + alpa;
     const percentage =
       totalAttendance > 0 ? Math.round((hadir / totalAttendance) * 1000) / 10 : 100.0;
+
+    // Attendance Trends
+    const attRows = db
+      .query(
+        `SELECT date, status
+         FROM attendances
+         WHERE student_id = ?
+         ORDER BY date ASC`
+      )
+      .all(studentId) as { date: string; status: string }[];
+    const attendance_trends = buildStudentAttendanceTrends(attRows, today);
 
     // 3. Schedules Today
     const dayOfWeekMap: Record<number, string> = {
@@ -230,6 +250,7 @@ export function createStudentRoutes(db: Database): Hono<AppEnv> {
         alpa,
         percentage,
       },
+      attendance_trends,
       schedules_today,
       assignments_active,
       unread_announcements_count: unreadAnnouncements.count,

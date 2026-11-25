@@ -100,10 +100,12 @@ export function createAuthRoutes(db: Database): Hono<AppEnv> {
       const studentRows = db
         .query(
           `SELECT s.id, s.nis, s.nisn, s.full_name, s.nickname, s.class_id, c.name as class_name,
+                  c.homeroom_teacher_id, ht.name as homeroom_teacher_name,
                   s.gender, s.birth_date, s.is_active, s.created_at
            FROM students s
            JOIN guardian_students gs ON s.id = gs.student_id
            LEFT JOIN classes c ON s.class_id = c.id
+           LEFT JOIN users ht ON c.homeroom_teacher_id = ht.id
            WHERE gs.guardian_id = ?
            ORDER BY s.full_name ASC`
         )

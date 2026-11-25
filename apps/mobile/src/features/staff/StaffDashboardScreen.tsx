@@ -13,6 +13,7 @@ import {
   InvoiceStatus,
   formatTanggalId,
   type Announcement,
+  type StaffAttendanceSummaryResponse,
 } from "@neoschola/shared";
 import {
   TopUtilityBar,
@@ -67,6 +68,8 @@ export function StaffDashboardScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [trendPeriod, setTrendPeriod] = useState<string>("1M");
+  const [attendanceSummary, setAttendanceSummary] =
+    useState<StaffAttendanceSummaryResponse | null>(null);
 
   useEffect(() => {
     setDismissedIds(getDismissedAnnouncementIds(user?.id));
@@ -81,16 +84,23 @@ export function StaffDashboardScreen() {
     setErrorMessage(null);
 
     try {
-      const [studentsRes, leaveRes, threadsRes, invoicesRes, announcementsRes] =
-        await Promise.all([
-          api.getStudents().catch(() => ({ students: [] })),
-          api.getLeaveRequests().catch(() => ({ items: [] })),
-          api.getThreads().catch(() => ({ threads: [] })),
-          isAdmin
-            ? api.getInvoices().catch(() => ({ invoices: [] }))
-            : Promise.resolve({ invoices: [] }),
-          api.getAnnouncements().catch(() => ({ announcements: [] })),
-        ]);
+      const [
+        studentsRes,
+        leaveRes,
+        threadsRes,
+        invoicesRes,
+        announcementsRes,
+        summaryRes,
+      ] = await Promise.all([
+        api.getStudents().catch(() => ({ students: [] })),
+        api.getLeaveRequests().catch(() => ({ items: [] })),
+        api.getThreads().catch(() => ({ threads: [] })),
+        isAdmin
+          ? api.getInvoices().catch(() => ({ invoices: [] }))
+          : Promise.resolve({ invoices: [] }),
+        api.getAnnouncements().catch(() => ({ announcements: [] })),
+        api.getAttendanceSummary().catch(() => null),
+      ]);
 
       const pendingLeaves = (leaveRes.items || []).filter(
         (item) => item.status === LeaveStatus.PENDING
@@ -112,6 +122,7 @@ export function StaffDashboardScreen() {
         waitingInvoiceCount: waitingInvoices,
       });
       setAnnouncements(announcementsRes.announcements || []);
+      setAttendanceSummary(summaryRes);
     } catch (err: any) {
       setErrorMessage(
         err?.message || "Gagal memuat ringkasan data staf. Silakan coba kembali."
@@ -203,25 +214,45 @@ export function StaffDashboardScreen() {
 
             <View style={isTablet ? styles.rowTablet1 : styles.rowMobile}>
               <View style={isTablet ? styles.colChartTablet : styles.colMobile}>
-                <MiniTrendChart
-                  heroValue="96%"
-                  heroLabel="Kehadiran Siswa Hari Ini"
-                  calloutText="+2.4% stabilitas"
-                  points={[
-                    { label: "Sen", value: 34 },
-                    { label: "Sel", value: 35 },
-                    { label: "Rab", value: 33 },
-                    { label: "Kam", value: 36 },
-                    { label: "Jum", value: 35 },
-                  ]}
-                  periods={[
-                    { key: "1M", label: "1 Minggu" },
-                    { key: "1B", label: "1 Bulan" },
-                  ]}
-                  activePeriod={trendPeriod}
-                  onPeriodChange={setTrendPeriod}
-                  style={isTablet ? styles.chartFullHeight : undefined}
-                />
+                {(() => {
+                  const staffPeriodKey = (trendPeriod === "1B" ? "1B" : "1M") as "1M" | "1B";
+                  const activeTrend = attendanceSummary?.periods?.[staffPeriodKey] ?? null;
+                  const hasToday = (attendanceSummary?.today?.recorded ?? 0) > 0;
+                  const heroValue =
+                    staffPeriodKey === "1M" &&
+                    hasToday &&
+                    attendanceSummary?.today.percentage !== null &&
+                    attendanceSummary?.today.percentage !== undefined
+                      ? `${attendanceSummary.today.percentage}%`
+                      : activeTrend && activeTrend.total_records > 0
+                      ? `${activeTrend.percentage}%`
+                      : "-";
+                  const heroLabel =
+                    staffPeriodKey === "1M"
+                      ? hasToday
+                        ? "Kehadiran Siswa Hari Ini"
+                        : "Kehadiran 1 Minggu Terakhir"
+                      : "Kehadiran 30 Hari Terakhir";
+                  const calloutText =
+                    activeTrend?.callout || "Belum ada presensi hari ini";
+                  const points = activeTrend?.points ?? [];
+
+                  return (
+                    <MiniTrendChart
+                      heroValue={heroValue}
+                      heroLabel={heroLabel}
+                      calloutText={calloutText}
+                      points={points}
+                      periods={[
+                        { key: "1M", label: "1 Minggu" },
+                        { key: "1B", label: "1 Bulan" },
+                      ]}
+                      activePeriod={trendPeriod}
+                      onPeriodChange={setTrendPeriod}
+                      style={isTablet ? styles.chartFullHeight : undefined}
+                    />
+                  );
+                })()}
               </View>
 
               {isTablet ? (

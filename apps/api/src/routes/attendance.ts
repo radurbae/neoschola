@@ -8,6 +8,7 @@ import {
 import type { AppEnv } from "../app";
 import { requireAuth, requireRole, assertStudentAccess } from "../middleware/auth";
 import { createNotifications, type CreateNotificationParams } from "../lib/notify";
+import { buildStaffAttendanceSummary } from "../lib/attendanceTrend";
 
 export function createAttendanceRoutes(db: Database): Hono<AppEnv> {
   const router = new Hono<AppEnv>();
@@ -236,9 +237,73 @@ export function createAttendanceRoutes(db: Database): Hono<AppEnv> {
     });
   };
 
+  const getAttendanceSummaryHandler = async (c: any) => {
+    const user = c.get("user");
+    const todayWib = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Jakarta" }).format(new Date());
+
+    let totalStudents = 0;
+    let rows: { date: string; status: string }[] = [];
+
+    if (user.role === Role.TEACHER) {
+      const studentCount = db
+        .query(
+          `SELECT COUNT(*) as count
+           FROM students s
+           JOIN classes c ON s.class_id = c.id
+           WHERE s.is_active = 1 AND c.homeroom_teacher_id = ?`
+        )
+        .get(user.id) as { count: number };
+      totalStudents = studentCount.count;
+
+      rows = db
+        .query(
+          `SELECT a.date, a.status
+           FROM attendances a
+           JOIN classes c ON a.class_id = c.id
+           WHERE c.homeroom_teacher_id = ?
+           ORDER BY a.date ASC`
+        )
+        .all(user.id) as { date: string; status: string }[];
+    } else {
+      // ADMIN
+      const studentCount = db
+        .query(
+          `SELECT COUNT(*) as count
+           FROM students s
+           WHERE s.is_active = 1`
+        )
+        .get() as { count: number };
+      totalStudents = studentCount.count;
+
+      rows = db
+        .query(
+          `SELECT a.date, a.status
+           FROM attendances a
+           ORDER BY a.date ASC`
+        )
+        .all() as { date: string; status: string }[];
+    }
+
+    const summary = buildStaffAttendanceSummary(rows, totalStudents, todayWib);
+    return c.json(summary);
+  };
+
   // Support both direct mount and sub-app path prefixes
   router.get("/", requireAuth(db), getAttendanceHandler);
   router.get("/api/attendance", requireAuth(db), getAttendanceHandler);
+
+  router.get(
+    "/summary",
+    requireAuth(db),
+    requireRole(Role.TEACHER, Role.ADMIN),
+    getAttendanceSummaryHandler
+  );
+  router.get(
+    "/api/attendance/summary",
+    requireAuth(db),
+    requireRole(Role.TEACHER, Role.ADMIN),
+    getAttendanceSummaryHandler
+  );
 
   router.get(
     "/class",

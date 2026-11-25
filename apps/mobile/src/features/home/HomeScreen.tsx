@@ -148,18 +148,33 @@ export default function HomeScreen() {
     }
   };
 
-  const attendancePercentage =
-    dashboardData?.attendance_summary?.percentage ?? 100;
+  const periodKey = (
+    activePeriod === "7H" || activePeriod === "30H" || activePeriod === "Sem"
+      ? activePeriod
+      : "30H"
+  ) as "7H" | "30H" | "Sem";
+  const currentTrend = dashboardData?.attendance_trends?.[periodKey];
+  const totalSummary =
+    (dashboardData?.attendance_summary?.hadir ?? 0) +
+    (dashboardData?.attendance_summary?.sakit ?? 0) +
+    (dashboardData?.attendance_summary?.izin ?? 0) +
+    (dashboardData?.attendance_summary?.alpa ?? 0);
 
-  const attendancePoints: TrendPoint[] = [
-    { label: "Sen", value: 92 },
-    { label: "Sel", value: 95 },
-    { label: "Rab", value: 98 },
-    { label: "Kam", value: 94 },
-    { label: "Jum", value: 100 },
-    { label: "Sab", value: 90 },
-    { label: "Hari", value: attendancePercentage },
-  ];
+  const heroValue =
+    currentTrend && currentTrend.total > 0
+      ? `${currentTrend.percentage}%`
+      : totalSummary > 0
+      ? `${dashboardData?.attendance_summary?.percentage ?? 0}%`
+      : "-";
+
+  const heroLabel =
+    periodKey === "7H"
+      ? "Kehadiran 7 Hari Terakhir"
+      : periodKey === "30H"
+      ? "Kehadiran 30 Hari"
+      : "Kehadiran Semester";
+
+  const points = currentTrend?.points ?? [];
 
   const highlightAnnouncement = pickHighlightAnnouncement(
     announcements,
@@ -270,10 +285,10 @@ export default function HomeScreen() {
                 }
               >
                 <MiniTrendChart
-                  heroValue={`${attendancePercentage}%`}
-                  heroLabel="Kehadiran Bulan Ini"
+                  heroValue={heroValue}
+                  heroLabel={heroLabel}
                   calloutText={getAttendanceCallout()}
-                  points={attendancePoints}
+                  points={points}
                   periods={PERIODS}
                   activePeriod={activePeriod}
                   onPeriodChange={(key) => setActivePeriod(key)}

@@ -70,9 +70,13 @@ Sebagai bentuk komitmen kemitraan, kami menawarkan skema pengenalan transparan:
 
 | Komponen Program | Keterangan | Nilai Investasi |
 | :--- | :--- | :--- |
-| **Uji Coba Penuh (Pilot 1 Bulan)** | Akses seluruh fitur (Presensi, Izin, Keuangan TU, Pengumuman, Pesan, Akun Wali & Guru) | **[ISI HARGA PILOT / GRATIS 1 BULAN]** |
-| **Migrasi Data Awal & Pelatihan** | Bantuan input master data kelas, siswa, dan sesi panduan daring untuk Guru dan TU | Termasuk dalam paket |
-| **Skema Berlangganan Pasca-Pilot** | Opsi kelanjutan setelah evaluasi 1 bulan selesai (per siswa per bulan) | **[ISI SKEMA LANGGANAN PER SISWA / BULAN]** |
+| **Uji Coba Penuh (Pilot 1 Bulan)** | Akses seluruh fitur (Presensi, Izin, Keuangan TU, Pengumuman, Pesan, Akun Wali & Guru) khusus 1-3 sekolah perintis (Founding School), dengan evaluasi mingguan 15 menit serta opsi izin studi kasus bila sekolah puas | **Gratis (Rp 0)** |
+| **Migrasi Data Awal & Pelatihan** | Bantuan input master data 1-2 kelas percontohan dan sesi panduan daring untuk Guru dan TU | Termasuk dalam paket |
+| **Skema Berlangganan Pasca-Pilot** | Tarif khusus sekolah perintis, dikunci 1 tahun dari tarif normal Rp 6.000/siswa/bulan; minimum Rp 400.000/bulan untuk <= 100 siswa; diskon 10% untuk pembayaran per semester (6 bulan) | **Rp 4.000 / siswa / bulan** |
+
+Cakupan layanan:
+- Termasuk dalam paket: server dan basis data terisolasi khusus sekolah, backup harian, pembaruan fitur inti, dan dukungan melalui WhatsApp.
+- Opsional di luar paket dasar: kuota pengiriman notifikasi WhatsApp otomatis (sesuai tarif penyedia layanan WA) dan custom domain sekolah.
 
 *Catatan: Tidak ada kewajiban kontrak jangka panjang untuk melanjutkan layanan setelah masa pilot 1 bulan berakhir.*
 

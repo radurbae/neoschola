@@ -111,6 +111,8 @@ export const StudentSchema = z.object({
   nickname: z.string(),
   class_id: z.string(),
   class_name: z.string().optional(),
+  homeroom_teacher_id: z.string().nullable().optional(),
+  homeroom_teacher_name: z.string().nullable().optional(),
   gender: z.enum(["L", "P"]),
   birth_date: z.string(),
   is_active: z.boolean(),
@@ -309,6 +311,56 @@ export const MeResponseSchema = z.object({
 });
 export type MeResponse = z.infer<typeof MeResponseSchema>;
 
+// Attendance Trends & Summary
+export const AttendanceTrendPointSchema = z.object({
+  label: z.string(),
+  value: z.number(),
+});
+export type AttendanceTrendPoint = z.infer<typeof AttendanceTrendPointSchema>;
+
+export const AttendanceTrendBucketSchema = z.object({
+  points: z.array(AttendanceTrendPointSchema),
+  percentage: z.number(),
+  hadir: z.number().int(),
+  total: z.number().int(),
+});
+export type AttendanceTrendBucket = z.infer<typeof AttendanceTrendBucketSchema>;
+
+export const StudentAttendanceTrendsSchema = z.object({
+  "7H": AttendanceTrendBucketSchema,
+  "30H": AttendanceTrendBucketSchema,
+  Sem: AttendanceTrendBucketSchema,
+});
+export type StudentAttendanceTrends = z.infer<typeof StudentAttendanceTrendsSchema>;
+
+export const StaffAttendanceTrendPeriodSchema = z.object({
+  points: z.array(AttendanceTrendPointSchema),
+  percentage: z.number(),
+  recorded_days: z.number().int(),
+  hadir_records: z.number().int(),
+  total_records: z.number().int(),
+  callout: z.string(),
+});
+export type StaffAttendanceTrendPeriod = z.infer<typeof StaffAttendanceTrendPeriodSchema>;
+
+export const StaffAttendanceSummaryResponseSchema = z.object({
+  total_students: z.number().int(),
+  today_date: z.string(),
+  today: z.object({
+    recorded: z.number().int(),
+    hadir: z.number().int(),
+    sakit: z.number().int(),
+    izin: z.number().int(),
+    alpa: z.number().int(),
+    percentage: z.number().nullable(),
+  }),
+  periods: z.object({
+    "1M": StaffAttendanceTrendPeriodSchema,
+    "1B": StaffAttendanceTrendPeriodSchema,
+  }),
+});
+export type StaffAttendanceSummaryResponse = z.infer<typeof StaffAttendanceSummaryResponseSchema>;
+
 // Dashboard
 export const StudentDashboardResponseSchema = z.object({
   student: StudentSchema,
@@ -326,6 +378,7 @@ export const StudentDashboardResponseSchema = z.object({
     alpa: z.number().int(),
     percentage: z.number(),
   }),
+  attendance_trends: StudentAttendanceTrendsSchema.optional(),
   schedules_today: z.array(ScheduleSchema),
   assignments_active: z.array(AssignmentSchema),
   unread_announcements_count: z.number().int(),

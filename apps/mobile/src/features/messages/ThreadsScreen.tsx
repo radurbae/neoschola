@@ -41,9 +41,6 @@ import {
   touchTarget,
 } from "../../theme/tokens";
 
-const DEFAULT_TEACHER_ID = "usr_ani";
-const DEFAULT_TEACHER_NAME = "Ibu Ani Wijayanti, S.Pd. (Wali Kelas)";
-
 export function ThreadsScreen() {
   const router = useRouter();
   const { width } = useWindowDimensions();
@@ -52,7 +49,7 @@ export function ThreadsScreen() {
     ? layout.tabletPaddingX
     : layout.mobilePaddingX;
 
-  const { user, students, unreadNotificationCount } = useAuth();
+  const { user, students, activeStudentId, unreadNotificationCount } = useAuth();
 
   const [threads, setThreads] = useState<MessageThread[]>([]);
   const [serviceHours, setServiceHours] = useState<string>(
@@ -104,18 +101,27 @@ export function ThreadsScreen() {
   }, [threads]);
 
   const handleOpenNewThreadModal = () => {
-    if (students.length > 0 && !selectedStudentId) {
-      setSelectedStudentId(students[0].id);
-    }
+    setSelectedStudentId(activeStudentId || students[0]?.id || "");
     setSubject("");
     setInitialMessage("");
     setFormError(null);
     setNewThreadModalVisible(true);
   };
 
+  const selectedStudent = useMemo(
+    () => students.find((s) => s.id === selectedStudentId) ?? students[0] ?? null,
+    [students, selectedStudentId]
+  );
+  const recipientTeacherId = selectedStudent?.homeroom_teacher_id ?? null;
+  const recipientTeacherName = selectedStudent?.homeroom_teacher_name ?? null;
+
   const handleCreateThread = async () => {
     if (!selectedStudentId) {
       setFormError("Mohon pilih anak yang terkait dengan pesan ini.");
+      return;
+    }
+    if (!recipientTeacherId) {
+      setFormError("Wali kelas untuk siswa ini belum ditetapkan di sistem.");
       return;
     }
     if (!subject.trim()) {
@@ -133,7 +139,7 @@ export function ThreadsScreen() {
     try {
       const res = await api.createThread({
         student_id: selectedStudentId,
-        teacher_id: DEFAULT_TEACHER_ID,
+        teacher_id: recipientTeacherId,
         subject: subject.trim(),
         initial_message: initialMessage.trim(),
       });
@@ -238,7 +244,7 @@ export function ThreadsScreen() {
           <Card style={styles.threadsCard}>
             {threads.map((thread, index) => {
               const hasUnread = Boolean(thread.unread_count && thread.unread_count > 0);
-              const teacherName = thread.teacher_name || DEFAULT_TEACHER_NAME;
+              const teacherName = thread.teacher_name || "Wali Kelas";
               const studentName = thread.student_name || "Siswa Asuh";
 
               return (
@@ -314,17 +320,35 @@ export function ThreadsScreen() {
         title="Mulai Pesan Baru"
       >
         <View style={styles.newThreadForm}>
-          {/* Penerima Tetap: Wali Kelas */}
+          {/* Penerima: Wali Kelas */}
           <Label>Penerima Pesan</Label>
-          <View style={styles.recipientRow}>
-            <Avatar name={DEFAULT_TEACHER_NAME} size="md" />
-            <View style={styles.recipientTextCol}>
-              <Text style={styles.recipientName}>{DEFAULT_TEACHER_NAME}</Text>
-              <Text style={styles.recipientRole}>
-                Wali Kelas SDN Nusantara Harapan
-              </Text>
+          {recipientTeacherId && recipientTeacherName ? (
+            <View style={styles.recipientRow}>
+              <Avatar name={recipientTeacherName} size="md" />
+              <View style={styles.recipientTextCol}>
+                <Text style={styles.recipientName}>{recipientTeacherName}</Text>
+                <Text style={styles.recipientRole}>
+                  {selectedStudent?.class_name
+                    ? `Wali ${selectedStudent.class_name}`
+                    : "Wali Kelas"}
+                </Text>
+              </View>
             </View>
-          </View>
+          ) : (
+            <Alert
+              variant="default"
+              title="Wali kelas belum ditetapkan"
+              description={`Wali kelas untuk ${selectedStudent?.class_name || "kelas ini"} belum diatur di sistem. Silakan hubungi Tata Usaha.`}
+              icon={
+                <Ionicons
+                  name="information-circle-outline"
+                  size={20}
+                  color={shadcn.foreground}
+                />
+              }
+              style={styles.serviceAlert}
+            />
+          )}
 
           <Separator style={styles.formSeparator} />
 
@@ -392,6 +416,7 @@ export function ThreadsScreen() {
             <Button
               title="Kirim Pesan"
               variant="default"
+              disabled={!recipientTeacherId || creatingThread}
               loading={creatingThread}
               onPress={handleCreateThread}
               leftIcon={
