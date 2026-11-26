@@ -24,12 +24,13 @@
         <nav class="nav-desktop" aria-label="Navigasi Utama">
           <a href="#masalah" class="nav-link">Masalah</a>
           <a href="#alur-peran" class="nav-link">Alur Peran</a>
+          <a href="#skema-pilot" class="nav-link">Skema Pilot</a>
           <a href="#coba-demo" class="nav-link">Coba Demo</a>
-          <a href="#kontak" class="nav-link">Jadwalkan Demo</a>
+          <a href="#kontak" class="nav-link">Kontak</a>
         </nav>
 
         <div class="header-actions">
-          <a href="#coba-demo" class="btn btn-primary btn-header-cta btn-open-demo">Buka Demo</a>
+          <a href="#coba-demo" class="btn btn-light btn-header-cta btn-open-demo">Buka Demo</a>
           <button type="button" class="btn-hamburger" id="btn-hamburger" aria-expanded="false" aria-controls="mobile-drawer" aria-label="Buka menu navigasi">
             <span class="hamburger-icon" aria-hidden="true">
               <span class="hamburger-line"></span>
@@ -46,157 +47,228 @@
       <nav class="nav-mobile-list" aria-label="Navigasi Mobile">
         <a href="#masalah" class="nav-mobile-link">Masalah</a>
         <a href="#alur-peran" class="nav-mobile-link">Alur Peran</a>
+        <a href="#skema-pilot" class="nav-mobile-link">Skema Pilot</a>
         <a href="#coba-demo" class="nav-mobile-link">Coba Demo</a>
-        <a href="#kontak" class="nav-mobile-link">Jadwalkan Demo</a>
+        <a href="#kontak" class="nav-mobile-link">Kontak</a>
       </nav>
-      <a href="#coba-demo" class="btn btn-primary btn-open-demo" style="width: 100%;">Buka Demo Interaktif</a>
+      <a href="#coba-demo" class="btn btn-light btn-open-demo btn-mobile-full">Buka Demo Interaktif</a>
     </div>
   </header>
 
   <main id="main-content" tabindex="-1">
-    <section class="section hero-section" id="hero">
+    <section class="slab-section hero-slab-section" id="hero">
       <div class="container">
-        <div class="hero-grid">
-          <div class="hero-content">
-            <h1 class="hero-title">Presensi, Izin, Pengumuman, dan SPP Sekolah dalam Satu Portal Rapi.</h1>
+        <div class="slab-card slab-hero">
+          <div class="hero-copy">
+            <h1 class="hero-title">Satu portal rapi untuk presensi, izin, dan SPP sekolah.</h1>
             <p class="hero-desc">
-              Hentikan pesan izin yang tercecer dan bukti transfer manual di grup chat. NeoSchola menghubungkan Wali Murid, Wali Kelas, dan Staf Tata Usaha dalam satu alur kerja transparan, tertib, dan mudah dioperasikan.
+              Hentikan surat izin yang tenggelam dan bukti transfer tercecer di grup chat. NeoSchola menyatukan ruang kerja Wali Murid, Wali Kelas, dan Staf Tata Usaha dalam satu alur tertib.
             </p>
             <div class="hero-actions">
               <a href="#coba-demo" class="btn btn-primary btn-open-demo">Buka Demo Interaktif</a>
               <a href="#kontak" class="btn btn-secondary">Jadwalkan Demo via WhatsApp</a>
             </div>
-            <p class="hero-note">
-              Tanpa instalasi rumit. Akses instan melalui peramban web ponsel maupun komputer sekolah.
-            </p>
+            <ul class="hero-facts" aria-label="Karakteristik platform">
+              <li>Berbasis Web &amp; PWA</li>
+              <li>Tanpa instalasi aplikasi</li>
+              <li>Akses terisolasi per peran</li>
+            </ul>
           </div>
 
-          <div class="hero-preview-frame" aria-label="Simulasi Tampilan Portal NeoSchola">
-            <div class="frame-topbar">
-              <div class="frame-school-info">
-                <div class="frame-school-badge" aria-hidden="true">SD</div>
-                <div>
-                  <div class="frame-school-name">SDN Nusantara Harapan</div>
-                </div>
-              </div>
-              <span class="frame-tag-demo">Data Demo</span>
-            </div>
-
-            <div class="child-switcher-box">
-              <div class="child-switcher-label" id="child-switcher-heading">Pilih Siswa (Simulasi Wali Murid):</div>
-              <div class="child-switcher-tabs" role="group" aria-labelledby="child-switcher-heading">
-                <button type="button" class="child-tab is-active" data-child="raka" aria-pressed="true">
-                  Raka Pratama (4A)
-                </button>
-                <button type="button" class="child-tab" data-child="nadia" aria-pressed="false">
-                  Nadia Putri (2B)
-                </button>
+          <div class="hero-app-stage" aria-label="Simulasi Tampilan Portal NeoSchola">
+            <div class="app-rail" aria-hidden="true">
+              <div class="app-rail-badge">NS</div>
+              <div class="app-rail-icons">
+                <span class="rail-dot is-active">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5L12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>
+                </span>
+                <span class="rail-dot">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+                </span>
+                <span class="rail-dot">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18"/></svg>
+                </span>
+                <span class="rail-dot">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                </span>
               </div>
             </div>
 
-            <div class="preview-bento">
-              <div class="preview-pastel-card card-mint" id="hero-card-presensi">
-                <div class="preview-card-header">
-                  <span class="preview-card-label">Presensi Hari Ini</span>
-                  <span class="preview-card-status" id="hero-presensi-status">Hadir Tepat Waktu</span>
+            <div class="app-canvas">
+              <div class="frame-topbar">
+                <div class="frame-school-info">
+                  <div class="frame-school-badge" aria-hidden="true">SD</div>
+                  <div>
+                    <div class="frame-school-name">SDN Nusantara Harapan</div>
+                    <div class="frame-school-sub">Simulasi Portal Wali Murid</div>
+                  </div>
                 </div>
-                <div class="preview-card-val" id="hero-presensi-detail">Presensi masuk pukul 06.48 WIB</div>
-                <div class="preview-card-sub" id="hero-presensi-sub">Tercatat oleh Wali Kelas 4A</div>
+                <div class="frame-topbar-right">
+                  <span class="frame-tag-demo">Data Demo</span>
+                  <div class="child-switcher-tabs" role="group" aria-label="Pilih Siswa (Simulasi Wali Murid)">
+                    <button type="button" class="child-tab is-active" data-child="raka" aria-pressed="true">
+                      Raka Pratama (4A)
+                    </button>
+                    <button type="button" class="child-tab" data-child="nadia" aria-pressed="false">
+                      Nadia Putri (2B)
+                    </button>
+                  </div>
+                </div>
               </div>
 
-              <div class="preview-pastel-card card-lavender" id="hero-card-tugas">
-                <div class="preview-card-header">
-                  <span class="preview-card-label">Tugas Terkini</span>
-                  <span class="preview-card-status" id="hero-tugas-status">PR Matematika</span>
+              <div class="preview-bento">
+                <div class="preview-pastel-card card-mint" id="hero-card-presensi">
+                  <div class="preview-card-header">
+                    <span class="preview-card-label">Presensi Hari Ini</span>
+                    <span class="preview-card-status" id="hero-presensi-status">Hadir Tepat Waktu</span>
+                  </div>
+                  <div class="preview-card-val" id="hero-presensi-detail">Presensi masuk pukul 06.48 WIB</div>
+                  <div class="preview-card-sub" id="hero-presensi-sub">Tercatat oleh Wali Kelas 4A</div>
                 </div>
-                <div class="preview-card-val" id="hero-tugas-detail">Batas pengumpulan besok pukul 12.00</div>
-                <div class="preview-card-sub" id="hero-tugas-sub">Bab 4: Pecahan Desimal</div>
+
+                <div class="preview-pastel-card card-lavender" id="hero-card-tugas">
+                  <div class="preview-card-header">
+                    <span class="preview-card-label">Tugas Terkini</span>
+                    <span class="preview-card-status" id="hero-tugas-status">PR Matematika</span>
+                  </div>
+                  <div class="preview-card-val" id="hero-tugas-detail">Batas pengumpulan besok pukul 12.00</div>
+                  <div class="preview-card-sub" id="hero-tugas-sub">Bab 4: Pecahan Desimal</div>
+                </div>
+
+                <div class="preview-pastel-card card-mint" id="hero-card-spp">
+                  <div class="preview-card-header">
+                    <span class="preview-card-label">Status Biaya SPP</span>
+                    <span class="preview-card-status" id="hero-spp-status">Lunas</span>
+                  </div>
+                  <div class="preview-card-val" id="hero-spp-detail">SPP November 2026</div>
+                  <div class="preview-card-sub" id="hero-spp-sub">Kuitansi digital NS-202611-042</div>
+                </div>
               </div>
 
-              <div class="preview-pastel-card card-mint" id="hero-card-spp">
-                <div class="preview-card-header">
-                  <span class="preview-card-label">Status Biaya SPP</span>
-                  <span class="preview-card-status" id="hero-spp-status">Lunas</span>
+              <div class="preview-lower-grid">
+                <div class="preview-trend-card">
+                  <div class="preview-trend-head">
+                    <div>
+                      <div class="preview-trend-label">Rekap Kehadiran Bulan Berjalan</div>
+                      <div class="preview-trend-val tabular-nums" id="hero-trend-val">21/22 Hari</div>
+                    </div>
+                    <span class="preview-trend-tag">Data Demo</span>
+                  </div>
+                  <div class="preview-trend-sub" id="hero-trend-sub">Raka Pratama, 1 izin sakit tercatat bulan ini</div>
+                  <div class="trend-bars" id="hero-trend-bars" aria-hidden="true">
+                    <span class="trend-bar" style="height: 78%;"></span>
+                    <span class="trend-bar" style="height: 92%;"></span>
+                    <span class="trend-bar" style="height: 85%;"></span>
+                    <span class="trend-bar" style="height: 64%;"></span>
+                    <span class="trend-bar" style="height: 94%;"></span>
+                    <span class="trend-bar" style="height: 88%;"></span>
+                    <span class="trend-bar is-active" style="height: 96%;"></span>
+                  </div>
                 </div>
-                <div class="preview-card-val" id="hero-spp-detail">SPP November 2026</div>
-                <div class="preview-card-sub" id="hero-spp-sub">Kuitansi digital NS-202611-042</div>
+
+                <div class="preview-dark-card">
+                  <div>
+                    <div class="preview-dark-kicker">Pengumuman &amp; Pesan</div>
+                    <h2 class="preview-dark-title">Komunikasi Sesuai Jam Dinas</h2>
+                    <p class="preview-dark-desc">
+                      Surat edaran sekolah dilengkapi konfirmasi baca, dan ruang konsultasi wali kelas aktif pada jam kerja sekolah.
+                    </p>
+                  </div>
+                  <a href="#coba-demo" class="btn btn-ice-cta">Lihat Akun Uji Coba</a>
+                </div>
               </div>
+
+              <p class="frame-footer-note">
+                Pilih nama siswa di atas untuk melihat perpindahan data anak secara langsung.
+              </p>
             </div>
-
-            <p class="frame-footer-note">
-              Klik nama siswa di atas untuk melihat simulasi perpindahan data anak secara instan.
-            </p>
           </div>
         </div>
       </div>
     </section>
 
-    <section class="section" id="masalah">
+    <section class="dark-section" id="masalah" data-reveal>
       <div class="container">
-        <div class="section-header">
-          <span class="section-tag">Tantangan Tata Kelola</span>
-          <h2 class="section-title">Mengapa Mengelola Administrasi Sekolah di Grup Chat Kian Melelahkan?</h2>
-          <p class="section-desc">
+        <div class="section-header section-header-centered">
+          <span class="section-tag section-tag-dark">Tantangan Harian Sekolah</span>
+          <h2 class="section-title section-title-dark">Mengapa mengelola administrasi sekolah di grup chat kian melelahkan?</h2>
+          <p class="section-desc section-desc-dark">
             Saat komunikasi sekolah bercampur dalam satu linimasa percakapan instan, informasi penting mudah terlewat dan rekapitulasi data menyita waktu staf setiap hari.
           </p>
         </div>
 
         <div class="problem-grid">
-          <div class="problem-card-light">
-            <span class="problem-card-badge badge-light">Kondisi Lama: Grup Chat Konvensional</span>
-            <h3 class="problem-card-title">Pesan Bertumpuk Tanpa Arsip Terstruktur</h3>
+          <div class="problem-card-dark">
+            <span class="problem-card-badge badge-dark-danger">Grup Chat Konvensional</span>
+            <h3 class="problem-card-title">Pesan bertumpuk tanpa arsip terstruktur</h3>
             <ul class="problem-list">
               <li class="problem-item">
-                <span class="problem-icon problem-icon-cross" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5L5 15M5 5l10 10"/></svg></span>
+                <span class="problem-icon problem-icon-cross" aria-hidden="true">
+                  <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5L5 15M5 5l10 10"/></svg>
+                </span>
                 <div>
                   Pesan izin sakit dari orang tua tenggelam oleh obrolan harian, sehingga wali kelas harus mencari ulang saat merekap absensi.
                 </div>
               </li>
               <li class="problem-item">
-                <span class="problem-icon problem-icon-cross" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5L5 15M5 5l10 10"/></svg></span>
+                <span class="problem-icon problem-icon-cross" aria-hidden="true">
+                  <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5L5 15M5 5l10 10"/></svg>
+                </span>
                 <div>
-                  Sekolah tidak tahu wali murid mana yang sudah membaca surat edaran penting dan mana yang terlewat.
+                  Sekolah tidak mengetahui wali murid mana yang sudah membaca surat edaran penting dan mana yang terlewat.
                 </div>
               </li>
               <li class="problem-item">
-                <span class="problem-icon problem-icon-cross" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5L5 15M5 5l10 10"/></svg></span>
+                <span class="problem-icon problem-icon-cross" aria-hidden="true">
+                  <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5L5 15M5 5l10 10"/></svg>
+                </span>
                 <div>
                   Tangkapan layar bukti transfer SPP menumpuk di ponsel bendahara tanpa pencatatan nomor kuitansi yang rapi.
                 </div>
               </li>
               <li class="problem-item">
-                <span class="problem-icon problem-icon-cross" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5L5 15M5 5l10 10"/></svg></span>
+                <span class="problem-icon problem-icon-cross" aria-hidden="true">
+                  <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5L5 15M5 5l10 10"/></svg>
+                </span>
                 <div>
-                  Guru terus menerima pesan pertanyaan tugas dan administrasi di luar jam kerja karena tidak ada batas layanan yang jelas.
+                  Guru menerima pertanyaan administrasi dan tugas di luar jam kerja karena belum ada batas jam layanan yang jelas.
                 </div>
               </li>
             </ul>
           </div>
 
-          <div class="problem-card-obsidian">
-            <span class="problem-card-badge badge-dark">Alur Terstruktur: Portal NeoSchola</span>
-            <h3 class="problem-card-title">Portal Rapi dengan Arsip Terverifikasi</h3>
+          <div class="problem-card-light">
+            <span class="problem-card-badge badge-light-info">Portal NeoSchola</span>
+            <h3 class="problem-card-title">Portal rapi dengan arsip terverifikasi</h3>
             <ul class="problem-list">
               <li class="problem-item">
-                <span class="problem-icon problem-icon-check" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M16.5 5.5L8 14l-4.5-4.5"/></svg></span>
+                <span class="problem-icon problem-icon-check" aria-hidden="true">
+                  <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M16.5 5.5L8 14l-4.5-4.5"/></svg>
+                </span>
                 <div>
                   Orang tua mengajukan izin lewat formulir beralasan dan tautan lampiran yang langsung masuk ke daftar tinjau wali kelas.
                 </div>
               </li>
               <li class="problem-item">
-                <span class="problem-icon problem-icon-check" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M16.5 5.5L8 14l-4.5-4.5"/></svg></span>
+                <span class="problem-icon problem-icon-check" aria-hidden="true">
+                  <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M16.5 5.5L8 14l-4.5-4.5"/></svg>
+                </span>
                 <div>
                   Setiap pengumuman sekolah dilengkapi tombol konfirmasi baca agar TU dan wali kelas dapat memantau keterbacaannya.
                 </div>
               </li>
               <li class="problem-item">
-                <span class="problem-icon problem-icon-check" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M16.5 5.5L8 14l-4.5-4.5"/></svg></span>
+                <span class="problem-icon problem-icon-check" aria-hidden="true">
+                  <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M16.5 5.5L8 14l-4.5-4.5"/></svg>
+                </span>
                 <div>
                   Tata Usaha menerbitkan tagihan SPP, memverifikasi bukti transfer, dan menerbitkan kuitansi digital bernomor di dalam portal.
                 </div>
               </li>
               <li class="problem-item">
-                <span class="problem-icon problem-icon-check" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M16.5 5.5L8 14l-4.5-4.5"/></svg></span>
+                <span class="problem-icon problem-icon-check" aria-hidden="true">
+                  <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M16.5 5.5L8 14l-4.5-4.5"/></svg>
+                </span>
                 <div>
                   Saluran pesan antara orang tua dan wali kelas mengikuti jam layanan sekolah sehingga batas waktu kerja guru tetap terjaga.
                 </div>
@@ -207,358 +279,580 @@
       </div>
     </section>
 
-    <section class="section" id="alur-peran">
+    <section class="slab-section" id="alur-peran" data-reveal>
       <div class="container">
-        <div class="section-header">
-          <span class="section-tag">Alur Kerja Tiga Peran</span>
-          <h2 class="section-title">Setiap Pengguna Memiliki Ruang Kerja yang Disesuaikan</h2>
-          <p class="section-desc">
-            NeoSchola dirancang spesifik untuk kebutuhan tiga aktor utama di lingkungan sekolah. Pilih peran di bawah untuk melihat kapabilitas yang tersedia.
-          </p>
-        </div>
-
-        <div class="role-tabs-wrap">
-          <div class="role-tabs" role="tablist" aria-label="Pilih Peran Pengguna">
-            <button type="button" class="role-tab is-active" id="tab-wali-murid" role="tab" aria-selected="true" aria-controls="panel-wali-murid">
-              Wali Murid
-            </button>
-            <button type="button" class="role-tab" id="tab-wali-kelas" role="tab" aria-selected="false" aria-controls="panel-wali-kelas" tabindex="-1">
-              Wali Kelas
-            </button>
-            <button type="button" class="role-tab" id="tab-admin-tu" role="tab" aria-selected="false" aria-controls="panel-admin-tu" tabindex="-1">
-              Admin Tata Usaha
-            </button>
-          </div>
-        </div>
-
-        <div class="role-panel is-active" id="panel-wali-murid" role="tabpanel" aria-labelledby="tab-wali-murid">
-          <div class="role-bento-grid role-bento-grid-five">
-            <div class="bento-card bento-card-featured bento-mint">
-              <div class="bento-card-top">
-                <div class="bento-category">Presensi & Kedisiplinan</div>
-                <h3 class="bento-title">Pantau Kehadiran Harian</h3>
-                <p class="bento-desc">Lihat status hadir, sakit, atau izin anak pada hari berjalan beserta riwayat presensi langsung dari portal.</p>
-              </div>
-              <span class="bento-pill-indicator">Rekap Kehadiran Harian</span>
-            </div>
-
-            <div class="bento-card bento-ice">
-              <div class="bento-card-top">
-                <div class="bento-category">Perizinan Siswa</div>
-                <h3 class="bento-title">Ajukan Izin dan Sakit</h3>
-                <p class="bento-desc">Formulir izin terstruktur dengan alasan dan tautan lampiran yang langsung masuk ke antrean wali kelas.</p>
-              </div>
-              <span class="bento-pill-indicator">Status Izin Tercatat</span>
-            </div>
-
-            <div class="bento-card bento-lavender">
-              <div class="bento-card-top">
-                <div class="bento-category">Informasi Akademik</div>
-                <h3 class="bento-title">Jadwal, Tugas, & Nilai</h3>
-                <p class="bento-desc">Lihat jadwal pelajaran mingguan, tenggat tugas sekolah, dan catatan kemajuan belajar dari guru.</p>
-              </div>
-              <span class="bento-pill-indicator">Arsip Nilai Siswa</span>
-            </div>
-
-            <div class="bento-card bento-butter">
-              <div class="bento-card-top">
-                <div class="bento-category">Administrasi Keuangan</div>
-                <h3 class="bento-title">Unggah Bukti & Kuitansi SPP</h3>
-                <p class="bento-desc">Kirim referensi setoran bank, pantau status verifikasi TU, dan lihat kuitansi digital bernomor resmi kapan saja.</p>
-              </div>
-              <span class="bento-pill-indicator">Kuitansi Digital Bernomor</span>
-            </div>
-
-            <div class="bento-card bento-ice">
-              <div class="bento-card-top">
-                <div class="bento-category">Komunikasi Resmi</div>
-                <h3 class="bento-title">Pengumuman & Chat Terjadwal</h3>
-                <p class="bento-desc">Baca edaran sekolah dengan tombol konfirmasi dan hubungi wali kelas pada jam layanan yang ditentukan.</p>
-              </div>
-              <span class="bento-pill-indicator">Jam Layanan Teratur</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="role-panel" id="panel-wali-kelas" role="tabpanel" aria-labelledby="tab-wali-kelas" hidden>
-          <div class="role-bento-grid role-bento-grid-four">
-            <div class="bento-card bento-card-featured bento-mint">
-              <div class="bento-card-top">
-                <div class="bento-category">Absensi Cepat</div>
-                <h3 class="bento-title">Presensi Massal Satu Kelas</h3>
-                <p class="bento-desc">Tandai status hadir, izin, sakit, atau alpa seluruh murid dalam satu lembar kerja ringkas.</p>
-              </div>
-              <span class="bento-pill-indicator">Hemat Waktu Mengajar</span>
-            </div>
-
-            <div class="bento-card bento-butter">
-              <div class="bento-card-top">
-                <div class="bento-category">Verifikasi Izin</div>
-                <h3 class="bento-title">Persetujuan Surat Masuk</h3>
-                <p class="bento-desc">Periksa permohonan izin dari orang tua dan berikan status persetujuan atau penolakan dengan catatan resmi.</p>
-              </div>
-              <span class="bento-pill-indicator">Keputusan Izin Tercatat</span>
-            </div>
-
-            <div class="bento-card bento-lavender">
-              <div class="bento-card-top">
-                <div class="bento-category">Manajemen Pembelajaran</div>
-                <h3 class="bento-title">Kelola Tugas dan Nilai</h3>
-                <p class="bento-desc">Publikasikan instruksi tugas rumah, tetapkan batas waktu pengumpulan, dan input penilaian hasil belajar.</p>
-              </div>
-              <span class="bento-pill-indicator">Buku Nilai Digital</span>
-            </div>
-
-            <div class="bento-card bento-card-wide bento-ice">
-              <div class="bento-card-top">
-                <div class="bento-category">Pusat Pesan</div>
-                <h3 class="bento-title">Saluran Konsultasi Murid</h3>
-                <p class="bento-desc">Terima pertanyaan dari wali murid hanya pada jam dinas aktif tanpa membagikan nomor telepon pribadi.</p>
-              </div>
-              <span class="bento-pill-indicator">Privasi Guru Terjaga</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="role-panel" id="panel-admin-tu" role="tabpanel" aria-labelledby="tab-admin-tu" hidden>
-          <div class="role-bento-grid role-bento-grid-four">
-            <div class="bento-card bento-card-featured bento-butter">
-              <div class="bento-card-top">
-                <div class="bento-category">Penagihan Rutin</div>
-                <h3 class="bento-title">Penerbitan Tagihan SPP</h3>
-                <p class="bento-desc">Terbitkan tagihan SPP per siswa dengan rincian pos iuran, tenggat bayar, dan nomor tagihan yang jelas.</p>
-              </div>
-              <span class="bento-pill-indicator">Nomor Tagihan Unik</span>
-            </div>
-
-            <div class="bento-card bento-mint">
-              <div class="bento-card-top">
-                <div class="bento-category">Rekonsiliasi Kas</div>
-                <h3 class="bento-title">Verifikasi Bukti Pembayaran</h3>
-                <p class="bento-desc">Cocokkan bukti transfer bank yang masuk dengan mutasi rekening dan sahkan penerimaan dana sekolah.</p>
-              </div>
-              <span class="bento-pill-indicator">Kuitansi Nomor Seri Sah</span>
-            </div>
-
-            <div class="bento-card bento-ice">
-              <div class="bento-card-top">
-                <div class="bento-category">Warta Sekolah</div>
-                <h3 class="bento-title">Siaran Pengumuman Resmi</h3>
-                <p class="bento-desc">Kirim surat edaran libur, jadwal ujian, atau agenda rapat komite ke seluruh wali murid secara serentak.</p>
-              </div>
-              <span class="bento-pill-indicator">Konfirmasi Keterbacaan</span>
-            </div>
-
-            <div class="bento-card bento-card-wide bento-lavender">
-              <div class="bento-card-top">
-                <div class="bento-category">Pemantauan Sekolah</div>
-                <h3 class="bento-title">Pantau Presensi & Izin Lintas Kelas</h3>
-                <p class="bento-desc">Pantau daftar siswa, kehadiran harian, dan status pengajuan izin seluruh kelas dari satu dasbor.</p>
-              </div>
-              <span class="bento-pill-indicator">Visibilitas Lintas Kelas</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section class="section demo-section" id="coba-demo">
-      <div class="container">
-        <div class="section-header">
-          <span class="section-tag">Uji Coba Langsung</span>
-          <h2 class="section-title">Eksplorasi Portal dengan Akun Uji Coba Nyata</h2>
-          <p class="section-desc">
-            Anda dapat langsung mencoba alur kerja ketiga peran tanpa proses registrasi berbelit.
-          </p>
-        </div>
-
-        <div class="notice-banner">
-          <div aria-hidden="true" style="font-weight: 800; color: var(--butter-text);">i</div>
-          <p>
-            <strong>Informasi Data Sintetis:</strong> Seluruh nama siswa, nomor induk, nama kelas, dan rincian transaksi di bawah adalah data tiruan untuk simulasi SDN Nusantara Harapan. Basis data demo di-reset secara berkala untuk menjaga kebersihan sistem.
-          </p>
-        </div>
-
-        <div class="demo-accounts-grid">
-          <div class="account-card">
-            <div>
-              <span class="account-badge-role card-mint">Wali Murid</span>
-              <h3 class="account-title">Budi Santoso</h3>
-              <p class="account-subtitle">Wali dari Raka Pratama (4A) & Nadia Putri (2B)</p>
-              
-              <div class="account-field">
-                <div class="account-field-label">Alamat Email:</div>
-                <div class="account-field-val tabular-nums">wali.budi@neoschola.demo</div>
-              </div>
-              <div class="account-field">
-                <div class="account-field-label">Kata Sandi:</div>
-                <div class="account-field-val tabular-nums">neoschola123</div>
-              </div>
-            </div>
-
-            <div class="account-actions">
-              <button type="button" class="btn-copy" data-copy-text="wali.budi@neoschola.demo" data-default-label="Salin Email">Salin Email</button>
-              <button type="button" class="btn-copy" data-copy-text="neoschola123" data-default-label="Salin Sandi">Salin Sandi</button>
-            </div>
-          </div>
-
-          <div class="account-card">
-            <div>
-              <span class="account-badge-role card-mint">Wali Murid</span>
-              <h3 class="account-title">Siti Rahmawati</h3>
-              <p class="account-subtitle">Wali dari Dimas Mahendra (Kelas 4A)</p>
-              
-              <div class="account-field">
-                <div class="account-field-label">Alamat Email:</div>
-                <div class="account-field-val tabular-nums">wali.siti@neoschola.demo</div>
-              </div>
-              <div class="account-field">
-                <div class="account-field-label">Kata Sandi:</div>
-                <div class="account-field-val tabular-nums">neoschola123</div>
-              </div>
-            </div>
-
-            <div class="account-actions">
-              <button type="button" class="btn-copy" data-copy-text="wali.siti@neoschola.demo" data-default-label="Salin Email">Salin Email</button>
-              <button type="button" class="btn-copy" data-copy-text="neoschola123" data-default-label="Salin Sandi">Salin Sandi</button>
-            </div>
-          </div>
-
-          <div class="account-card">
-            <div>
-              <span class="account-badge-role card-lavender">Wali Kelas</span>
-              <h3 class="account-title">Ani Wijayanti, S.Pd.</h3>
-              <p class="account-subtitle">Wali Kelas 4A</p>
-              
-              <div class="account-field">
-                <div class="account-field-label">Alamat Email:</div>
-                <div class="account-field-val tabular-nums">guru.ani@neoschola.demo</div>
-              </div>
-              <div class="account-field">
-                <div class="account-field-label">Kata Sandi:</div>
-                <div class="account-field-val tabular-nums">neoschola123</div>
-              </div>
-            </div>
-
-            <div class="account-actions">
-              <button type="button" class="btn-copy" data-copy-text="guru.ani@neoschola.demo" data-default-label="Salin Email">Salin Email</button>
-              <button type="button" class="btn-copy" data-copy-text="neoschola123" data-default-label="Salin Sandi">Salin Sandi</button>
-            </div>
-          </div>
-
-          <div class="account-card">
-            <div>
-              <span class="account-badge-role card-butter">Admin TU</span>
-              <h3 class="account-title">Hendra Setiawan</h3>
-              <p class="account-subtitle">Admin Tata Usaha & Keuangan</p>
-              
-              <div class="account-field">
-                <div class="account-field-label">Alamat Email:</div>
-                <div class="account-field-val tabular-nums">admin.tu@neoschola.demo</div>
-              </div>
-              <div class="account-field">
-                <div class="account-field-label">Kata Sandi:</div>
-                <div class="account-field-val tabular-nums">neoschola123</div>
-              </div>
-            </div>
-
-            <div class="account-actions">
-              <button type="button" class="btn-copy" data-copy-text="admin.tu@neoschola.demo" data-default-label="Salin Email">Salin Email</button>
-              <button type="button" class="btn-copy" data-copy-text="neoschola123" data-default-label="Salin Sandi">Salin Sandi</button>
-            </div>
-          </div>
-        </div>
-
-        <div class="demo-bottom-cta">
-          <p>Sudah menyalin akun demo di atas? Masuk ke portal aplikasi uji coba sekarang.</p>
-          <a href="https://app.neoschola.floc.site" class="btn btn-primary btn-open-demo">Buka Aplikasi Demo</a>
-        </div>
-      </div>
-    </section>
-
-    <section class="section" id="kontak">
-      <div class="container">
-        <div class="lead-grid">
-          <div class="lead-info">
-            <span class="section-tag">Konsultasi & Kemitraan</span>
-            <h2 class="section-title">Jadwalkan Uji Coba untuk Sekolah Anda</h2>
-            <p class="section-desc">
-              Kami siap mendampingi proses pengenalan dan migrasi data sekolah Anda dengan pendampingan langsung bagi guru maupun orang tua.
-            </p>
-
-            <div class="lead-direct-card">
-              <h3 class="lead-direct-title">Konsultasi WhatsApp Cepat</h3>
-              <p class="lead-direct-desc">
-                Ingin berdiskusi langsung mengenai kebutuhan khusus kurikulum atau mekanisme pembayaran sekolah Anda? Hubungi narahubung kami.
-              </p>
-              <a href="https://wa.me/6285791702218?text=Halo%20Tim%20NeoSchola,%20saya%20ingin%20berkonsultasi%20mengenai%20portal%20sekolah." id="btn-wa-consult" target="_blank" rel="noopener noreferrer" class="btn btn-primary">
-                Kirim Pesan ke WhatsApp
-              </a>
-              <p class="lead-direct-desc" style="margin-top: 16px; margin-bottom: 0;">
-                Email: <a id="link-contact-email" href="mailto:floccreativeid@gmail.com">floccreativeid@gmail.com</a>
+        <div class="slab-card">
+          <div class="section-header-split">
+            <div class="section-header-copy">
+              <span class="section-tag">Alur Kerja Tiga Peran</span>
+              <h2 class="section-title">Ruang kerja terpisah untuk tiap peran di sekolah.</h2>
+              <p class="section-desc">
+                Pilih peran di bawah untuk meninjau tampilan tugas utama dan modul yang diakses oleh Wali Murid, Wali Kelas, serta Admin Tata Usaha.
               </p>
             </div>
-          </div>
 
-          <div class="lead-form-wrap">
-            <h3 style="font-size: 1.35rem; font-weight: 800; margin-bottom: 8px;">Formulir Permintaan Demo</h3>
-            <p style="font-size: 0.9rem; color: var(--muted-fg); margin-bottom: 24px;">Isi formulir ringkas di bawah untuk menyusun pesan registrasi ke tim kami.</p>
-
-            <form id="lead-form" novalidate>
-              <div class="form-group">
-                <label for="lead-school-name" class="form-label">
-                  Nama Sekolah <span class="form-required">*</span>
-                </label>
-                <input type="text" id="lead-school-name" class="form-input" placeholder="Masukkan nama sekolah Anda" aria-invalid="false" required>
-                <div class="form-error-msg" id="error-school-name" role="alert">Nama sekolah wajib diisi.</div>
-              </div>
-
-              <div class="form-group">
-                <label for="lead-school-level" class="form-label">Jenjang Pendidikan</label>
-                <select id="lead-school-level" class="form-select">
-                  <option value="SD / MI">SD / MI</option>
-                  <option value="SMP / MTs">SMP / MTs</option>
-                  <option value="SMA / SMK / MA">SMA / SMK / MA</option>
-                  <option value="Lainnya">Lainnya</option>
-                </select>
-              </div>
-
-              <div class="form-group">
-                <label for="lead-student-count" class="form-label">Perkiraan Jumlah Siswa</label>
-                <input type="text" id="lead-student-count" class="form-input" placeholder="Perkiraan jumlah siswa aktif" aria-describedby="help-student-count">
-                <div class="form-help" id="help-student-count">Membantu kami menyiapkan alokasi server dan sesi pengenalan yang tepat.</div>
-              </div>
-
-              <div class="form-group">
-                <label for="lead-contact-name" class="form-label">
-                  Nama & Jabatan Kontak <span class="form-required">*</span>
-                </label>
-                <input type="text" id="lead-contact-name" class="form-input" placeholder="Nama lengkap dan jabatan (mis. Kepala Sekolah / Staf TU)" aria-invalid="false" required>
-                <div class="form-error-msg" id="error-contact-name" role="alert">Nama dan jabatan kontak wajib diisi.</div>
-              </div>
-
-              <div class="form-group">
-                <label for="lead-notes" class="form-label">Catatan Kebutuhan Khusus (Opsional)</label>
-                <textarea id="lead-notes" class="form-textarea" placeholder="Tuliskan kendala administrasi utama yang ingin diselesaikan di sekolah Anda..."></textarea>
-              </div>
-
-              <button type="submit" class="btn btn-primary btn-submit">
-                Kirim Jadwal ke WhatsApp
-              </button>
-            </form>
-
-            <div class="lead-confirmation" id="lead-confirmation" hidden>
-              <h4 class="confirmation-title">Pesan Pendaftaran Berhasil Disusun!</h4>
-              <p class="confirmation-desc">
-                Jika jendela WhatsApp tidak terbuka secara otomatis pada peramban Anda, silakan gunakan tombol langsung di bawah atau salin teks pesan pendaftaran.
-              </p>
-              <div class="confirmation-actions">
-                <a href="https://wa.me/6285791702218?text=Halo%20Tim%20NeoSchola,%20saya%20ingin%20menjadwalkan%20demo%20portal%20sekolah." id="btn-wa-direct" target="_blank" rel="noopener noreferrer" class="btn btn-primary">
-                  Lanjut ke WhatsApp
-                </a>
-                <button type="button" class="btn btn-copy" id="btn-copy-wa-message" data-copy-text="" data-default-label="Salin Pesan Pendaftaran">
-                  Salin Pesan Pendaftaran
+            <div class="role-tabs-wrap">
+              <div class="role-tabs" role="tablist" aria-label="Pilih Peran Pengguna">
+                <button type="button" class="role-tab is-active" id="tab-wali-murid" role="tab" aria-selected="true" aria-controls="panel-wali-murid">
+                  Wali Murid
                 </button>
+                <button type="button" class="role-tab" id="tab-wali-kelas" role="tab" aria-selected="false" aria-controls="panel-wali-kelas" tabindex="-1">
+                  Wali Kelas
+                </button>
+                <button type="button" class="role-tab" id="tab-admin-tu" role="tab" aria-selected="false" aria-controls="panel-admin-tu" tabindex="-1">
+                  Admin TU
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="role-panel is-active" id="panel-wali-murid" role="tabpanel" aria-labelledby="tab-wali-murid">
+            <div class="role-spotlight">
+              <div class="role-spotlight-copy">
+                <h3 class="spotlight-title">Satu pintu informasi khusus anak di bawah perwalian</h3>
+                <p class="spotlight-desc">
+                  Wali murid berpindah antar-anak dalam satu akun tanpa perlu masuk ulang, memantau presensi harian, mengajukan izin sakit berlampiran, hingga menyimpan kuitansi SPP bernomor resmi.
+                </p>
+                <ul class="cap-tags" aria-label="Modul Wali Murid">
+                  <li class="cap-tag">Pengalih anak asuh</li>
+                  <li class="cap-tag">Presensi harian</li>
+                  <li class="cap-tag">Izin sakit &amp; surat</li>
+                  <li class="cap-tag">Jadwal &amp; tugas</li>
+                  <li class="cap-tag">Kuitansi SPP digital</li>
+                  <li class="cap-tag">Pesan jam dinas</li>
+                </ul>
+              </div>
+
+              <div class="role-mock-card">
+                <div class="mock-head">
+                  <span class="mock-title">Ringkasan Perwalian: Budi Santoso</span>
+                  <span class="mock-badge">Simulasi Alur</span>
+                </div>
+                <div class="mock-rows">
+                  <div class="mock-row">
+                    <div>
+                      <div class="mock-row-title">Pengajuan Izin Sakit (Nadia Putri)</div>
+                      <div class="mock-row-sub">Surat keterangan diunggah wali murid</div>
+                    </div>
+                    <span class="mock-status status-mint">Disetujui</span>
+                  </div>
+                  <div class="mock-row">
+                    <div>
+                      <div class="mock-row-title">Edaran Pembagian Rapor Semester</div>
+                      <div class="mock-row-sub">Menunggu konfirmasi baca wali murid</div>
+                    </div>
+                    <span class="mock-status status-butter">Konfirmasi Baca</span>
+                  </div>
+                  <div class="mock-row">
+                    <div>
+                      <div class="mock-row-title">Tagihan SPP November 2026 (Raka)</div>
+                      <div class="mock-row-sub">Kuitansi digital NS-202611-042</div>
+                    </div>
+                    <span class="mock-status status-ice">Lunas</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="role-bento-grid role-bento-grid-five">
+              <div class="bento-card bento-card-featured bento-mint">
+                <div class="bento-card-top">
+                  <div class="bento-category">Presensi &amp; Kedisiplinan</div>
+                  <h4 class="bento-title">Pantau Kehadiran Harian</h4>
+                  <p class="bento-desc">Lihat status hadir, sakit, atau izin anak pada hari berjalan beserta riwayat presensi langsung dari portal.</p>
+                </div>
+                <span class="bento-pill-indicator">Rekap Kehadiran Harian</span>
+              </div>
+
+              <div class="bento-card bento-ice">
+                <div class="bento-card-top">
+                  <div class="bento-category">Perizinan Siswa</div>
+                  <h4 class="bento-title">Ajukan Izin dan Sakit</h4>
+                  <p class="bento-desc">Formulir izin terstruktur dengan alasan dan tautan lampiran yang langsung masuk ke antrean wali kelas.</p>
+                </div>
+                <span class="bento-pill-indicator">Status Izin Tercatat</span>
+              </div>
+
+              <div class="bento-card bento-lavender">
+                <div class="bento-card-top">
+                  <div class="bento-category">Informasi Akademik</div>
+                  <h4 class="bento-title">Jadwal, Tugas, &amp; Nilai</h4>
+                  <p class="bento-desc">Lihat jadwal pelajaran mingguan, tenggat tugas sekolah, dan catatan kemajuan belajar dari guru.</p>
+                </div>
+                <span class="bento-pill-indicator">Arsip Nilai Siswa</span>
+              </div>
+
+              <div class="bento-card bento-butter">
+                <div class="bento-card-top">
+                  <div class="bento-category">Administrasi Keuangan</div>
+                  <h4 class="bento-title">Unggah Bukti &amp; Kuitansi SPP</h4>
+                  <p class="bento-desc">Kirim referensi setoran bank, pantau status verifikasi TU, dan lihat kuitansi digital bernomor resmi kapan saja.</p>
+                </div>
+                <span class="bento-pill-indicator">Kuitansi Digital Bernomor</span>
+              </div>
+
+              <div class="bento-card bento-ice">
+                <div class="bento-card-top">
+                  <div class="bento-category">Komunikasi Resmi</div>
+                  <h4 class="bento-title">Pengumuman &amp; Chat Terjadwal</h4>
+                  <p class="bento-desc">Baca edaran sekolah dengan tombol konfirmasi dan hubungi wali kelas pada jam layanan yang ditentukan.</p>
+                </div>
+                <span class="bento-pill-indicator">Jam Layanan Teratur</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="role-panel" id="panel-wali-kelas" role="tabpanel" aria-labelledby="tab-wali-kelas" hidden>
+            <div class="role-spotlight">
+              <div class="role-spotlight-copy">
+                <h3 class="spotlight-title">Input absensi satu kelas selesai dalam hitungan detik</h3>
+                <p class="spotlight-desc">
+                  Wali kelas menandai kehadiran seluruh murid dengan preset hadir massal, memproses permohonan izin masuk dalam satu daftar, serta menjaga privasi nomor pribadi lewat ruang pesan jam dinas.
+                </p>
+                <ul class="cap-tags" aria-label="Modul Wali Kelas">
+                  <li class="cap-tag">Preset hadir massal</li>
+                  <li class="cap-tag">Persetujuan izin</li>
+                  <li class="cap-tag">Publikasi tugas</li>
+                  <li class="cap-tag">Input buku nilai</li>
+                  <li class="cap-tag">Pengumuman kelas</li>
+                  <li class="cap-tag">Konsultasi jam dinas</li>
+                </ul>
+              </div>
+
+              <div class="role-mock-card">
+                <div class="mock-head">
+                  <span class="mock-title">Lembar Kerja Kelas 4A: Ani Wijayanti</span>
+                  <span class="mock-badge">Simulasi Alur</span>
+                </div>
+                <div class="mock-rows">
+                  <div class="mock-row">
+                    <div>
+                      <div class="mock-row-title">Presensi Harian Kelas 4A</div>
+                      <div class="mock-row-sub">Preset semua hadir, sesuaikan siswa berhalangan</div>
+                    </div>
+                    <span class="mock-status status-mint">Tersimpan</span>
+                  </div>
+                  <div class="mock-row">
+                    <div>
+                      <div class="mock-row-title">Permohonan Izin: Dimas Mahendra</div>
+                      <div class="mock-row-sub">Lampiran surat izin orang tua terlampir</div>
+                    </div>
+                    <span class="mock-status status-butter">Perlu Tinjau</span>
+                  </div>
+                  <div class="mock-row">
+                    <div>
+                      <div class="mock-row-title">Tugas PR Matematika Bab 4</div>
+                      <div class="mock-row-sub">Terdistribusi ke akun wali murid kelas 4A</div>
+                    </div>
+                    <span class="mock-status status-lavender">Dipublikasikan</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="role-bento-grid role-bento-grid-four">
+              <div class="bento-card bento-card-featured bento-mint">
+                <div class="bento-card-top">
+                  <div class="bento-category">Absensi Cepat</div>
+                  <h4 class="bento-title">Presensi Massal Satu Kelas</h4>
+                  <p class="bento-desc">Tandai status hadir, izin, sakit, atau alpa seluruh murid dalam satu lembar kerja ringkas.</p>
+                </div>
+                <span class="bento-pill-indicator">Hemat Waktu Mengajar</span>
+              </div>
+
+              <div class="bento-card bento-butter">
+                <div class="bento-card-top">
+                  <div class="bento-category">Verifikasi Izin</div>
+                  <h4 class="bento-title">Persetujuan Surat Masuk</h4>
+                  <p class="bento-desc">Periksa permohonan izin dari orang tua dan berikan status persetujuan atau penolakan dengan catatan resmi.</p>
+                </div>
+                <span class="bento-pill-indicator">Keputusan Izin Tercatat</span>
+              </div>
+
+              <div class="bento-card bento-lavender">
+                <div class="bento-card-top">
+                  <div class="bento-category">Manajemen Pembelajaran</div>
+                  <h4 class="bento-title">Kelola Tugas dan Nilai</h4>
+                  <p class="bento-desc">Publikasikan instruksi tugas rumah, tetapkan batas waktu pengumpulan, dan input penilaian hasil belajar.</p>
+                </div>
+                <span class="bento-pill-indicator">Buku Nilai Digital</span>
+              </div>
+
+              <div class="bento-card bento-card-wide bento-ice">
+                <div class="bento-card-top">
+                  <div class="bento-category">Pusat Pesan</div>
+                  <h4 class="bento-title">Saluran Konsultasi Murid</h4>
+                  <p class="bento-desc">Terima pertanyaan dari wali murid hanya pada jam dinas aktif tanpa membagikan nomor telepon pribadi.</p>
+                </div>
+                <span class="bento-pill-indicator">Privasi Guru Terjaga</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="role-panel" id="panel-admin-tu" role="tabpanel" aria-labelledby="tab-admin-tu" hidden>
+            <div class="role-spotlight">
+              <div class="role-spotlight-copy">
+                <h3 class="spotlight-title">Rekonsiliasi SPP dan warta sekolah tanpa tumpukan tangkapan layar</h3>
+                <p class="spotlight-desc">
+                  Staf Tata Usaha menerbitkan tagihan SPP per siswa, mencocokkan referensi transfer masuk, menerbitkan kuitansi bernomor seri, serta memantau keterbacaan surat edaran sekolah lintas kelas.
+                </p>
+                <ul class="cap-tags" aria-label="Modul Admin Tata Usaha">
+                  <li class="cap-tag">Terbit tagihan SPP</li>
+                  <li class="cap-tag">Verifikasi setoran</li>
+                  <li class="cap-tag">Kuitansi bernomor</li>
+                  <li class="cap-tag">Siaran edaran resmi</li>
+                  <li class="cap-tag">Pantau konfirmasi baca</li>
+                  <li class="cap-tag">Rekap lintas kelas</li>
+                </ul>
+              </div>
+
+              <div class="role-mock-card">
+                <div class="mock-head">
+                  <span class="mock-title">Meja Tata Usaha: Hendra Setiawan</span>
+                  <span class="mock-badge">Simulasi Alur</span>
+                </div>
+                <div class="mock-rows">
+                  <div class="mock-row">
+                    <div>
+                      <div class="mock-row-title">Konfirmasi Transfer: Nadia Putri (2B)</div>
+                      <div class="mock-row-sub">Referensi transfer masuk 22 Nov 2026</div>
+                    </div>
+                    <span class="mock-status status-butter">Menunggu Verifikasi</span>
+                  </div>
+                  <div class="mock-row">
+                    <div>
+                      <div class="mock-row-title">Kuitansi NS-202611-042 (Raka Pratama)</div>
+                      <div class="mock-row-sub">Terbit otomatis setelah disahkan TU</div>
+                    </div>
+                    <span class="mock-status status-mint">Sah &amp; Terarsip</span>
+                  </div>
+                  <div class="mock-row">
+                    <div>
+                      <div class="mock-row-title">Edaran Jadwal Penilaian Akhir</div>
+                      <div class="mock-row-sub">Terpantau status konfirmasi baca per wali</div>
+                    </div>
+                    <span class="mock-status status-ice">Siaran Sekolah</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="role-bento-grid role-bento-grid-four">
+              <div class="bento-card bento-card-featured bento-butter">
+                <div class="bento-card-top">
+                  <div class="bento-category">Penagihan Rutin</div>
+                  <h4 class="bento-title">Penerbitan Tagihan SPP</h4>
+                  <p class="bento-desc">Terbitkan tagihan SPP per siswa dengan rincian pos iuran, tenggat bayar, dan nomor tagihan yang jelas.</p>
+                </div>
+                <span class="bento-pill-indicator">Nomor Tagihan Unik</span>
+              </div>
+
+              <div class="bento-card bento-mint">
+                <div class="bento-card-top">
+                  <div class="bento-category">Rekonsiliasi Kas</div>
+                  <h4 class="bento-title">Verifikasi Bukti Pembayaran</h4>
+                  <p class="bento-desc">Cocokkan bukti transfer bank yang masuk dengan mutasi rekening dan sahkan penerimaan dana sekolah.</p>
+                </div>
+                <span class="bento-pill-indicator">Kuitansi Nomor Seri Sah</span>
+              </div>
+
+              <div class="bento-card bento-ice">
+                <div class="bento-card-top">
+                  <div class="bento-category">Warta Sekolah</div>
+                  <h4 class="bento-title">Siaran Pengumuman Resmi</h4>
+                  <p class="bento-desc">Kirim surat edaran libur, jadwal ujian, atau agenda rapat komite ke seluruh wali murid secara serentak.</p>
+                </div>
+                <span class="bento-pill-indicator">Konfirmasi Keterbacaan</span>
+              </div>
+
+              <div class="bento-card bento-card-wide bento-lavender">
+                <div class="bento-card-top">
+                  <div class="bento-category">Pemantauan Sekolah</div>
+                  <h4 class="bento-title">Pantau Presensi &amp; Izin Lintas Kelas</h4>
+                  <p class="bento-desc">Pantau daftar siswa, kehadiran harian, dan status pengajuan izin seluruh kelas dari satu dasbor.</p>
+                </div>
+                <span class="bento-pill-indicator">Visibilitas Lintas Kelas</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="dark-section" id="skema-pilot" data-reveal>
+      <div class="container">
+        <div class="section-header section-header-centered">
+          <span class="section-tag section-tag-dark">Program Kemitraan Sekolah</span>
+          <h2 class="section-title section-title-dark">Mulai dari pilot gratis. Biaya transparan tanpa jebakan.</h2>
+          <p class="section-desc section-desc-dark">
+            Sekolah menguji alur kerja nyata di satu hingga dua kelas percontohan terlebih dahulu sebelum memutuskan penerapan penuh.
+          </p>
+        </div>
+
+        <div class="pricing-grid">
+          <div class="pricing-card-dark">
+            <div>
+              <div class="pricing-label pricing-label-dark">Khusus 1-3 sekolah perintis</div>
+              <h3 class="pricing-title">Pilot Uji Coba 1 Bulan</h3>
+              <div class="pricing-price-row">
+                <span class="pricing-amount tabular-nums">Rp 0</span>
+                <span class="pricing-unit">/ bulan pertama</span>
+              </div>
+              <p class="pricing-desc">
+                Evaluasi langsung seluruh alur Presensi, Izin, Pengumuman, Pesan, dan Keuangan SPP TU pada 1-2 kelas percontohan.
+              </p>
+              <ul class="pricing-list">
+                <li>Akses penuh tiga peran untuk 1-2 kelas percontohan</li>
+                <li>Bantuan input data awal siswa, guru, dan tagihan berjalan</li>
+                <li>Pendampingan daring guru &amp; TU plus evaluasi mingguan 15 menit</li>
+                <li>Tanpa perpanjangan otomatis berbayar setelah 30 hari</li>
+              </ul>
+            </div>
+            <a href="#kontak" class="btn btn-dark-outline">Ajukan Pilot Gratis</a>
+          </div>
+
+          <div class="pricing-card-light">
+            <div>
+              <div class="pricing-label pricing-label-light">Tarif perintis dikunci 1 tahun</div>
+              <h3 class="pricing-title">Langganan Pasca-Pilot</h3>
+              <div class="pricing-price-row">
+                <span class="pricing-amount tabular-nums">Rp 4.000</span>
+                <span class="pricing-unit">/ siswa / bulan</span>
+              </div>
+              <p class="pricing-desc">
+                Lebih hemat dari tarif normal Rp 6.000/siswa/bulan. Minimal tagihan Rp 400.000/bulan untuk sekolah hingga 100 siswa.
+              </p>
+              <ul class="pricing-list">
+                <li>Server dan basis data terisolasi khusus sekolah Anda</li>
+                <li>Pencadangan data harian dan pembaruan fitur inti</li>
+                <li>Dukungan teknis langsung melalui WhatsApp</li>
+                <li>Diskon 10% untuk pembayaran di muka per semester (6 bulan)</li>
+              </ul>
+            </div>
+            <a href="#kontak" class="btn btn-primary">Diskusikan Kebutuhan Sekolah</a>
+          </div>
+        </div>
+
+        <div class="governance-strip">
+          <div class="governance-copy">
+            <h3 class="governance-title">Tata Kelola Data Selaras UU PDP No. 27 Tahun 2022</h3>
+            <p class="governance-desc">
+              Sekolah memegang kendali penuh atas data siswa (Data Controller) dengan isolasi akses berbasis peran (RBAC), ekspor CSV mandiri, serta dukungan dokumen MoU dan Perjanjian Pemrosesan Data (DPA).
+            </p>
+          </div>
+          <div class="governance-links">
+            <a href="privasi.html" class="btn btn-dark-outline">Kebijakan Privasi</a>
+            <a href="ketentuan.html" class="btn btn-dark-outline">Syarat &amp; Ketentuan</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slab-section" id="coba-demo" data-reveal>
+      <div class="container">
+        <div class="slab-card">
+          <div class="section-header">
+            <span class="section-tag">Uji Coba Langsung</span>
+            <h2 class="section-title">Eksplorasi portal dengan akun uji coba nyata</h2>
+            <p class="section-desc">
+              Salin kredensial di bawah dan masuk ke aplikasi demo untuk mencoba alur kerja ketiga peran tanpa proses pendaftaran.
+            </p>
+          </div>
+
+          <div class="notice-banner">
+            <div class="notice-icon" aria-hidden="true">i</div>
+            <p>
+              <strong>Informasi Data Sintetis:</strong> Seluruh nama siswa, nomor induk, nama kelas, dan rincian transaksi di bawah adalah data tiruan untuk simulasi SDN Nusantara Harapan. Basis data demo di-reset secara berkala.
+            </p>
+          </div>
+
+          <div class="demo-accounts-grid">
+            <div class="account-card">
+              <div>
+                <span class="account-badge-role card-mint">Wali Murid</span>
+                <h3 class="account-title">Budi Santoso</h3>
+                <p class="account-subtitle">Wali dari Raka Pratama (4A) &amp; Nadia Putri (2B)</p>
+
+                <div class="account-field">
+                  <div class="account-field-label">Alamat Email:</div>
+                  <div class="account-field-val tabular-nums">wali.budi@neoschola.demo</div>
+                </div>
+                <div class="account-field">
+                  <div class="account-field-label">Kata Sandi:</div>
+                  <div class="account-field-val tabular-nums">neoschola123</div>
+                </div>
+              </div>
+
+              <div class="account-actions">
+                <button type="button" class="btn-copy" data-copy-text="wali.budi@neoschola.demo" data-default-label="Salin Email">Salin Email</button>
+                <button type="button" class="btn-copy" data-copy-text="neoschola123" data-default-label="Salin Sandi">Salin Sandi</button>
+              </div>
+            </div>
+
+            <div class="account-card">
+              <div>
+                <span class="account-badge-role card-mint">Wali Murid</span>
+                <h3 class="account-title">Siti Rahmawati</h3>
+                <p class="account-subtitle">Wali dari Dimas Mahendra (Kelas 4A)</p>
+
+                <div class="account-field">
+                  <div class="account-field-label">Alamat Email:</div>
+                  <div class="account-field-val tabular-nums">wali.siti@neoschola.demo</div>
+                </div>
+                <div class="account-field">
+                  <div class="account-field-label">Kata Sandi:</div>
+                  <div class="account-field-val tabular-nums">neoschola123</div>
+                </div>
+              </div>
+
+              <div class="account-actions">
+                <button type="button" class="btn-copy" data-copy-text="wali.siti@neoschola.demo" data-default-label="Salin Email">Salin Email</button>
+                <button type="button" class="btn-copy" data-copy-text="neoschola123" data-default-label="Salin Sandi">Salin Sandi</button>
+              </div>
+            </div>
+
+            <div class="account-card">
+              <div>
+                <span class="account-badge-role card-lavender">Wali Kelas</span>
+                <h3 class="account-title">Ani Wijayanti, S.Pd.</h3>
+                <p class="account-subtitle">Wali Kelas 4A</p>
+
+                <div class="account-field">
+                  <div class="account-field-label">Alamat Email:</div>
+                  <div class="account-field-val tabular-nums">guru.ani@neoschola.demo</div>
+                </div>
+                <div class="account-field">
+                  <div class="account-field-label">Kata Sandi:</div>
+                  <div class="account-field-val tabular-nums">neoschola123</div>
+                </div>
+              </div>
+
+              <div class="account-actions">
+                <button type="button" class="btn-copy" data-copy-text="guru.ani@neoschola.demo" data-default-label="Salin Email">Salin Email</button>
+                <button type="button" class="btn-copy" data-copy-text="neoschola123" data-default-label="Salin Sandi">Salin Sandi</button>
+              </div>
+            </div>
+
+            <div class="account-card">
+              <div>
+                <span class="account-badge-role card-butter">Admin TU</span>
+                <h3 class="account-title">Hendra Setiawan</h3>
+                <p class="account-subtitle">Admin Tata Usaha &amp; Keuangan</p>
+
+                <div class="account-field">
+                  <div class="account-field-label">Alamat Email:</div>
+                  <div class="account-field-val tabular-nums">admin.tu@neoschola.demo</div>
+                </div>
+                <div class="account-field">
+                  <div class="account-field-label">Kata Sandi:</div>
+                  <div class="account-field-val tabular-nums">neoschola123</div>
+                </div>
+              </div>
+
+              <div class="account-actions">
+                <button type="button" class="btn-copy" data-copy-text="admin.tu@neoschola.demo" data-default-label="Salin Email">Salin Email</button>
+                <button type="button" class="btn-copy" data-copy-text="neoschola123" data-default-label="Salin Sandi">Salin Sandi</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="demo-bottom-bar">
+            <div class="demo-bottom-copy">
+              <div class="demo-bottom-title">Sudah menyalin salah satu kredensial di atas?</div>
+              <p class="demo-bottom-desc">Masuk ke aplikasi demo untuk mencoba seluruh alur presensi, perizinan, dan SPP.</p>
+            </div>
+            <a href="https://app.neoschola.floc.site" class="btn btn-light btn-open-demo">Buka Aplikasi Demo</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slab-section" id="kontak" data-reveal>
+      <div class="container">
+        <div class="slab-card">
+          <div class="lead-grid">
+            <div class="lead-info">
+              <span class="section-tag">Konsultasi &amp; Kemitraan</span>
+              <h2 class="section-title">Jadwalkan demo 15 menit untuk sekolah Anda</h2>
+              <p class="section-desc">
+                Kami siap mendampingi proses pengenalan dan migrasi data awal sekolah Anda dengan panduan langsung bagi guru maupun staf tata usaha.
+              </p>
+
+              <div class="lead-direct-card">
+                <h3 class="lead-direct-title">Konsultasi WhatsApp Cepat</h3>
+                <p class="lead-direct-desc">
+                  Ingin berdiskusi langsung mengenai kesiapan kelas percontohan atau alur pembayaran SPP sekolah Anda? Hubungi narahubung resmi kami.
+                </p>
+                <a href="https://wa.me/6285791702218?text=Halo%20Tim%20NeoSchola,%20saya%20ingin%20berkonsultasi%20mengenai%20portal%20sekolah." id="btn-wa-consult" target="_blank" rel="noopener noreferrer" class="btn btn-primary">
+                  Kirim Pesan ke WhatsApp
+                </a>
+                <div class="lead-contact-meta">
+                  <div>WhatsApp: <span class="tabular-nums">+62-857-9170-2218</span></div>
+                  <div>Email: <a id="link-contact-email" href="mailto:floccreativeid@gmail.com">floccreativeid@gmail.com</a></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="lead-form-wrap">
+              <h3 class="lead-form-title">Formulir Permintaan Demo</h3>
+              <p class="lead-form-subtitle">Isi formulir ringkas di bawah untuk menyusun pesan pendaftaran ke tim kami.</p>
+
+              <form id="lead-form" novalidate>
+                <div class="form-group">
+                  <label for="lead-school-name" class="form-label">
+                    Nama Sekolah <span class="form-required">*</span>
+                  </label>
+                  <input type="text" id="lead-school-name" class="form-input" placeholder="Masukkan nama sekolah Anda" aria-invalid="false" required>
+                  <div class="form-error-msg" id="error-school-name" role="alert">Nama sekolah wajib diisi.</div>
+                </div>
+
+                <div class="form-group">
+                  <label for="lead-school-level" class="form-label">Jenjang Pendidikan</label>
+                  <select id="lead-school-level" class="form-select">
+                    <option value="SD / MI">SD / MI</option>
+                    <option value="SMP / MTs">SMP / MTs</option>
+                    <option value="SMA / SMK / MA">SMA / SMK / MA</option>
+                    <option value="Lainnya">Lainnya</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label for="lead-student-count" class="form-label">Perkiraan Jumlah Siswa</label>
+                  <input type="text" id="lead-student-count" class="form-input" placeholder="Perkiraan jumlah siswa aktif" aria-describedby="help-student-count">
+                  <div class="form-help" id="help-student-count">Membantu kami menyiapkan alokasi server dan sesi pengenalan yang tepat.</div>
+                </div>
+
+                <div class="form-group">
+                  <label for="lead-contact-name" class="form-label">
+                    Nama &amp; Jabatan Kontak <span class="form-required">*</span>
+                  </label>
+                  <input type="text" id="lead-contact-name" class="form-input" placeholder="Nama lengkap dan jabatan (mis. Kepala Sekolah / Staf TU)" aria-invalid="false" required>
+                  <div class="form-error-msg" id="error-contact-name" role="alert">Nama dan jabatan kontak wajib diisi.</div>
+                </div>
+
+                <div class="form-group">
+                  <label for="lead-notes" class="form-label">Catatan Kebutuhan Khusus (Opsional)</label>
+                  <textarea id="lead-notes" class="form-textarea" placeholder="Tuliskan kendala administrasi utama yang ingin diselesaikan di sekolah Anda..."></textarea>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-submit">
+                  Kirim Jadwal ke WhatsApp
+                </button>
+              </form>
+
+              <div class="lead-confirmation" id="lead-confirmation" hidden>
+                <h4 class="confirmation-title">Pesan Pendaftaran Berhasil Disusun!</h4>
+                <p class="confirmation-desc">
+                  Jika jendela WhatsApp tidak terbuka secara otomatis pada peramban Anda, silakan gunakan tombol langsung di bawah atau salin teks pesan pendaftaran.
+                </p>
+                <div class="confirmation-actions">
+                  <a href="https://wa.me/6285791702218?text=Halo%20Tim%20NeoSchola,%20saya%20ingin%20menjadwalkan%20demo%20portal%20sekolah." id="btn-wa-direct" target="_blank" rel="noopener noreferrer" class="btn btn-primary">
+                    Lanjut ke WhatsApp
+                  </a>
+                  <button type="button" class="btn btn-copy" id="btn-copy-wa-message" data-copy-text="" data-default-label="Salin Pesan Pendaftaran">
+                    Salin Pesan Pendaftaran
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -578,6 +872,10 @@
           <p class="footer-desc">
             Portal tata kelola terpadu sekolah untuk presensi, perizinan, komunikasi resmi, dan pencatatan iuran transparan.
           </p>
+          <div class="footer-contact-list">
+            <div>WhatsApp: <span class="tabular-nums">+62-857-9170-2218</span></div>
+            <div>Email: <a href="mailto:floccreativeid@gmail.com" class="footer-inline-link">floccreativeid@gmail.com</a></div>
+          </div>
         </div>
 
         <div class="footer-links-zone">
@@ -585,6 +883,7 @@
           <ul class="footer-links-list">
             <li><a href="#masalah" class="footer-link">Masalah Tata Kelola</a></li>
             <li><a href="#alur-peran" class="footer-link">Alur Tiga Peran</a></li>
+            <li><a href="#skema-pilot" class="footer-link">Skema Pilot &amp; Biaya</a></li>
             <li><a href="#coba-demo" class="footer-link">Akun Demo Sintetis</a></li>
             <li><a href="#kontak" class="footer-link">Jadwalkan Konsultasi</a></li>
           </ul>
@@ -595,13 +894,14 @@
           <ul class="footer-links-list">
             <li><a href="privasi.html" class="footer-link">Kebijakan Privasi</a></li>
             <li><a href="ketentuan.html" class="footer-link">Syarat &amp; Ketentuan</a></li>
+            <li><a href="https://app.neoschola.floc.site" target="_blank" rel="noopener noreferrer" class="footer-link btn-open-demo">Portal Demo Langsung</a></li>
           </ul>
         </div>
       </div>
 
       <div class="footer-bottom">
         <div>
-          &copy; 2026 NeoSchola. Hak cipta dilindungi undang-undang.
+          &copy; 2026 NeoSchola oleh FLOC Creative. Hak cipta dilindungi undang-undang.
         </div>
         <div>
           Studi kasus SDN Nusantara Harapan menggunakan data demo sintetis.

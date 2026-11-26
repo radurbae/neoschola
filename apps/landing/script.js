@@ -19,7 +19,10 @@ var DEMO_CHILDREN = {
     taskSub: "Bab 4: Pecahan Desimal",
     sppStatus: "Lunas",
     sppDetail: "SPP November 2026",
-    sppSub: "Kuitansi digital NS-202611-042"
+    sppSub: "Kuitansi digital NS-202611-042",
+    trendVal: "21/22 Hari",
+    trendSub: "Raka Pratama, 1 izin sakit tercatat bulan ini",
+    trendBars: [78, 92, 85, 64, 94, 88, 96]
   },
   nadia: {
     name: "Nadia Putri",
@@ -32,19 +35,73 @@ var DEMO_CHILDREN = {
     taskSub: "Batas pengumpulan Jumat depan",
     sppStatus: "Menunggu Verifikasi",
     sppDetail: "SPP November 2026",
-    sppSub: "Referensi transfer dikirim 22 Nov"
+    sppSub: "Referensi transfer dikirim 22 Nov",
+    trendVal: "19/22 Hari",
+    trendSub: "Nadia Putri, izin sakit hari ini sedang ditinjau",
+    trendBars: [84, 76, 90, 68, 82, 74, 86]
   }
 };
 
 document.addEventListener("DOMContentLoaded", function () {
   initLiveClipboardFeedback();
+  initHeaderState();
   initMobileDrawer();
   initChildSwitcher();
   initRoleTabs();
   initLeadForm();
   initCopyButtons();
   initDemoLinks();
+  initScrollReveal();
 });
+
+function initHeaderState() {
+  var header = document.querySelector(".header");
+  if (!header) return;
+
+  function onScrollHeader() {
+    if (window.scrollY > 12) {
+      header.classList.add("is-scrolled");
+    } else {
+      header.classList.remove("is-scrolled");
+    }
+  }
+
+  onScrollHeader();
+  window.addEventListener("scroll", onScrollHeader, { passive: true });
+
+  var sections = document.querySelectorAll("main section[id]");
+  var navLinks = document.querySelectorAll(".nav-link, .nav-mobile-link");
+  if (!sections.length || !navLinks.length || !("IntersectionObserver" in window)) return;
+
+  function setActiveNav(sectionId) {
+    var targetHash = sectionId && sectionId !== "hero" ? "#" + sectionId : "";
+    for (var i = 0; i < navLinks.length; i++) {
+      var href = navLinks[i].getAttribute("href") || "";
+      if (targetHash && href === targetHash) {
+        navLinks[i].classList.add("is-active");
+        navLinks[i].setAttribute("aria-current", "location");
+      } else {
+        navLinks[i].classList.remove("is-active");
+        navLinks[i].removeAttribute("aria-current");
+      }
+    }
+  }
+
+  var navObserver = new IntersectionObserver(function (entries) {
+    for (var i = 0; i < entries.length; i++) {
+      if (entries[i].isIntersecting) {
+        setActiveNav(entries[i].target.id);
+      }
+    }
+  }, {
+    rootMargin: "-25% 0px -60% 0px",
+    threshold: 0
+  });
+
+  for (var j = 0; j < sections.length; j++) {
+    navObserver.observe(sections[j]);
+  }
+}
 
 function initLiveClipboardFeedback() {
   if (!document.getElementById("clipboard-live-region")) {
@@ -99,6 +156,13 @@ function initMobileDrawer() {
       btnHamburger.focus();
     }
   });
+
+  var header = document.querySelector(".header");
+  document.addEventListener("click", function (e) {
+    if (drawer.classList.contains("is-open") && header && !header.contains(e.target)) {
+      toggleDrawer(false);
+    }
+  });
 }
 
 function initChildSwitcher() {
@@ -118,7 +182,19 @@ function initChildSwitcher() {
   var sppDetail = document.getElementById("hero-spp-detail");
   var sppSub = document.getElementById("hero-spp-sub");
 
+  var trendCard = document.querySelector(".preview-trend-card");
+  var trendVal = document.getElementById("hero-trend-val");
+  var trendSub = document.getElementById("hero-trend-sub");
+  var trendBarsWrap = document.getElementById("hero-trend-bars");
+
   if (!tabs.length || !presensiStatus) return;
+
+  function triggerSwitchMotion(el) {
+    if (!el) return;
+    el.classList.remove("is-switching");
+    void el.offsetWidth;
+    el.classList.add("is-switching");
+  }
 
   function updateChildView(childKey) {
     var data = DEMO_CHILDREN[childKey];
@@ -128,11 +204,9 @@ function initChildSwitcher() {
     presensiDetail.textContent = data.attendanceDetail;
     presensiSub.textContent = data.attendanceSub;
     if (cardPresensi) {
-      if (childKey === "raka") {
-        cardPresensi.className = "preview-pastel-card card-mint";
-      } else {
-        cardPresensi.className = "preview-pastel-card card-butter";
-      }
+      cardPresensi.className = childKey === "raka"
+        ? "preview-pastel-card card-mint"
+        : "preview-pastel-card card-butter";
     }
 
     tugasStatus.textContent = data.taskStatus;
@@ -143,12 +217,26 @@ function initChildSwitcher() {
     sppDetail.textContent = data.sppDetail;
     sppSub.textContent = data.sppSub;
     if (cardSpp) {
-      if (childKey === "raka") {
-        cardSpp.className = "preview-pastel-card card-mint";
-      } else {
-        cardSpp.className = "preview-pastel-card card-butter";
+      cardSpp.className = childKey === "raka"
+        ? "preview-pastel-card card-mint"
+        : "preview-pastel-card card-butter";
+    }
+
+    if (trendVal) trendVal.textContent = data.trendVal;
+    if (trendSub) trendSub.textContent = data.trendSub;
+    if (trendBarsWrap && data.trendBars) {
+      var bars = trendBarsWrap.querySelectorAll(".trend-bar");
+      for (var k = 0; k < bars.length; k++) {
+        if (typeof data.trendBars[k] === "number") {
+          bars[k].style.height = data.trendBars[k] + "%";
+        }
       }
     }
+
+    triggerSwitchMotion(cardPresensi);
+    triggerSwitchMotion(cardTugas);
+    triggerSwitchMotion(cardSpp);
+    triggerSwitchMotion(trendCard);
 
     announceToScreenReader("Menampilkan data " + data.name + ", " + data.classGrade);
   }
@@ -431,4 +519,64 @@ function initLeadForm() {
       announceToScreenReader("Jadwal demo berhasil disusun. Silakan lanjutkan ke WhatsApp.");
     }
   });
+}
+
+function initScrollReveal() {
+  var targets = document.querySelectorAll("[data-reveal]");
+  if (!targets.length) return;
+
+  var reducedMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (reducedMotion || !("IntersectionObserver" in window)) {
+    for (var i = 0; i < targets.length; i++) {
+      targets[i].classList.add("is-revealed");
+    }
+    return;
+  }
+
+  function revealVisible() {
+    var viewH = window.innerHeight || document.documentElement.clientHeight;
+    var remaining = 0;
+    for (var i = 0; i < targets.length; i++) {
+      var el = targets[i];
+      if (el.classList.contains("is-revealed")) continue;
+      var rect = el.getBoundingClientRect();
+      if (rect.top <= viewH - 16) {
+        el.classList.add("is-revealed");
+      } else {
+        remaining++;
+      }
+    }
+    return remaining;
+  }
+
+  revealVisible();
+  document.documentElement.classList.add("has-reveal");
+
+  var observer = new IntersectionObserver(function (entries) {
+    for (var i = 0; i < entries.length; i++) {
+      if (entries[i].isIntersecting) {
+        entries[i].target.classList.add("is-revealed");
+        observer.unobserve(entries[i].target);
+      }
+    }
+  }, {
+    threshold: 0.01,
+    rootMargin: "0px 0px -16px 0px"
+  });
+
+  for (var j = 0; j < targets.length; j++) {
+    if (!targets[j].classList.contains("is-revealed")) {
+      observer.observe(targets[j]);
+    }
+  }
+
+  function onScrollCheck() {
+    if (revealVisible() === 0) {
+      window.removeEventListener("scroll", onScrollCheck);
+      window.removeEventListener("hashchange", onScrollCheck);
+    }
+  }
+
+  window.addEventListener("scroll", onScrollCheck, { passive: true });
+  window.addEventListener("hashchange", onScrollCheck);
 }
