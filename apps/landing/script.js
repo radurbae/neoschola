@@ -58,11 +58,13 @@ function initHeaderState() {
   var header = document.querySelector(".header");
   if (!header) return;
 
+  var isScrolled = false;
+
   function onScrollHeader() {
-    if (window.scrollY > 12) {
-      header.classList.add("is-scrolled");
-    } else {
-      header.classList.remove("is-scrolled");
+    var nextScrolled = window.scrollY > 12;
+    if (nextScrolled !== isScrolled) {
+      isScrolled = nextScrolled;
+      header.classList.toggle("is-scrolled", isScrolled);
     }
   }
 
@@ -71,7 +73,7 @@ function initHeaderState() {
 
   var sections = document.querySelectorAll("main section[id]");
   var navLinks = document.querySelectorAll(".nav-link, .nav-mobile-link");
-  if (!sections.length || !navLinks.length || !("IntersectionObserver" in window)) return;
+  if (!sections.length || !navLinks.length) return;
 
   function setActiveNav(sectionId) {
     var targetHash = sectionId && sectionId !== "hero" ? "#" + sectionId : "";
@@ -87,6 +89,12 @@ function initHeaderState() {
     }
   }
 
+  if (window.scrollY < 160) {
+    setActiveNav("hero");
+  }
+
+  if (!("IntersectionObserver" in window)) return;
+
   var navObserver = new IntersectionObserver(function (entries) {
     for (var i = 0; i < entries.length; i++) {
       if (entries[i].isIntersecting) {
@@ -94,7 +102,7 @@ function initHeaderState() {
       }
     }
   }, {
-    rootMargin: "-25% 0px -60% 0px",
+    rootMargin: "-20% 0px -55% 0px",
     threshold: 0
   });
 
@@ -535,18 +543,14 @@ function initScrollReveal() {
 
   function revealVisible() {
     var viewH = window.innerHeight || document.documentElement.clientHeight;
-    var remaining = 0;
     for (var i = 0; i < targets.length; i++) {
       var el = targets[i];
       if (el.classList.contains("is-revealed")) continue;
       var rect = el.getBoundingClientRect();
-      if (rect.top <= viewH - 16) {
+      if (rect.top <= viewH + 80) {
         el.classList.add("is-revealed");
-      } else {
-        remaining++;
       }
     }
-    return remaining;
   }
 
   revealVisible();
@@ -561,7 +565,7 @@ function initScrollReveal() {
     }
   }, {
     threshold: 0.01,
-    rootMargin: "0px 0px -16px 0px"
+    rootMargin: "0px 0px 80px 0px"
   });
 
   for (var j = 0; j < targets.length; j++) {
@@ -570,13 +574,5 @@ function initScrollReveal() {
     }
   }
 
-  function onScrollCheck() {
-    if (revealVisible() === 0) {
-      window.removeEventListener("scroll", onScrollCheck);
-      window.removeEventListener("hashchange", onScrollCheck);
-    }
-  }
-
-  window.addEventListener("scroll", onScrollCheck, { passive: true });
-  window.addEventListener("hashchange", onScrollCheck);
+  window.addEventListener("hashchange", revealVisible);
 }

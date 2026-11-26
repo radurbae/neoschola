@@ -514,6 +514,7 @@ section[id] {
 .slab-section {
   padding-top: 16px;
   padding-bottom: 16px;
+  overflow-x: clip;
 }
 
 .hero-slab-section {
@@ -524,6 +525,7 @@ section[id] {
 .dark-section {
   padding-top: 56px;
   padding-bottom: 56px;
+  overflow-x: clip;
 }
 
 @media (min-width: 768px) {
@@ -2275,54 +2277,220 @@ section[id] {
   }
 }
 
-.has-reveal [data-reveal] {
-  opacity: 0;
-  transform: translateY(14px);
-  transition: opacity 0.36s cubic-bezier(0.22, 1, 0.36, 1), transform 0.36s cubic-bezier(0.22, 1, 0.36, 1);
+.has-reveal .slab-section[data-reveal] .slab-card {
+  transition: opacity 0.42s cubic-bezier(0.16, 1, 0.3, 1), transform 0.42s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.has-reveal [data-reveal].is-revealed {
+.has-reveal .slab-section[data-reveal]:not(.is-revealed) .slab-card {
+  opacity: 0;
+  transform: translateY(16px);
+  will-change: transform, opacity;
+}
+
+.has-reveal .slab-section[data-reveal].is-revealed .slab-card {
   opacity: 1;
   transform: translateY(0);
+  will-change: auto;
 }
 
-.has-reveal [data-reveal] .problem-card-dark,
-.has-reveal [data-reveal] .problem-card-light,
-.has-reveal [data-reveal] .pricing-card-dark,
-.has-reveal [data-reveal] .pricing-card-light,
-.has-reveal [data-reveal] .account-card {
+.has-reveal #masalah .section-header,
+.has-reveal #masalah .problem-card-dark,
+.has-reveal #masalah .problem-card-light {
+  transition: opacity 0.36s cubic-bezier(0.16, 1, 0.3, 1), transform 0.36s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.has-reveal #masalah:not(.is-revealed) .section-header {
   opacity: 0;
   transform: translateY(12px);
-  transition: opacity 0.32s cubic-bezier(0.22, 1, 0.36, 1), transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform, opacity;
 }
 
-.has-reveal [data-reveal].is-revealed .problem-card-dark,
-.has-reveal [data-reveal].is-revealed .problem-card-light,
-.has-reveal [data-reveal].is-revealed .pricing-card-dark,
-.has-reveal [data-reveal].is-revealed .pricing-card-light,
-.has-reveal [data-reveal].is-revealed .account-card {
+.has-reveal #masalah:not(.is-revealed) .problem-card-dark {
+  opacity: 0;
+  transform: translateX(-12px);
+  will-change: transform, opacity;
+}
+
+.has-reveal #masalah:not(.is-revealed) .problem-card-light {
+  opacity: 0;
+  transform: translateX(12px);
+  will-change: transform, opacity;
+}
+
+.has-reveal #masalah.is-revealed .section-header {
   opacity: 1;
   transform: translateY(0);
+  will-change: auto;
 }
 
-.has-reveal [data-reveal].is-revealed .problem-card-dark,
-.has-reveal [data-reveal].is-revealed .pricing-card-dark,
-.has-reveal [data-reveal].is-revealed .account-card:nth-child(1) {
-  transition-delay: 60ms;
+.has-reveal #masalah.is-revealed .problem-card-dark {
+  opacity: 1;
+  transform: translateX(0);
+  transition-delay: 40ms;
+  will-change: auto;
 }
 
-.has-reveal [data-reveal].is-revealed .problem-card-light,
-.has-reveal [data-reveal].is-revealed .pricing-card-light,
-.has-reveal [data-reveal].is-revealed .account-card:nth-child(2) {
-  transition-delay: 120ms;
+.has-reveal #masalah.is-revealed .problem-card-light {
+  opacity: 1;
+  transform: translateX(0);
+  transition-delay: 90ms;
+  will-change: auto;
 }
 
-.has-reveal [data-reveal].is-revealed .account-card:nth-child(3) {
-  transition-delay: 180ms;
+.has-reveal #alur-peran .section-header-split,
+.has-reveal #alur-peran .role-spotlight,
+.has-reveal #alur-peran .role-panel.is-active .bento-card {
+  transition: opacity 0.36s cubic-bezier(0.16, 1, 0.3, 1), transform 0.36s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.has-reveal [data-reveal].is-revealed .account-card:nth-child(4) {
-  transition-delay: 240ms;
+.has-reveal #alur-peran:not(.is-revealed) .section-header-split,
+.has-reveal #alur-peran:not(.is-revealed) .role-spotlight,
+.has-reveal #alur-peran:not(.is-revealed) .role-panel.is-active .bento-card {
+  opacity: 0;
+  transform: translateY(12px);
+  will-change: transform, opacity;
+}
+
+.has-reveal #alur-peran.is-revealed .section-header-split {
+  opacity: 1;
+  transform: translateY(0);
+  transition-delay: 30ms;
+  will-change: auto;
+}
+
+.has-reveal #alur-peran.is-revealed .role-spotlight {
+  opacity: 1;
+  transform: translateY(0);
+  transition-delay: 70ms;
+  will-change: auto;
+}
+
+.has-reveal #alur-peran.is-revealed .role-panel.is-active .bento-card {
+  opacity: 1;
+  transform: translateY(0);
+  will-change: auto;
+}
+
+.has-reveal #alur-peran.is-revealed .role-panel.is-active .bento-card:nth-child(1) { transition-delay: 90ms; }
+.has-reveal #alur-peran.is-revealed .role-panel.is-active .bento-card:nth-child(2) { transition-delay: 130ms; }
+.has-reveal #alur-peran.is-revealed .role-panel.is-active .bento-card:nth-child(3) { transition-delay: 170ms; }
+.has-reveal #alur-peran.is-revealed .role-panel.is-active .bento-card:nth-child(4) { transition-delay: 210ms; }
+.has-reveal #alur-peran.is-revealed .role-panel.is-active .bento-card:nth-child(5) { transition-delay: 250ms; }
+
+.has-reveal #skema-pilot .section-header,
+.has-reveal #skema-pilot .pricing-card-dark,
+.has-reveal #skema-pilot .pricing-card-light,
+.has-reveal #skema-pilot .governance-strip {
+  transition: opacity 0.36s cubic-bezier(0.16, 1, 0.3, 1), transform 0.36s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.has-reveal #skema-pilot:not(.is-revealed) .section-header,
+.has-reveal #skema-pilot:not(.is-revealed) .pricing-card-dark,
+.has-reveal #skema-pilot:not(.is-revealed) .pricing-card-light,
+.has-reveal #skema-pilot:not(.is-revealed) .governance-strip {
+  opacity: 0;
+  transform: translateY(14px);
+  will-change: transform, opacity;
+}
+
+.has-reveal #skema-pilot.is-revealed .section-header {
+  opacity: 1;
+  transform: translateY(0);
+  will-change: auto;
+}
+
+.has-reveal #skema-pilot.is-revealed .pricing-card-dark {
+  opacity: 1;
+  transform: translateY(0);
+  transition-delay: 40ms;
+  will-change: auto;
+}
+
+.has-reveal #skema-pilot.is-revealed .pricing-card-light {
+  opacity: 1;
+  transform: translateY(0);
+  transition-delay: 90ms;
+  will-change: auto;
+}
+
+.has-reveal #skema-pilot.is-revealed .governance-strip {
+  opacity: 1;
+  transform: translateY(0);
+  transition-delay: 140ms;
+  will-change: auto;
+}
+
+.has-reveal #coba-demo .section-header,
+.has-reveal #coba-demo .notice-banner,
+.has-reveal #coba-demo .account-card,
+.has-reveal #coba-demo .demo-bottom-bar {
+  transition: opacity 0.36s cubic-bezier(0.16, 1, 0.3, 1), transform 0.36s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.has-reveal #coba-demo:not(.is-revealed) .section-header,
+.has-reveal #coba-demo:not(.is-revealed) .notice-banner,
+.has-reveal #coba-demo:not(.is-revealed) .account-card,
+.has-reveal #coba-demo:not(.is-revealed) .demo-bottom-bar {
+  opacity: 0;
+  transform: translateY(12px);
+  will-change: transform, opacity;
+}
+
+.has-reveal #coba-demo.is-revealed .section-header {
+  opacity: 1;
+  transform: translateY(0);
+  will-change: auto;
+}
+
+.has-reveal #coba-demo.is-revealed .notice-banner {
+  opacity: 1;
+  transform: translateY(0);
+  transition-delay: 40ms;
+  will-change: auto;
+}
+
+.has-reveal #coba-demo.is-revealed .account-card {
+  opacity: 1;
+  transform: translateY(0);
+  will-change: auto;
+}
+
+.has-reveal #coba-demo.is-revealed .account-card:nth-child(1) { transition-delay: 70ms; }
+.has-reveal #coba-demo.is-revealed .account-card:nth-child(2) { transition-delay: 110ms; }
+.has-reveal #coba-demo.is-revealed .account-card:nth-child(3) { transition-delay: 150ms; }
+.has-reveal #coba-demo.is-revealed .account-card:nth-child(4) { transition-delay: 190ms; }
+
+.has-reveal #coba-demo.is-revealed .demo-bottom-bar {
+  opacity: 1;
+  transform: translateY(0);
+  transition-delay: 210ms;
+  will-change: auto;
+}
+
+.has-reveal #kontak .lead-info,
+.has-reveal #kontak .lead-form-wrap {
+  transition: opacity 0.36s cubic-bezier(0.16, 1, 0.3, 1), transform 0.36s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.has-reveal #kontak:not(.is-revealed) .lead-info,
+.has-reveal #kontak:not(.is-revealed) .lead-form-wrap {
+  opacity: 0;
+  transform: translateY(14px);
+  will-change: transform, opacity;
+}
+
+.has-reveal #kontak.is-revealed .lead-info {
+  opacity: 1;
+  transform: translateY(0);
+  transition-delay: 40ms;
+  will-change: auto;
+}
+
+.has-reveal #kontak.is-revealed .lead-form-wrap {
+  opacity: 1;
+  transform: translateY(0);
+  transition-delay: 90ms;
+  will-change: auto;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -2343,12 +2511,24 @@ section[id] {
   }
 
   .has-reveal [data-reveal],
-  .has-reveal [data-reveal] .problem-card-dark,
-  .has-reveal [data-reveal] .problem-card-light,
-  .has-reveal [data-reveal] .pricing-card-dark,
-  .has-reveal [data-reveal] .pricing-card-light,
-  .has-reveal [data-reveal] .account-card {
-    opacity: 1;
-    transform: none;
+  .has-reveal .slab-section[data-reveal] .slab-card,
+  .has-reveal #masalah .section-header,
+  .has-reveal #masalah .problem-card-dark,
+  .has-reveal #masalah .problem-card-light,
+  .has-reveal #alur-peran .section-header-split,
+  .has-reveal #alur-peran .role-spotlight,
+  .has-reveal #alur-peran .role-panel.is-active .bento-card,
+  .has-reveal #skema-pilot .section-header,
+  .has-reveal #skema-pilot .pricing-card-dark,
+  .has-reveal #skema-pilot .pricing-card-light,
+  .has-reveal #skema-pilot .governance-strip,
+  .has-reveal #coba-demo .section-header,
+  .has-reveal #coba-demo .notice-banner,
+  .has-reveal #coba-demo .account-card,
+  .has-reveal #coba-demo .demo-bottom-bar,
+  .has-reveal #kontak .lead-info,
+  .has-reveal #kontak .lead-form-wrap {
+    opacity: 1 !important;
+    transform: none !important;
   }
 }
