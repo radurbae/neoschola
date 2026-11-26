@@ -53,6 +53,10 @@ html {
   scroll-behavior: smooth;
 }
 
+html.has-smooth-scroll {
+  scroll-behavior: auto;
+}
+
 body {
   min-height: 100vh;
   display: flex;

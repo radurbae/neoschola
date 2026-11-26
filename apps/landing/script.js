@@ -52,6 +52,7 @@ document.addEventListener("DOMContentLoaded", function () {
   initCopyButtons();
   initDemoLinks();
   initScrollReveal();
+  initSmoothScroll();
 });
 
 function initHeaderState() {
@@ -575,4 +576,167 @@ function initScrollReveal() {
   }
 
   window.addEventListener("hashchange", revealVisible);
+}
+
+function initSmoothScroll() {
+  var reducedMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var finePointer = window.matchMedia && window.matchMedia("(pointer: fine)").matches;
+  var coarsePointer = window.matchMedia && window.matchMedia("(pointer: coarse)").matches;
+  if (reducedMotion || coarsePointer || !finePointer) return;
+
+  document.documentElement.classList.add("has-smooth-scroll");
+
+  var currentY = window.scrollY || window.pageYOffset;
+  var targetY = currentY;
+  var lastWrittenY = currentY;
+  var rafId = null;
+  var lastTime = 0;
+
+  function clamp(val, min, max) {
+    return Math.max(min, Math.min(max, val));
+  }
+
+  function getMaxScroll() {
+    return Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+  }
+
+  function stopLoop() {
+    if (rafId !== null) {
+      cancelAnimationFrame(rafId);
+      rafId = null;
+      lastTime = 0;
+    }
+  }
+
+  function step(now) {
+    var dt = lastTime ? Math.min((now - lastTime) / 1000, 0.05) : 1 / 60;
+    lastTime = now;
+    var damping = 1 - Math.exp(-10.5 * dt);
+    currentY += (targetY - currentY) * damping;
+
+    if (Math.abs(targetY - currentY) < 0.35) {
+      currentY = targetY;
+      lastWrittenY = currentY;
+      window.scrollTo(0, currentY);
+      rafId = null;
+      lastTime = 0;
+      return;
+    }
+
+    lastWrittenY = currentY;
+    window.scrollTo(0, currentY);
+    rafId = requestAnimationFrame(step);
+  }
+
+  function startLoop() {
+    if (rafId === null) {
+      lastTime = 0;
+      rafId = requestAnimationFrame(step);
+    }
+  }
+
+  function hasScrollableParent(target, deltaY) {
+    var el = target && target.nodeType === 1 ? target : null;
+    while (el && el !== document.body && el !== document.documentElement) {
+      var style = window.getComputedStyle(el);
+      var overflowY = style ? style.overflowY : "";
+      var isScrollable = el.tagName === "TEXTAREA" || overflowY === "auto" || overflowY === "scroll";
+      if (isScrollable && el.scrollHeight > el.clientHeight + 1) {
+        var canScrollDown = deltaY > 0 && el.scrollTop + el.clientHeight < el.scrollHeight - 1;
+        var canScrollUp = deltaY < 0 && el.scrollTop > 0;
+        if (canScrollDown || canScrollUp) {
+          return true;
+        }
+      }
+      el = el.parentElement;
+    }
+    return false;
+  }
+
+  window.addEventListener("wheel", function (e) {
+    if (!e.cancelable) return;
+    if (e.ctrlKey || e.metaKey) return;
+    if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
+    if (hasScrollableParent(e.target, e.deltaY)) return;
+
+    var delta = e.deltaY;
+    if (e.deltaMode === 1) {
+      delta *= 28;
+    } else if (e.deltaMode === 2) {
+      delta *= window.innerHeight * 0.85;
+    }
+    delta = clamp(delta, -320, 320);
+
+    e.preventDefault();
+
+    if (rafId === null) {
+      currentY = window.scrollY || window.pageYOffset;
+      targetY = currentY;
+    }
+    targetY = clamp(targetY + delta, 0, getMaxScroll());
+    startLoop();
+  }, { passive: false });
+
+  window.addEventListener("scroll", function () {
+    var actualY = window.scrollY || window.pageYOffset;
+    if (Math.abs(actualY - lastWrittenY) > 2) {
+      stopLoop();
+      currentY = actualY;
+      targetY = actualY;
+      lastWrittenY = actualY;
+    }
+  }, { passive: true });
+
+  window.addEventListener("keydown", function (e) {
+    var keys = {
+      ArrowUp: true,
+      ArrowDown: true,
+      PageUp: true,
+      PageDown: true,
+      Home: true,
+      End: true
+    };
+    var tag = e.target && e.target.tagName ? e.target.tagName : "";
+    var isSpace = e.key === " " && tag !== "INPUT" && tag !== "TEXTAREA" && tag !== "SELECT" && tag !== "BUTTON" && tag !== "A";
+    if (keys[e.key] || isSpace) {
+      stopLoop();
+      currentY = window.scrollY || window.pageYOffset;
+      targetY = currentY;
+      lastWrittenY = currentY;
+    }
+  });
+
+  window.addEventListener("mousedown", function () {
+    stopLoop();
+    currentY = window.scrollY || window.pageYOffset;
+    targetY = currentY;
+    lastWrittenY = currentY;
+  });
+
+  window.addEventListener("resize", function () {
+    var maxScroll = getMaxScroll();
+    targetY = clamp(targetY, 0, maxScroll);
+    currentY = clamp(currentY, 0, maxScroll);
+  }, { passive: true });
+
+  var anchorLinks = document.querySelectorAll('a[href^="#"]');
+  for (var i = 0; i < anchorLinks.length; i++) {
+    anchorLinks[i].addEventListener("click", function (e) {
+      var href = this.getAttribute("href");
+      if (!href || href === "#" || href === "#main-content") return;
+      var targetEl = document.getElementById(href.slice(1));
+      if (!targetEl) return;
+
+      e.preventDefault();
+      try {
+        history.pushState(null, "", href);
+      } catch (err) {}
+
+      if (rafId === null) {
+        currentY = window.scrollY || window.pageYOffset;
+      }
+      targetY = clamp(targetEl.getBoundingClientRect().top + (window.scrollY || window.pageYOffset) - 84, 0, getMaxScroll());
+      startLoop();
+    });
+  }
 }
